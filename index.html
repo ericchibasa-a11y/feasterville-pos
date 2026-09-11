@@ -1,0 +1,2422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feasterville Food - Restaurant POS | 51 Senagal Street, Isivana Section, Tembisa</title>
+<style>
+*{box-sizing:border-box} body{margin:0;font-family:Arial,sans-serif;background:#f3f5f0;color:#222}
+header{background:#111;color:#fff;padding:16px 22px;display:flex;justify-content:space-between;align-items:center}
+header h1{margin:0;font-size:24px} header span{font-size:13px}
+.app{display:grid;grid-template-columns:1.65fr .9fr;gap:16px;padding:16px;max-width:1500px;margin:auto}
+.panel{background:#fff;border-radius:12px;box-shadow:0 2px 10px #0001;padding:15px}
+.categories{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+button{border:0;border-radius:8px;padding:11px 14px;cursor:pointer;font-weight:bold}
+.cat{background:#111;color:#fff} .cat.active{background:#8cc63f;color:#111}
+.products{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;max-height:62vh;overflow:auto}
+.product{background:#f6f8f2;border:2px solid #dce8c9;text-align:left;min-height:90px}
+.product:hover{border-color:#8cc63f;transform:translateY(-1px)}
+.product .name{display:block;font-size:14px;margin-bottom:7px} .price{font-size:17px;color:#4e7d12}
+.order-head{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+input,select{padding:10px;border:1px solid #ccc;border-radius:7px;font-size:14px}
+.order-table{width:100%;border-collapse:collapse} .order-table th,.order-table td{padding:8px;border-bottom:1px solid #eee;text-align:left}
+.qty button{padding:5px 8px;background:#eee} .remove{background:#f4cccc;color:#900;padding:5px 8px}
+.summary{margin-top:12px;border-top:2px solid #111;padding-top:10px}
+.row{display:flex;justify-content:space-between;padding:5px 0} .grand{font-size:22px;font-weight:bold}
+.pay{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.primary{background:#8cc63f;color:#111;font-size:17px} .secondary{background:#111;color:#fff} .danger{background:#f4cccc}
+.receipt{font-family:monospace;white-space:pre-wrap;background:#fafafa;padding:12px;border:1px dashed #aaa;min-height:180px}
+.small{font-size:12px;color:#666}
+@media(max-width:900px){.app{grid-template-columns:1fr} .products{max-height:none}}
+@media print{body *{visibility:hidden} #receiptPrint,#receiptPrint *{visibility:visible} #receiptPrint{position:absolute;left:0;top:0;width:80mm}}
+
+.inventory-panel{margin-top:4px}.inventory-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.inv-table{width:100%;border-collapse:collapse;font-size:13px}.inv-table th,.inv-table td{padding:8px;border-bottom:1px solid #eee}
+.inv-table th{background:#111;color:#fff;text-align:left}.stock-input{width:90px;padding:7px}
+.badge{padding:4px 7px;border-radius:12px;font-weight:bold;font-size:11px}.ok{background:#d9ead3}.warn{background:#fff2cc}.bad{background:#f4cccc}
+.inv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}.inv-card{background:#f6f8f2;padding:12px;border-radius:9px}.inv-card b{font-size:20px}
+@media(max-width:900px){.inv-grid{grid-template-columns:repeat(2,1fr)}}
+
+</style>
+<style>
+.inv-table{width:100%;border-collapse:collapse;font-size:13px}.inv-table th,.inv-table td{padding:8px;border-bottom:1px solid #eee}.inv-table th{background:#111;color:#fff;text-align:left}
+.inv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}.inv-card{background:#f6f8f2;padding:12px;border-radius:9px}.inv-card b{font-size:20px}.stock-input{width:95px;padding:7px}
+.badge{padding:4px 7px;border-radius:12px;font-weight:bold;font-size:11px}.ok{background:#d9ead3}.warn{background:#fff2cc}.bad{background:#f4cccc}
+@media(max-width:900px){.inv-grid{grid-template-columns:repeat(2,1fr)}}
+</style><style>
+.recipe-table{width:100%;border-collapse:collapse}
+</style><style>
+@media print {
+  @page { size: 80mm auto; margin: 0; }
+  html, body { width:80mm !important; margin:0 !important; padding:0 !important; background:#fff !important; }
+  body * { visibility:hidden !important; }
+  #receiptPrint, #receiptPrint * { visibility:visible !important; }
+  #receiptPrint {
+    display:block !important;
+    position:absolute !important;
+    left:0 !important;
+    top:0 !important;
+    width:80mm !important;
+    max-width:80mm !important;
+    margin:0 !important;
+    padding:4mm !important;
+    box-shadow:none !important;
+    border:0 !important;
+    font-family:monospace !important;
+    font-size:11px !important;
+    line-height:1.25 !important;
+    overflow:visible !important;
+  }
+  #receiptPrint h2 { font-size:16px !important; margin:0 0 4px 0 !important; }
+  #receiptPrint hr { margin:4px 0 !important; }
+  #receiptPrint table { width:100% !important; }
+}body.print-report #reportContent, body.print-report #reportContent * { visibility:visible !important; }
+body.print-report #reportContent { position:absolute; left:0; top:0; width:100%; background:#fff; }
+@media print {
+  body.print-report { width:auto !important; }
+  body.print-report #receiptPrint, body.print-report #receiptPrint * { visibility:hidden !important; display:none !important; }
+  body.print-report #reportContent, body.print-report #reportContent * { visibility:visible !important; }
+  body.print-report #reportContent { position:absolute; left:0; top:0; width:100%; }
+}
+@media print {
+ body.print-production *{visibility:hidden!important}
+ body.print-production #productionInputsPanel, body.print-production #productionInputsPanel *{visibility:visible!important}
+ body.print-production #productionInputsPanel{display:block!important;position:absolute!important;left:0!important;top:0!important;width:100%!important;background:#fff!important}
+ body.print-production #receiptPrint{display:none!important}
+}
+</style>
+
+<style>
+#loginScreen{display:none!important}
+#liveLoginOverlay{position:fixed;inset:0;background:#111;z-index:100000;display:flex;align-items:center;justify-content:center;padding:15px}
+#liveLoginCard{background:#fff;color:#111;border:4px solid #8cc63f;border-radius:12px;padding:24px;width:min(440px,96%)}
+#liveLoginCard input{width:100%;padding:10px;margin:5px 0 10px;border:1px solid #bbb;border-radius:6px}
+#liveLoginCard .actions{display:flex;gap:8px;flex-wrap:wrap}
+#liveLoginCard button{padding:10px 14px}
+#liveTopBar{background:#111;color:#fff;padding:8px 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<div id="liveTopBar">
+  <b>FEASTERVILLE LIVE POS</b>
+  <span id="liveStatus">Sign in required</span>
+  <span id="liveUser"></span>
+  <button type="button" id="liveLogout" style="display:none">SIGN OUT</button>
+</div>
+
+<div id="liveLoginOverlay">
+  <div id="liveLoginCard">
+    <h2 style="margin-top:0">FEASTERVILLE LIVE POS LOGIN</h2>
+    <p style="font-size:13px">Use an email address and password for the live shared POS.</p>
+
+    <label><b>Email</b>
+      <input id="liveEmail" type="email" autocomplete="username">
+    </label>
+
+    <label><b>Password</b>
+      <input id="livePassword" type="password" autocomplete="current-password">
+    </label>
+
+    <label><b>Display Name</b> <span style="font-size:11px">(for a new account)</span>
+      <input id="liveDisplayName" type="text">
+    </label>
+
+    <div class="actions">
+      <button type="button" id="liveSignIn" class="primary">SIGN IN</button>
+      <button type="button" id="liveCreate">CREATE ACCOUNT</button>
+    </div>
+
+    <hr>
+    <label><b>Manager Setup Code</b>
+      <input id="liveManagerCode" type="password" placeholder="Only for first manager">
+    </label>
+    <button type="button" id="liveClaimManager">MAKE THIS ACCOUNT MANAGER</button>
+
+    <p id="liveMessage" style="font-weight:bold"></p>
+  </div>
+</div>
+
+<header><div><h1 style="margin:0">FEASTERVILLE FOOD — POS</h1><div style="font-size:13px;margin-top:3px">51 Senagal Street, Isivana Section, Tembisa</div></div><span id="userBadge">Not logged in</span><button onclick="logout()" style="background:#f4cccc;color:#900;padding:7px 10px">LOGOUT</button></header>
+
+<div id="loginScreen" style="position:fixed;inset:0;background:#111;z-index:9999;display:flex;align-items:center;justify-content:center">
+  <div style="background:#fff;padding:28px;border-radius:14px;width:min(420px,90%);box-shadow:0 10px 40px #0008">
+    <h2 style="margin-top:0">FEASTERVILLE POS LOGIN</h2>
+    <p class="small">Enter your username and password.</p>
+    <label>Role<br><select id="loginRole" style="width:100%;margin:6px 0 12px">
+      <option value="manager">Manager</option>
+      <option value="salesperson">Salesperson</option>
+    </select></label>
+    <label>Username<br><input id="loginUsername" type="text" autocomplete="username" style="width:100%;margin:6px 0 12px" placeholder="manager"></label>
+    <label>Password<br><input id="loginPassword" type="password" autocomplete="current-password" style="width:100%;margin:6px 0 12px" placeholder="admin123" onkeydown="if(event.key==='Enter')login()"></label>
+    <button class="primary" style="width:100%" onclick="login()">LOGIN</button>
+    <p id="loginError" style="color:#a00;font-weight:bold"></p>
+    <p class="small">Demo accounts: manager / admin123 and salesperson1 / 1234.</p>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button type="button" onclick="fillLogin('manager','admin123','manager')" style="flex:1;background:#eee">Manager Login</button>
+      <button type="button" onclick="fillLogin('salesperson1','1234','salesperson')" style="flex:1;background:#eee">Salesperson Login</button>
+    </div>
+  </div>
+</div>
+<div class="app">
+<section class="panel">
+<div class="order-head">
+<label>Date<br><input id="date" type="date"></label>
+<label>Cashier<br><input id="cashier" value="Cashier 1"></label>
+<label>Order Type<br><select id="orderType"><option>Take Away</option><option>Dine In</option><option>Delivery</option></select></label>
+</div>
+
+<div style="margin:10px 0 12px">
+  <label><b>Search Product</b></label><br>
+  <input id="salesProductSearch" type="text"
+         placeholder="Search by product code, name or category..."
+         style="width:100%;max-width:520px;padding:10px;border:1px solid #ccc;border-radius:8px">
+  <button type="button" id="clearSalesProductSearch" style="margin-left:5px">CLEAR</button>
+</div>
+
+<div class="categories" id="categories"></div>
+<div class="products" id="products"></div>
+</section>
+
+<section class="panel">
+<h2 style="margin-top:0">Current Order <span class="small" id="orderNo"></span></h2>
+<table class="order-table">
+<thead><tr><th>Item</th><th>Qty</th><th>Total</th><th></th></tr></thead>
+<tbody id="cart"></tbody>
+</table>
+<div class="summary">
+<div class="row"><span>Subtotal</span><b id="subtotal">R0.00</b></div>
+<div class="row"><span>Discount</span><input id="discount" type="number" min="0" value="0" style="width:100px"></div>
+<div class="row grand"><span>TOTAL</span><span id="total">R0.00</span></div>
+<div class="pay">
+<label>Payment<br><select id="payment"><option>Cash</option><option>Card</option><option>EFT</option><option>Other</option></select></label>
+<label>Amount Received<br><input id="received" type="number" min="0" value="0" oninput="render()"></label>
+</div>
+<div class="row"><span>Change</span><b id="change">R0.00</b></div>
+<button class="primary" style="width:100%;margin-top:8px" onclick="completeSale()">COMPLETE SALE</button>
+<button class="secondary" style="width:100%;margin-top:8px" onclick="printReceipt()">PRINT RECEIPT</button>
+<button class="danger" style="width:100%;margin-top:8px" onclick="clearCart()">CLEAR ORDER</button>
+</div>
+</section>
+
+<section class="panel" style="grid-column:1/-1">
+<h2>Today's Sales</h2>
+<div id="salesSummary"></div>
+</section>
+
+
+<section class="panel inventory-panel" style="grid-column:1/-1">
+<h2>Inventory Listing & Count Sheets</h2>
+<p class="small">Separate <b>Sellable / Finished Products</b> from <b>Purchased Production Inputs / Raw Materials</b>.</p>
+<div class="inventory-actions">
+<button class="cat active" onclick="showInvMaster('all',this)">Inventory Listing</button>
+<button class="cat" onclick="showInvMaster('finished',this)">Sellable Products</button>
+<button class="cat" onclick="showInvMaster('raw',this)">Production Inputs</button>
+<button class="cat" onclick="showInvCount('finished',this)">Finished Count Sheet</button>
+<button class="cat" onclick="showInvCount('raw',this)">Raw Material Count Sheet</button>
+<button class="cat" onclick="showInvStockIn(this)">Stock In</button>
+</div>
+<div id="inventoryMasterContent"></div>
+</section>
+
+
+
+<section class="panel" id="recipePanel" style="grid-column:1/-1;display:none">
+  <h2>Product Inputs / Recipe Link</h2>
+  <p class="small">Link each sold product to the raw materials used to produce it. When a product is sold, the linked input quantities are deducted from production inventory.</p>
+  <div class="order-head">
+    <select id="recipeProduct" onchange="loadRecipe()"></select>
+    <select id="recipeInput"></select>
+    <input id="recipeQty" type="number" min="0.001" step="0.001" value="1" class="stock-input">
+    <button class="primary" onclick="addRecipeInput()">LINK INPUT</button>
+  </div>
+  <div id="recipeList"></div>
+</section>
+
+
+
+<section class="panel" id="userPanel" style="grid-column:1/-1;display:none">
+<h2>Salesperson &amp; User Management</h2>
+<p class="small">Manager only. Create individual salesperson accounts, activate/deactivate users and reset passwords.</p>
+<div class="order-head">
+<input id="staffEmail" type="email" placeholder="Salesperson email">
+<input id="staffDisplayName" placeholder="Display name">
+<input id="staffPassword" type="password" placeholder="Temporary password (min 6)">
+<button class="primary" type="button" id="createStaffBtn">CREATE SALESPERSON</button>
+<button type="button" id="refreshStaffBtn">REFRESH USERS</button>
+</div>
+<p id="staffMessage" class="small"></p>
+<div style="overflow:auto"><table class="inv-table">
+<thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Last Sign In</th><th>Actions</th></tr></thead>
+<tbody id="staffRows"><tr><td colspan="6">Open this section to load live users.</td></tr></tbody>
+</table></div>
+</section>
+
+
+
+
+
+
+<section class="panel" id="easyLinkPanel" style="grid-column:1/-1;display:none">
+<h2>Build Final Product Recipe</h2>
+<p class="small"><b>Step 1:</b> Select the final product first. <b>Step 2:</b> select each production input used to make it and enter the quantity. The selected final product stays fixed while you add inputs.</p>
+
+<div class="order-head">
+<label style="min-width:280px">1. FINAL PRODUCT<br>
+<select id="easyProduct" onchange="easyProductSelected()" style="width:100%"></select></label>
+</div>
+
+<div id="selectedProductBox" class="inv-card" style="display:none;margin:10px 0">
+<b>Selected Final Product:</b> <span id="selectedProductName"></span>
+<button class="danger" style="float:right" onclick="easyChangeProduct()">CHANGE PRODUCT</button>
+</div>
+
+<div id="inputBuilder" style="display:none">
+<h3>2. Add Production Inputs</h3>
+<div class="order-head">
+<label>Production Input<br><select id="easyInput"></select></label>
+<label>Quantity Used<br><input id="easyQty" type="number" min="0.001" step="0.001" value="1" style="width:120px"></label>
+<button class="primary" onclick="easyAdd()">ADD INPUT</button>
+</div>
+<div id="easyRecipeSummary" class="inv-card" style="margin-top:10px"></div>
+<div id="easyRecipeTable"></div>
+</div>
+</section>
+
+<section class="panel" id="productionInputsPanel" style="grid-column:1/-1;display:none">
+<h2>Production Inputs — Stock Received & Stock Used via Sales</h2>
+<div class="inventory-actions">
+<button class="cat" onclick="document.getElementById('stockMovementPanel').scrollIntoView({behavior:'smooth'})">ENTER STOCK RECEIVED</button>
+<button class="cat" onclick="document.getElementById('usagePanel').scrollIntoView({behavior:'smooth'})">VIEW STOCK USED VIA SALES</button><button class="cat" onclick="document.getElementById('easyLinkPanel').scrollIntoView({behavior:'smooth'})">EASY LINK INPUTS → PRODUCT</button>
+</div>
+<p class="small">Track raw materials received from suppliers and automatically calculate raw material usage from sold products using the product recipes.</p>
+
+<div class="inv-grid">
+<div class="inv-card">Production Inputs<br><b id="piCount">0</b></div>
+<div class="inv-card">Stock Received<br><b id="piReceived">0</b></div>
+<div class="inv-card">Used via Sales<br><b id="piUsed">0</b></div>
+<div class="inv-card">Reorder Items<br><b id="piReorder">0</b></div>
+</div>
+
+<h3>1. Receive Production Input Stock</h3>
+<div class="order-head">
+<select id="piStockInput"></select>
+<input id="piStockQty" type="number" min="0" step="0.001" value="1" class="stock-input">
+<button class="primary" onclick="receiveProductionStock()">RECEIVE STOCK</button>
+</div>
+
+<h3>2. Production Input Stock Ledger</h3>
+<table class="inv-table">
+<thead><tr>
+<th>Code</th><th>Production Input</th><th>Unit</th><th>Opening</th><th>Stock Received</th><th>Used via Sales</th><th>Expected Balance</th><th>Physical Count</th><th>Variance</th><th>Reorder</th><th>Status</th>
+</tr></thead>
+<tbody id="productionLedgerBody"></tbody>
+</table>
+
+<h3>3. Production Input Count Sheet</h3>
+<p class="small">Enter the actual physical quantity counted. The system compares it with the expected balance.</p>
+<table class="inv-table">
+<thead><tr><th>Code</th><th>Input</th><th>Unit</th><th>Expected</th><th>Physical Count</th><th>Variance</th><th>Action</th></tr></thead>
+<tbody id="productionCountBody"></tbody>
+</table>
+
+<h3>4. Recipe Usage Link</h3>
+<p class="small">Manager links each sold product to its production inputs and quantity used per item sold. Once configured, POS sales drive the “Used via Sales” column.</p>
+<div class="order-head">
+<select id="piRecipeProduct" onchange="loadPIRecipe()"></select>
+<select id="piRecipeInput"></select>
+<input id="piRecipeQty" type="number" min="0.001" step="0.001" value="1" class="stock-input">
+<button class="primary" onclick="addPIRecipe()">LINK INPUT</button>
+</div>
+<div id="piRecipeList"></div>
+
+<button class="primary" onclick="printProductionInputs()">SAVE PRODUCTION INPUT REPORT AS PDF</button>
+</section>
+
+
+
+<section class="panel" id="usagePanel" style="grid-column:1/-1;display:none">
+<h2>Production Input Usage From Sales</h2>
+<p class="small">Shows which sold products consumed each production input based on the recipes configured by the Manager.</p>
+<div class="row" style="margin:8px 0">
+  <button type="button" class="primary" id="refreshUsageFromSalesBtn">REFRESH LIVE USAGE</button>
+  <span id="usageFromSalesStatus" class="small"></span>
+</div>
+<div style="overflow:auto">
+<table class="inv-table">
+<thead><tr>
+  <th>Date</th><th>Order</th><th>Final Product</th><th>Units Sold</th>
+  <th>Production Input</th><th>Qty per Product</th><th>Total Used</th><th>Unit</th>
+</tr></thead>
+<tbody id="usageFromSalesBody"></tbody>
+</table>
+</div>
+</section>
+
+
+<section class="panel" id="masterProductionEditorPanel" style="grid-column:1/-1">
+<h2>Master Production Inputs — Add / Edit Products</h2>
+<p class="small">Add new production inputs or edit existing production inputs. Changes are saved and used by recipes, stock movements, ledger, count sheet and reconciliation.</p>
+
+<div class="order-head">
+<label><b>Existing Input</b><br>
+<select id="masterEditSelect" style="min-width:280px">
+<option value="">-- Add New / Select Existing --</option>
+</select></label>
+
+<label><b>Code</b><br><input id="masterEditCode" style="width:120px" placeholder="RAW-023"></label>
+<label><b>Product / Input Name</b><br><input id="masterEditName" style="width:220px" placeholder="e.g. Cooking Oil"></label>
+<label><b>Category</b><br><input id="masterEditCategory" style="width:160px" value="Ingredient"></label>
+<label><b>Unit</b><br>
+<select id="masterEditUnit" style="width:110px">
+<option value="KG">KG</option><option value="G">G</option><option value="L">L</option>
+<option value="ML">ML</option><option value="EA">EA</option><option value="PACK">PACK</option>
+<option value="BOX">BOX</option><option value="500ML">500ML</option>
+</select></label>
+<label><b>Reorder Level</b><br><input id="masterEditReorder" type="number" min="0" step="0.001" value="5" style="width:110px"></label>
+
+<button type="button" class="primary" onclick="saveOldMasterInput()">SAVE INPUT</button>
+<button type="button" onclick="clearOldMasterEditor()">NEW INPUT</button>
+</div>
+
+<div style="overflow:auto;margin-top:12px">
+<table class="inv-table">
+<thead><tr><th>Code</th><th>Production Input</th><th>Category</th><th>Unit</th><th>Reorder Level</th><th>Action</th></tr></thead>
+<tbody id="oldMasterEditorBody"></tbody>
+</table>
+</div>
+</section>
+
+<section class="panel" id="sellableItemsEditorPanel" style="grid-column:1/-1;display:none">
+<h2>Sellable Items — Manager Edit</h2>
+<p class="small">Edit the sellable product name, category, selling price and active status. Existing product codes are locked to protect recipes and sales history.</p>
+<div class="order-head">
+<label><b>Existing Sellable Item</b><br><select id="sellableEditSelect" style="min-width:320px" onchange="loadSellableForEdit()"><option value="">-- Select Sellable Item --</option></select></label>
+<label><b>Code</b><br><input id="sellableEditCode" style="width:120px" placeholder="e.g. K12"></label>
+<label><b>Item Name</b><br><input id="sellableEditName" style="width:280px" placeholder="Sellable item name"></label>
+<label><b>Category</b><br><input id="sellableEditCategory" style="width:180px" placeholder="Category"></label>
+<label><b>Selling Price (R)</b><br><input id="sellableEditPrice" type="number" min="0" step="0.01" style="width:130px" value="0"></label>
+<label><b>Active on Sales Screen</b><br><select id="sellableEditActive" style="width:150px"><option value="true">YES</option><option value="false">NO</option></select></label>
+<button type="button" class="primary" onclick="saveSellableItemEdit()">SAVE ITEM</button>
+<button type="button" onclick="clearSellableItemEditor()">NEW ITEM</button>
+</div>
+<p id="sellableEditStatus" class="small"></p>
+<div style="overflow:auto;margin-top:12px"><table class="inv-table"><thead><tr><th>Code</th><th>Sellable Item</th><th>Category</th><th>Price</th><th>Active</th><th>Action</th></tr></thead><tbody id="sellableItemsEditorBody"></tbody></table></div>
+</section>
+
+<section class="panel" id="stockMovementPanel" style="grid-column:1/-1;display:none">
+<h2>Production Input Stock Movements</h2>
+<p class="small">Use this screen only for purchases/receipts. Stock Used is calculated automatically from POS sales and recipes.</p>
+<div class="order-head">
+<label>Date<br><input id="movementDate" type="date"></label>
+<label>Supplier<br><input id="movementSupplier" placeholder="Supplier name"></label>
+<label>Invoice / GRV No.<br><input id="movementRef" placeholder="Invoice / GRV"></label>
+<label>Production Input<br><select id="movementInput"></select></label>
+<label>Qty Received<br><input id="movementQty" type="number" min="0.001" step="0.001" value="1"></label>
+<label>Unit Cost<br><input id="movementCost" type="number" min="0" step="0.01" value="0"></label>
+<button class="primary" onclick="recordProductionReceipt()">RECORD RECEIPT</button>
+</div>
+<h3>Stock Receipt History</h3>
+<table class="inv-table"><thead><tr><th>Date</th><th>Supplier</th><th>Invoice / GRV</th><th>Input</th><th>Qty</th><th>Unit</th><th>Unit Cost</th><th>Total Cost</th><th>Received By</th></tr></thead>
+<tbody id="movementHistory"></tbody></table>
+</section>
+
+
+<section class="panel" id="recipePanel" style="grid-column:1/-1">
+<h2>Final Product → Production Inputs</h2>
+<p class="small">Select a final product first. Then add as many production inputs as you need. Each row is independent.</p>
+
+<div class="order-head">
+  <label><b>Final Product</b><br>
+    <select id="recipeFinalProduct" style="min-width:320px">
+      <option value="">-- Select Final Product --</option>
+      <option value="K1">K1 — Atchar/Lettuce + Chips + Polony + Special</option><option value="K2">K2 — Atchar/Lettuce + Chips + Polony + Special + Cheese</option><option value="K3">K3 — Atchar/Lettuce + Chips + Polony + Special + Vienna</option><option value="K4">K4 — Atchar/Lettuce + Chips + Vienna + Egg + Cheese</option><option value="K5">K5 — Atchar/Lettuce + Chips + Chicken Burger + Cheese</option><option value="K6">K6 — Atchar/Lettuce + Chips + Russian + Egg + Cheese</option><option value="K7">K7 — Atchar/Lettuce + Chips + Beef Burger + Cheese + Egg</option><option value="K8">K8 — Atchar/Lettuce + Chips + Polony + Russian + Vienna + Egg</option><option value="K9">K9 — Atchar/Lettuce + Chips + Beef Burger + Ham + Vienna + Egg + Cheese</option><option value="K10">K10 — Atchar/Lettuce + Chips + Polony + Beef Burger + Russian + Egg + Cheese</option><option value="K11">K11 — Atchar/Lettuce + Chips + Special + Polony + Russian + Vienna + Ham + Egg + Cheese</option><option value="RK1">RK1 — Rib Patty + Chips + Egg + Cheese</option><option value="RK2">RK2 — Rib Patty + Chips + Vienna + Cheese</option><option value="RK3">RK3 — Rib Patty + Chips + Ham + Cheese + Egg</option><option value="RK4">RK4 — Rib Patty + Chips + Egg + Russian + Bacon + Cheese</option><option value="RK5">RK5 — Rib Patty + Chips + Ham + Russian + Vienna + Cheese</option><option value="RK6">RK6 — Rib Patty + Chips + Beef Burger + Egg + Vienna + Russian + Cheese</option><option value="C01">C01 — Regular Chips</option><option value="C02">C02 — Medium Chips</option><option value="C03">C03 — Large Chips</option><option value="C04">C04 — Xtra-Large Chips</option><option value="C05">C05 — Jumbo Chips</option><option value="RC1">RC1 — Russian and Regular Chips</option><option value="RC2">RC2 — 2 x Russian and Regular Chips</option><option value="RC4">RC4 — 4 x Russian and Regular Chips</option><option value="RC5">RC5 — 5 x Russian and Regular Chips</option><option value="VC1">VC1 — 1 x Vienna and Regular Chips</option><option value="VC2">VC2 — 2 x Vienna and Regular Chips</option><option value="A01">A01 — Pork Rib Patty</option><option value="A02">A02 — Chicken Rib Patty</option><option value="A03">A03 — Egg</option><option value="A04">A04 — Russian</option><option value="A05">A05 — Vienna</option><option value="A06">A06 — Cheese</option><option value="A07">A07 — Beef Burger Patty</option><option value="A08">A08 — Chicken Burger Patty</option><option value="A09">A09 — Large Pop Corn</option><option value="A10">A10 — Medium Pop Corn</option><option value="RB1">RB1 — Rib Burger</option><option value="RB2">RB2 — Rib Burger Chips</option><option value="RB3">RB3 — Rib Burger Cheese Chips</option><option value="RB4">RB4 — Rib Burger Cheese Egg Chips</option><option value="RB5">RB5 — Rib Burger Bacon Egg Cheese Chips</option><option value="BB1">BB1 — Beef Burger Plain</option><option value="BB2">BB2 — Beef Burger with Chips</option><option value="BB3">BB3 — Beef Burger Cheese Chips</option><option value="BB4">BB4 — Beef Burger Egg Cheese Chips</option><option value="BB5">BB5 — Beef Burger Bacon Egg Cheese Chips</option><option value="CB1">CB1 — Chicken Burger Plain</option><option value="CB2">CB2 — Chicken Burger with Chips</option><option value="CB3">CB3 — Chicken Burger Cheese Chips</option><option value="CB4">CB4 — Chicken Burger Egg Cheese Chips</option><option value="CB5">CB5 — Chicken Burger x2 Egg Cheese Chips</option><option value="CK2">CK2 — Chips + Chicken Polony + Chicken Vienna + Cheese</option><option value="CK3">CK3 — Chips + Chicken Polony + Chicken Burger + Cheese + Egg</option><option value="CK4">CK4 — Chips + Chicken Polony + Chicken Vienna + Cheese + Egg</option><option value="CK5">CK5 — Chips + Chicken Polony + Chicken Vienna + Chicken Burger + Cheese</option><option value="CK6">CK6 — Chips + Chicken Polony + Chicken Burger + Chicken Vienna + Cheese + Egg</option><option value="CK7">CK7 — Chips + Chicken Polony + Chicken Rib Patty + Chicken Vienna + Cheese + Egg</option><option value="RW1">RW1 — Chips + Polony + Rib Patty + Special + Cheese</option><option value="RW2">RW2 — Chips + Polony + Rib Patty + Special + Egg + Cheese</option><option value="RW3">RW3 — Chips + Polony + Rib Patty + Russian + Cheese + Egg</option><option value="RW4">RW4 — Chips + Polony + Rib Patty + Ham + Vienna + Egg + Cheese</option><option value="CW1">CW1 — Lettuce + Tomato + Chicken Breast + Cheese</option><option value="CW2">CW2 — Lettuce + Tomato + Chicken Breast + Chicken Patty + Cheese</option><option value="CW3">CW3 — Lettuce + Tomato + Chicken Breast + Chicken Rib Patty + Cheese</option><option value="WR1">WR1 — 4 Chicken Wings + 2 Piece Rib with Value Chips</option><option value="WR2">WR2 — 8 Chicken Wings + 4 PCS Ribs with Value Chips</option><option value="WR3">WR3 — 10 Chicken Wings + 5 PCS Ribs with Value Chips</option><option value="W01">W01 — 4 Chicken Wings with Value Chips</option><option value="W02">W02 — 6 Chicken Wings with Value Chips</option><option value="W03">W03 — 12 Chicken Wings with Value Chips</option><option value="PR1">PR1 — 2 PCS BBQ Cocktail Rib with Value Chips</option><option value="PR2">PR2 — 3 PCS BBQ Cocktail Ribs with Value Chips</option><option value="PR3">PR3 — 5 PCS BBQ Cocktail Ribs with Value Chips</option><option value="PR4">PR4 — Full Rack Pork Rib with Regular Chips</option><option value="ICE-001">ICE-001 — ICup Tin Roof</option><option value="ICE-002">ICE-002 — ICup Mango</option><option value="ICE-003">ICE-003 — ICup Almond</option><option value="ICE-004">ICE-004 — ICup Pistachio Nuts</option><option value="ICE-005">ICE-005 — ICup Bufree</option><option value="ICE-006">ICE-006 — Polar Sundae</option><option value="ICE-007">ICE-007 — Polar I Cone</option><option value="ICE-008">ICE-008 — Milky Pie Almond</option><option value="ICE-009">ICE-009 — Maxi Choc Almond</option><option value="ICE-010">ICE-010 — Maxi White Almond</option><option value="ICE-011">ICE-011 — Maxi Classic</option><option value="ICE-012">ICE-012 — Cone Ice Cream</option><option value="ICE-013">ICE-013 — Cup Ice Cream</option><option value="ICE-014">ICE-014 — Bubblegum</option><option value="ICE-015">ICE-015 — Flavour Mania Cups</option><option value="ICE-016">ICE-016 — Jolly Jelly Ice Cream</option><option value="ICE-017">ICE-017 — Split Mix</option><option value="ICE-018">ICE-018 — Snow Pie</option><option value="ICE-019">ICE-019 — Rave Strawberry</option><option value="ICE-020">ICE-020 — Choc Overload</option><option value="ICE-021">ICE-021 — Banana Berry</option><option value="ICE-022">ICE-022 — Banana Split</option><option value="ICE-023">ICE-023 — Ice Cream Panda Pops</option><option value="ICE-024">ICE-024 — Polar Eish</option><option value="ICE-025">ICE-025 — Three in One</option><option value="ICE-026">ICE-026 — Polar Split</option><option value="ICE-027">ICE-027 — Litchilik</option><option value="ICE-028">ICE-028 — Custard & Jelly</option><option value="ICE-029">ICE-029 — Milky Mix</option><option value="ICE-030">ICE-030 — Rave Blackcurrant</option><option value="ICE-031">ICE-031 — Caramello</option><option value="ICE-032">ICE-032 — Choc 99</option><option value="ICE-033">ICE-033 — Fruity Licks Mix</option><option value="ICE-034">ICE-034 — Polar Raspberry</option><option value="ICE-035">ICE-035 — Polar Pop Orange</option><option value="ICE-036">ICE-036 — Polar Tropaz</option><option value="ICE-037">ICE-037 — Polar Apple</option><option value="ICE-038">ICE-038 — Polar Pineapple</option><option value="ICE-039">ICE-039 — Grandelch</option><option value="ICE-040">ICE-040 — Top Hat</option><option value="ICE-041">ICE-041 — Polar Pop</option><option value="ICE-042">ICE-042 — Banana and Strawberry 500ml</option><option value="ICE-043">ICE-043 — Vanilla and Strawberry 500ml</option><option value="ICE-044">ICE-044 — Vanilla Flavoured 500ml</option><option value="ICE-045">ICE-045 — Chocolate, Vanilla and Strawberry 500ml</option><option value="ICE-046">ICE-046 — Chocolate and Vanilla 500ml</option><option value="ICE-047">ICE-047 — Caramel Dip</option><option value="ICE-048">ICE-048 — Nice Cream 500ml Banana Split</option><option value="ICE-049">ICE-049 — Nice Cream 500ml Vanilla</option><option value="ICE-050">ICE-050 — Nice Cream 500ml Vanilla/Strawberry</option><option value="ICE-051">ICE-051 — Milky Pie</option>
+    </select>
+  </label>
+</div>
+
+<div id="recipeBuilderArea" style="display:none;margin-top:12px">
+  <h3>Production Inputs Used</h3>
+  <div id="recipeInputRows"></div>
+  <button type="button" class="cat" onclick="addRecipeInputRowOld()">+ ADD PRODUCTION INPUT</button>
+  <button type="button" class="primary" onclick="saveOldLayoutRecipe()">SAVE RECIPE</button>
+</div>
+
+<div id="savedRecipeOld" style="margin-top:12px"></div>
+</section>
+
+<section class="panel" id="reconPanel" style="grid-column:1/-1;display:none">
+<h2>Inventory & Stock Count Reconciliation</h2>
+<p class="small">Reconciles opening stock, purchases/stock-in, POS usage/sales, expected closing stock and physical stock count. Variances are highlighted for investigation.</p>
+<div class="inventory-actions">
+<button class="cat active" onclick="showRecon('finished',this)">Finished Products</button>
+<button class="cat" onclick="showRecon('raw',this)">Production Inputs</button>
+<button class="primary" onclick="printRecon()">SAVE RECONCILIATION AS PDF</button>
+</div>
+<div id="reconContent"></div>
+</section>
+
+<section class="panel" id="reportsPanel" style="grid-column:1/-1;display:none">
+<h2>Sales & Inventory Reports</h2><p class="small">Reports can be printed or saved as PDF using your browser print dialog. Select <b>Save as PDF</b> as the printer/destination.</p>
+<div class="inventory-actions">
+<button class="cat active" onclick="showReport('sales',this)">Sales Report</button>
+<button class="cat" onclick="showReport('inventory',this)">Inventory Report</button>
+<button class="cat" onclick="showReport('variance',this)">Variance Report</button>
+<button class="cat" onclick="showReport('reorder',this)">Reorder Report</button>
+<button class="primary" onclick="printCurrentReport()">SAVE REPORT AS PDF</button>
+<button class="secondary" onclick="printCurrentReport()">PRINT REPORT</button>
+</div>
+<div id="reportContent"></div>
+</section>
+
+
+<div id="managerInventoryNav" class="panel" style="grid-column:1/-1;display:none">
+  <h2>Manager — Inventory & Reports</h2>
+  <p class="small">Quick access to production inputs, usage, stock movements, reconciliation and reports.</p>
+  <div class="inventory-actions">
+    <button type="button" class="cat" data-manager-target="productionInputsPanel">PRODUCTION INPUT STOCK</button>
+    <button type="button" class="cat" data-manager-target="usagePanel">USAGE FROM SALES</button>
+    <button type="button" class="cat" data-manager-target="stockMovementPanel">STOCK MOVEMENTS</button>
+    <button type="button" class="cat" data-manager-target="reconPanel">STOCK RECONCILIATION</button>
+    <button type="button" class="cat" data-manager-target="reportsPanel">SALES & INVENTORY REPORTS</button>
+  </div>
+</div>
+
+<section class="panel" id="accessPanel" style="grid-column:1/-1;display:none">
+  <h2>Access Rights & User Management</h2>
+  <table class="inv-table">
+    <thead><tr><th>Function</th><th>Salesperson</th><th>Manager</th></tr></thead>
+    <tbody>
+      <tr><td>Process sales</td><td>✓</td><td>✓</td></tr>
+      <tr><td>Print receipts</td><td>✓</td><td>✓</td></tr>
+      <tr><td>View own/current sales</td><td>✓</td><td>✓</td></tr>
+      <tr><td>Discounts</td><td>Manager approval</td><td>✓</td></tr>
+      <tr><td>Void / cancel completed sale</td><td>Manager approval</td><td>✓</td></tr>
+      <tr><td>Stock In</td><td>✗</td><td>✓</td></tr>
+      <tr><td>Physical stock counts</td><td>✗</td><td>✓</td></tr>
+      <tr><td>Inventory adjustments</td><td>✗</td><td>✓</td></tr>
+      <tr><td>View variances</td><td>✗</td><td>✓</td></tr>
+      <tr><td>View reorder list</td><td>✗</td><td>✓</td></tr>
+      <tr><td>View sales dashboard</td><td>Limited</td><td>✓</td></tr>
+      <tr><td>Cash-up</td><td>✗</td><td>✓</td></tr>
+      <tr><td>User/access management</td><td>✗</td><td>✓</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="receiptPrint" class="panel receipt-only" style="display:block;grid-column:1/-1"></section>
+</div>
+
+<script>
+
+let recipes=JSON.parse(localStorage.getItem('feastervilleRecipes')||'{}');
+function initRecipes(){
+  products.forEach(p=>{if(!recipes[p.code])recipes[p.code]=[];});
+  localStorage.setItem('feastervilleRecipes',JSON.stringify(recipes));
+  const sel=document.getElementById('recipeProduct');
+  if(sel){
+    sel.innerHTML=products.map(p=>`<option value="${p.code}">${p.code} — ${p.name}</option>`).join('');
+    loadRecipe();
+  }
+}
+function loadRecipe(){
+  const code=document.getElementById('recipeProduct').value;
+  const input=document.getElementById('recipeInput');
+  const masterInputs=(typeof getRecipeMasterInputs==='function'?getRecipeMasterInputs():rawMaterials);
+  input.innerHTML=masterInputs.map(p=>`<option value="${p.code}">${p.code} — ${p.name} (${p.unit||''})</option>`).join('');
+  const list=recipes[code]||[];
+  document.getElementById('recipeList').innerHTML=`
+    <table class="inv-table"><thead><tr><th>Input Code</th><th>Raw Material</th><th>Qty per 1 Sold</th><th>Unit</th><th>Action</th></tr></thead>
+    <tbody>${list.length?list.map((x,i)=>{
+      const p=(typeof getRecipeMasterInputs==='function'?getRecipeMasterInputs():rawMaterials).find(r=>r.code===x.inputCode);
+      return `<tr><td>${x.inputCode}</td><td>${p?p.name:'Unknown'}</td><td>${x.qty}</td><td>${p?p.unit:''}</td><td><button class="remove" onclick="removeRecipeInput(${i})">REMOVE</button></td></tr>`;
+    }).join(''):'<tr><td colspan="5">No production inputs linked yet.</td></tr>'}</tbody></table>`;
+}
+async function addRecipeInput(){
+  const product=document.getElementById('recipeProduct').value;
+  const inputCode=document.getElementById('recipeInput').value;
+  const qty=Number(document.getElementById('recipeQty').value||0);
+  if(!product||!inputCode||qty<=0)return;
+  if(!recipes[product])recipes[product]=[];
+  const existing=recipes[product].find(x=>x.inputCode===inputCode);
+  if(existing)existing.qty+=qty; else recipes[product].push({inputCode,qty});
+  localStorage.setItem('feastervilleRecipes',JSON.stringify(recipes));
+  try{if(typeof pushState==='function')await pushState('recipes',recipes);}catch(e){console.error('Recipe cloud save failed',e);}
+  loadRecipe();
+}
+async function removeRecipeInput(i){
+  const product=document.getElementById('recipeProduct').value;
+  recipes[product].splice(i,1);
+  localStorage.setItem('feastervilleRecipes',JSON.stringify(recipes));
+  try{if(typeof pushState==='function')await pushState('recipes',recipes);}catch(e){console.error('Recipe cloud save failed',e);}
+  loadRecipe();
+}
+function showRecipePanel(){
+  if(currentUser && currentUser.role==='manager'){
+    document.getElementById('recipePanel').style.display='block';
+    initRecipes();
+  }
+}
+
+
+let users=[
+  {id:'USR001',name:'Manager',username:'manager',password:'admin123',role:'manager',active:true},
+  {id:'USR002',name:'Salesperson 1',username:'salesperson1',password:'1234',role:'salesperson',active:true}
+];
+localStorage.setItem('feastervilleUsers',JSON.stringify(users));
+function saveUsers(){localStorage.setItem('feastervilleUsers',JSON.stringify(users));}
+function createUser(){
+ if(!currentUser || currentUser.role!=='manager'){alert('Manager access required.');return;}
+ const name=document.getElementById('newEmpName').value.trim();
+ const username=document.getElementById('newUsername').value.trim().toLowerCase();
+ const password=document.getElementById('newPassword').value;
+ const role=document.getElementById('newRole').value;
+ if(!name||!username||!password){alert('Please complete all user fields.');return;}
+ if(users.some(u=>u.username===username)){alert('Username already exists.');return;}
+ const id='USR'+String(users.length+1).padStart(3,'0');
+ users.push({id,name,username,password,role,active:true});
+ saveUsers(); document.getElementById('newEmpName').value='';document.getElementById('newUsername').value='';document.getElementById('newPassword').value='';
+ renderUsers();
+}
+function renderUsers(){
+ const box=document.getElementById('userList');
+ if(!box)return;
+ box.innerHTML='<table class="inv-table"><thead><tr><th>Employee</th><th>Username</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+
+ users.map(u=>'<tr><td>'+u.name+'</td><td>'+u.username+'</td><td>'+u.role+'</td><td>'+(u.active?'<span class="badge ok">ACTIVE</span>':'<span class="badge bad">INACTIVE</span>')+
+ '</td><td><button onclick="toggleUser(\''+u.id+'\')">'+(u.active?'DEACTIVATE':'ACTIVATE')+'</button> <button onclick="resetUserPassword(\''+u.id+'\')">RESET PASSWORD</button></td></tr>').join('')+
+ '</tbody></table>';
+}
+function toggleUser(id){
+ const u=users.find(x=>x.id===id); if(!u)return;
+ if(u.username==='manager'){alert('The main manager account cannot be deactivated here.');return;}
+ u.active=!u.active;saveUsers();renderUsers();
+}
+function resetUserPassword(id){
+ const u=users.find(x=>x.id===id);if(!u)return;
+ const pw=prompt('Enter new temporary password for '+u.name+':');
+ if(pw){u.password=pw;saveUsers();alert('Password reset successfully.');}
+}
+function showUserPanel(){
+ if(currentUser && currentUser.role==='manager'){
+  document.getElementById('userPanel').style.display='block';renderUsers();
+ }
+}
+
+let currentUser=JSON.parse(sessionStorage.getItem('feastervilleUser')||'null');
+const userRights={
+ salesperson:{label:'Salesperson',password:'1234',inventory:false,cashup:false,access:false,discount:false},
+ manager:{label:'Manager',password:'admin123',inventory:true,cashup:true,access:true,discount:true}
+};
+function fillLogin(username,password,role){
+  const r=document.getElementById('loginRole');
+  const u=document.getElementById('loginUsername');
+  const p=document.getElementById('loginPassword');
+  if(r)r.value=role;
+  if(u)u.value=username;
+  if(p)p.value=password;
+  const e=document.getElementById('loginError');
+  if(e)e.textContent='';
+}
+function login(){
+  const role=(document.getElementById('loginRole')?.value||'').trim().toLowerCase();
+  const username=(document.getElementById('loginUsername')?.value||'').trim().toLowerCase();
+  const pw=document.getElementById('loginPassword')?.value||'';
+
+  const canonicalUsers=[
+    {id:'USR001',name:'Manager',username:'manager',password:'admin123',role:'manager',active:true},
+    {id:'USR002',name:'Salesperson 1',username:'salesperson1',password:'1234',role:'salesperson',active:true}
+  ];
+
+  const u=canonicalUsers.find(function(x){
+    return x.role===role && x.username===username && x.password===pw;
+  });
+
+  if(!u){
+    const err=document.getElementById('loginError');
+    if(err)err.textContent='Login failed. Use manager / admin123 or salesperson1 / 1234.';
+    return false;
+  }
+
+  currentUser={
+    id:u.id,
+    username:u.username,
+    name:u.name,
+    role:u.role,
+    label:u.role==='manager'?'Manager: '+u.name:'Salesperson: '+u.name
+  };
+  window.currentUser=currentUser;
+
+  try{sessionStorage.setItem('feastervilleUser',JSON.stringify(currentUser));}catch(e){}
+
+  const err=document.getElementById('loginError');
+  if(err)err.textContent='';
+
+  const screen=document.getElementById('loginScreen');
+  if(screen)screen.style.display='none';
+
+  const badge=document.getElementById('userBadge');
+  if(badge)badge.textContent=currentUser.label;
+
+  try{if(typeof applyRights==='function')applyRights();}catch(e){console.warn('applyRights skipped',e);}
+  try{if(typeof showProductionInputs==='function')showProductionInputs();}catch(e){}
+  try{if(typeof initStockMovement==='function')initStockMovement();}catch(e){}
+  try{if(typeof easyInit==='function')easyInit();}catch(e){}
+  try{if(typeof render==='function')render();}catch(e){}
+  try{if(typeof summary==='function')summary();}catch(e){}
+
+  return true;
+}
+function logout(){sessionStorage.removeItem('feastervilleUser');location.reload();}
+function applyRights(){
+ if(!currentUser){document.getElementById('loginScreen').style.display='flex';return;}
+ document.getElementById('loginScreen').style.display='none';
+ document.getElementById('userBadge').textContent=currentUser.label;
+ const manager=currentUser.role==='manager';
+ document.getElementById('accessPanel').style.display=manager?'block':'none'; document.getElementById('recipePanel').style.display=manager?'block':'none'; document.getElementById('reportsPanel').style.display=manager?'block':'none'; document.getElementById('userPanel').style.display=manager?'block':'none'; document.getElementById('reconPanel').style.display=manager?'block':'none'; document.getElementById('productionInputsPanel').style.display=manager?'block':'none'; document.getElementById('stockMovementPanel').style.display=manager?'block':'none'; document.getElementById('usagePanel').style.display=manager?'block':'none'; document.getElementById('easyLinkPanel').style.display=manager?'block':'none'; if(manager && document.getElementById('userList') && typeof renderUsers==='function'){try{renderUsers();}catch(e){console.warn(e);}}
+ document.querySelectorAll('.inventory-panel').forEach(el=>el.style.display=manager?'block':'none');
+ // Salesperson can use selling screen, but discount is manager-controlled.
+ const discount=document.getElementById('discount');
+ if(discount){
+   discount.disabled=!manager;
+   discount.title=manager?'Manager discount enabled':'Manager approval required for discounts';
+ }
+}
+
+const products=[{"category": "REGULAR KOTA", "code": "K1", "name": "Atchar/Lettuce + Chips + Polony + Special", "price": 20.0}, {"category": "REGULAR KOTA", "code": "K2", "name": "Atchar/Lettuce + Chips + Polony + Special + Cheese", "price": 25.0}, {"category": "REGULAR KOTA", "code": "K3", "name": "Atchar/Lettuce + Chips + Polony + Special + Vienna", "price": 28.0}, {"category": "REGULAR KOTA", "code": "K4", "name": "Atchar/Lettuce + Chips + Vienna + Egg + Cheese", "price": 30.0}, {"category": "REGULAR KOTA", "code": "K5", "name": "Atchar/Lettuce + Chips + Chicken Burger + Cheese", "price": 33.0}, {"category": "REGULAR KOTA", "code": "K6", "name": "Atchar/Lettuce + Chips + Russian + Egg + Cheese", "price": 36.0}, {"category": "REGULAR KOTA", "code": "K7", "name": "Atchar/Lettuce + Chips + Beef Burger + Cheese + Egg", "price": 40.0}, {"category": "REGULAR KOTA", "code": "K8", "name": "Atchar/Lettuce + Chips + Polony + Russian + Vienna + Egg", "price": 45.0}, {"category": "REGULAR KOTA", "code": "K9", "name": "Atchar/Lettuce + Chips + Beef Burger + Ham + Vienna + Egg + Cheese", "price": 49.0}, {"category": "REGULAR KOTA", "code": "K10", "name": "Atchar/Lettuce + Chips + Polony + Beef Burger + Russian + Egg + Cheese", "price": 55.0}, {"category": "REGULAR KOTA", "code": "K11", "name": "Atchar/Lettuce + Chips + Special + Polony + Russian + Vienna + Ham + Egg + Cheese", "price": 60.0}, {"category": "RIB PATTY KOTA", "code": "RK1", "name": "Rib Patty + Chips + Egg + Cheese", "price": 40.0}, {"category": "RIB PATTY KOTA", "code": "RK2", "name": "Rib Patty + Chips + Vienna + Cheese", "price": 45.0}, {"category": "RIB PATTY KOTA", "code": "RK3", "name": "Rib Patty + Chips + Ham + Cheese + Egg", "price": 53.0}, {"category": "RIB PATTY KOTA", "code": "RK4", "name": "Rib Patty + Chips + Egg + Russian + Bacon + Cheese", "price": 62.0}, {"category": "RIB PATTY KOTA", "code": "RK5", "name": "Rib Patty + Chips + Ham + Russian + Vienna + Cheese", "price": 68.0}, {"category": "RIB PATTY KOTA", "code": "RK6", "name": "Rib Patty + Chips + Beef Burger + Egg + Vienna + Russian + Cheese", "price": 75.0}, {"category": "CHIPS", "code": "C01", "name": "Regular Chips", "price": 20.0}, {"category": "CHIPS", "code": "C02", "name": "Medium Chips", "price": 30.0}, {"category": "CHIPS", "code": "C03", "name": "Large Chips", "price": 40.0}, {"category": "CHIPS", "code": "C04", "name": "Xtra-Large Chips", "price": 50.0}, {"category": "CHIPS", "code": "C05", "name": "Jumbo Chips", "price": 60.0}, {"category": "RUSSIAN & CHIPS", "code": "RC1", "name": "Russian and Regular Chips", "price": 30.0}, {"category": "RUSSIAN & CHIPS", "code": "RC2", "name": "2 x Russian and Regular Chips", "price": 40.0}, {"category": "RUSSIAN & CHIPS", "code": "RC4", "name": "4 x Russian and Regular Chips", "price": 50.0}, {"category": "RUSSIAN & CHIPS", "code": "RC5", "name": "5 x Russian and Regular Chips", "price": 60.0}, {"category": "VIENNA & CHIPS", "code": "VC1", "name": "1 x Vienna and Regular Chips", "price": 29.0}, {"category": "VIENNA & CHIPS", "code": "VC2", "name": "2 x Vienna and Regular Chips", "price": 38.0}, {"category": "ADD-ONS", "code": "A01", "name": "Pork Rib Patty", "price": 20.0}, {"category": "ADD-ONS", "code": "A02", "name": "Chicken Rib Patty", "price": 20.0}, {"category": "ADD-ONS", "code": "A03", "name": "Egg", "price": 5.0}, {"category": "ADD-ONS", "code": "A04", "name": "Russian", "price": 13.0}, {"category": "ADD-ONS", "code": "A05", "name": "Vienna", "price": 10.0}, {"category": "ADD-ONS", "code": "A06", "name": "Cheese", "price": 5.0}, {"category": "ADD-ONS", "code": "A07", "name": "Beef Burger Patty", "price": 18.0}, {"category": "ADD-ONS", "code": "A08", "name": "Chicken Burger Patty", "price": 12.0}, {"category": "ADD-ONS", "code": "A09", "name": "Large Pop Corn", "price": 8.0}, {"category": "ADD-ONS", "code": "A10", "name": "Medium Pop Corn", "price": 6.0}, {"category": "RIB BURGER", "code": "RB1", "name": "Rib Burger", "price": 35.0}, {"category": "RIB BURGER", "code": "RB2", "name": "Rib Burger Chips", "price": 42.0}, {"category": "RIB BURGER", "code": "RB3", "name": "Rib Burger Cheese Chips", "price": 48.0}, {"category": "RIB BURGER", "code": "RB4", "name": "Rib Burger Cheese Egg Chips", "price": 55.0}, {"category": "RIB BURGER", "code": "RB5", "name": "Rib Burger Bacon Egg Cheese Chips", "price": 60.0}, {"category": "BEEF BURGER", "code": "BB1", "name": "Beef Burger Plain", "price": 28.0}, {"category": "BEEF BURGER", "code": "BB2", "name": "Beef Burger with Chips", "price": 36.0}, {"category": "BEEF BURGER", "code": "BB3", "name": "Beef Burger Cheese Chips", "price": 42.0}, {"category": "BEEF BURGER", "code": "BB4", "name": "Beef Burger Egg Cheese Chips", "price": 49.0}, {"category": "BEEF BURGER", "code": "BB5", "name": "Beef Burger Bacon Egg Cheese Chips", "price": 58.0}, {"category": "CHICKEN BURGER", "code": "CB1", "name": "Chicken Burger Plain", "price": 25.0}, {"category": "CHICKEN BURGER", "code": "CB2", "name": "Chicken Burger with Chips", "price": 35.0}, {"category": "CHICKEN BURGER", "code": "CB3", "name": "Chicken Burger Cheese Chips", "price": 40.0}, {"category": "CHICKEN BURGER", "code": "CB4", "name": "Chicken Burger Egg Cheese Chips", "price": 44.0}, {"category": "CHICKEN BURGER", "code": "CB5", "name": "Chicken Burger x2 Egg Cheese Chips", "price": 55.0}, {"category": "CHICKEN KOTA", "code": "CK2", "name": "Chips + Chicken Polony + Chicken Vienna + Cheese", "price": 32.0}, {"category": "CHICKEN KOTA", "code": "CK3", "name": "Chips + Chicken Polony + Chicken Burger + Cheese + Egg", "price": 35.0}, {"category": "CHICKEN KOTA", "code": "CK4", "name": "Chips + Chicken Polony + Chicken Vienna + Cheese + Egg", "price": 40.0}, {"category": "CHICKEN KOTA", "code": "CK5", "name": "Chips + Chicken Polony + Chicken Vienna + Chicken Burger + Cheese", "price": 47.0}, {"category": "CHICKEN KOTA", "code": "CK6", "name": "Chips + Chicken Polony + Chicken Burger + Chicken Vienna + Cheese + Egg", "price": 55.0}, {"category": "CHICKEN KOTA", "code": "CK7", "name": "Chips + Chicken Polony + Chicken Rib Patty + Chicken Vienna + Cheese + Egg", "price": 65.0}, {"category": "RIB WRAP KOTA", "code": "RW1", "name": "Chips + Polony + Rib Patty + Special + Cheese", "price": 42.0}, {"category": "RIB WRAP KOTA", "code": "RW2", "name": "Chips + Polony + Rib Patty + Special + Egg + Cheese", "price": 47.0}, {"category": "RIB WRAP KOTA", "code": "RW3", "name": "Chips + Polony + Rib Patty + Russian + Cheese + Egg", "price": 55.0}, {"category": "RIB WRAP KOTA", "code": "RW4", "name": "Chips + Polony + Rib Patty + Ham + Vienna + Egg + Cheese", "price": 60.0}, {"category": "CHICKEN WRAP", "code": "CW1", "name": "Lettuce + Tomato + Chicken Breast + Cheese", "price": 35.0}, {"category": "CHICKEN WRAP", "code": "CW2", "name": "Lettuce + Tomato + Chicken Breast + Chicken Patty + Cheese", "price": 40.0}, {"category": "CHICKEN WRAP", "code": "CW3", "name": "Lettuce + Tomato + Chicken Breast + Chicken Rib Patty + Cheese", "price": 55.0}, {"category": "WINGS & RIBS COMBO", "code": "WR1", "name": "4 Chicken Wings + 2 Piece Rib with Value Chips", "price": 65.0}, {"category": "WINGS & RIBS COMBO", "code": "WR2", "name": "8 Chicken Wings + 4 PCS Ribs with Value Chips", "price": 96.0}, {"category": "WINGS & RIBS COMBO", "code": "WR3", "name": "10 Chicken Wings + 5 PCS Ribs with Value Chips", "price": 130.0}, {"category": "CHICKEN WINGS", "code": "W01", "name": "4 Chicken Wings with Value Chips", "price": 40.0}, {"category": "CHICKEN WINGS", "code": "W02", "name": "6 Chicken Wings with Value Chips", "price": 52.0}, {"category": "CHICKEN WINGS", "code": "W03", "name": "12 Chicken Wings with Value Chips", "price": 85.0}, {"category": "BBQ PORK RIBS", "code": "PR1", "name": "2 PCS BBQ Cocktail Rib with Value Chips", "price": 50.0}, {"category": "BBQ PORK RIBS", "code": "PR2", "name": "3 PCS BBQ Cocktail Ribs with Value Chips", "price": 60.0}, {"category": "BBQ PORK RIBS", "code": "PR3", "name": "5 PCS BBQ Cocktail Ribs with Value Chips", "price": 90.0}, {"category": "BBQ PORK RIBS", "code": "PR4", "name": "Full Rack Pork Rib with Regular Chips", "price": 210.0}, {"category": "ICE CREAM", "code": "ICE-001", "name": "ICup Tin Roof", "price": 25.0}, {"category": "ICE CREAM", "code": "ICE-002", "name": "ICup Mango", "price": 25.0}, {"category": "ICE CREAM", "code": "ICE-003", "name": "ICup Almond", "price": 25.0}, {"category": "ICE CREAM", "code": "ICE-004", "name": "ICup Pistachio Nuts", "price": 25.0}, {"category": "ICE CREAM", "code": "ICE-005", "name": "ICup Bufree", "price": 25.0}, {"category": "ICE CREAM", "code": "ICE-006", "name": "Polar Sundae", "price": 15.0}, {"category": "ICE CREAM", "code": "ICE-007", "name": "Polar I Cone", "price": 20.0}, {"category": "ICE CREAM", "code": "ICE-008", "name": "Milky Pie Almond", "price": 15.0}, {"category": "ICE CREAM", "code": "ICE-009", "name": "Maxi Choc Almond", "price": 25.0}, {"category": "ICE CREAM", "code": "ICE-010", "name": "Maxi White Almond", "price": 25.0}, {"category": "ICE CREAM", "code": "ICE-011", "name": "Maxi Classic", "price": 25.0}, {"category": "ICE CREAM", "code": "ICE-012", "name": "Cone Ice Cream", "price": 7.0}, {"category": "ICE CREAM", "code": "ICE-013", "name": "Cup Ice Cream", "price": 10.0}, {"category": "ICE CREAM", "code": "ICE-014", "name": "Bubblegum", "price": 10.0}, {"category": "ICE CREAM", "code": "ICE-015", "name": "Flavour Mania Cups", "price": 12.0}, {"category": "ICE CREAM", "code": "ICE-016", "name": "Jolly Jelly Ice Cream", "price": 10.0}, {"category": "ICE CREAM", "code": "ICE-017", "name": "Split Mix", "price": 8.0}, {"category": "ICE CREAM", "code": "ICE-018", "name": "Snow Pie", "price": 12.0}, {"category": "ICE CREAM", "code": "ICE-019", "name": "Rave Strawberry", "price": 10.0}, {"category": "ICE CREAM", "code": "ICE-020", "name": "Choc Overload", "price": 10.0}, {"category": "ICE CREAM", "code": "ICE-021", "name": "Banana Berry", "price": 10.0}, {"category": "ICE CREAM", "code": "ICE-022", "name": "Banana Split", "price": 10.0}, {"category": "ICE CREAM", "code": "ICE-023", "name": "Ice Cream Panda Pops", "price": 7.0}, {"category": "ICE CREAM", "code": "ICE-024", "name": "Polar Eish", "price": 10.0}, {"category": "ICE CREAM", "code": "ICE-025", "name": "Three in One", "price": 10.0}, {"category": "ICE CREAM", "code": "ICE-026", "name": "Polar Split", "price": 10.0}, {"category": "ICE CREAM", "code": "ICE-027", "name": "Litchilik", "price": 10.0}, {"category": "ICE CREAM", "code": "ICE-028", "name": "Custard & Jelly", "price": 10.0}, {"category": "ICE CREAM", "code": "ICE-029", "name": "Milky Mix", "price": 10.0}, {"category": "ICE CREAM", "code": "ICE-030", "name": "Rave Blackcurrant", "price": 10.0}, {"category": "ICE CREAM", "code": "ICE-031", "name": "Caramello", "price": 15.0}, {"category": "ICE CREAM", "code": "ICE-032", "name": "Choc 99", "price": 15.0}, {"category": "ICE CREAM", "code": "ICE-033", "name": "Fruity Licks Mix", "price": 10.0}, {"category": "ICE CREAM", "code": "ICE-034", "name": "Polar Raspberry", "price": 10.0}, {"category": "ICE CREAM", "code": "ICE-035", "name": "Polar Pop Orange", "price": 10.0}, {"category": "ICE CREAM", "code": "ICE-036", "name": "Polar Tropaz", "price": 10.0}, {"category": "ICE CREAM", "code": "ICE-037", "name": "Polar Apple", "price": 10.0}, {"category": "ICE CREAM", "code": "ICE-038", "name": "Polar Pineapple", "price": 10.0}, {"category": "ICE CREAM", "code": "ICE-039", "name": "Grandelch", "price": 10.0}, {"category": "ICE CREAM", "code": "ICE-040", "name": "Top Hat", "price": 10.0}, {"category": "ICE CREAM", "code": "ICE-041", "name": "Polar Pop", "price": 10.0}, {"category": "ICE CREAM", "code": "ICE-042", "name": "Banana and Strawberry 500ml", "price": 25.0}, {"category": "ICE CREAM", "code": "ICE-043", "name": "Vanilla and Strawberry 500ml", "price": 25.0}, {"category": "ICE CREAM", "code": "ICE-044", "name": "Vanilla Flavoured 500ml", "price": 25.0}, {"category": "ICE CREAM", "code": "ICE-045", "name": "Chocolate, Vanilla and Strawberry 500ml", "price": 25.0}, {"category": "ICE CREAM", "code": "ICE-046", "name": "Chocolate and Vanilla 500ml", "price": 25.0}, {"category": "ICE CREAM", "code": "ICE-047", "name": "Caramel Dip", "price": 12.0}, {"category": "ICE CREAM", "code": "ICE-048", "name": "Nice Cream 500ml Banana Split", "price": 15.0}, {"category": "ICE CREAM", "code": "ICE-049", "name": "Nice Cream 500ml Vanilla", "price": 15.0}, {"category": "ICE CREAM", "code": "ICE-050", "name": "Nice Cream 500ml Vanilla/Strawberry", "price": 15.0}, {"category": "ICE CREAM", "code": "ICE-051", "name": "Milky Pie", "price": 12.0}];
+let cart=[];
+let sales=JSON.parse(localStorage.getItem('feastervilleSales')||'[]');
+let orderCounter=Number(localStorage.getItem('feastervilleOrderNo')||0)+1;
+document.getElementById('date').value=new Date().toISOString().slice(0,10);
+document.getElementById('orderNo').textContent='Order #'+String(orderCounter).padStart(4,'0');
+
+const money=n=>'R'+Number(n||0).toFixed(2);
+function cats(){
+ const c=['ALL',...new Set(products.filter(p=>p.active!==false).map(p=>p.category))];
+ document.getElementById('categories').innerHTML=c.map(x=>`<button class="cat ${x==='ALL'?'active':''}" onclick="filterCat('${x.replaceAll("'","\\'")}',this)">${x}</button>`).join('');
+}
+function filterCat(cat,btn){
+ document.querySelectorAll('.cat').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
+ document.getElementById('products').innerHTML=products.filter(p=>p.active!==false && (cat==='ALL'||p.category===cat)).map(p=>`
+ <button class="product" onclick="add('${p.code}')"><span class="name">${p.code} — ${p.name}</span><span class="price">${money(p.price)}</span></button>`).join('');
+}
+function add(code){
+ const p=products.find(x=>x.code===code); if(!p)return;
+ const x=cart.find(i=>i.code===code); if(x)x.qty++; else cart.push({...p,qty:1});
+ render();
+}
+function changeQty(code,d){
+ const x=cart.find(i=>i.code===code); if(!x)return;
+ x.qty+=d; if(x.qty<=0)cart=cart.filter(i=>i.code!==code); render();
+}
+function clearCart(){cart=[];render()}
+function render(){
+ document.getElementById('cart').innerHTML=cart.map(i=>`<tr><td><b>${i.code}</b><br><span class="small">${i.name}</span></td>
+ <td class="qty"><button onclick="changeQty('${i.code}',-1)">−</button> ${i.qty} <button onclick="changeQty('${i.code}',1)">+</button></td>
+ <td>${money(i.qty*i.price)}</td><td><button class="remove" onclick="changeQty('${i.code}',-999)">×</button></td></tr>`).join('');
+ const sub=cart.reduce((s,i)=>s+i.qty*i.price,0), disc=Number(document.getElementById('discount').value||0), total=Math.max(sub-disc,0), rec=Number(document.getElementById('received').value||0);
+ document.getElementById('subtotal').textContent=money(sub); document.getElementById('total').textContent=money(total); document.getElementById('change').textContent=money(Math.max(rec-total,0));
+}
+function renderSellableItemsEditor(){
+ const sel=document.getElementById('sellableEditSelect'), body=document.getElementById('sellableItemsEditorBody');
+ if(!sel||!body)return;
+ const current=sel.value;
+ sel.innerHTML='<option value="">-- Select Sellable Item --</option>'+products.map(p=>`<option value="${p.code}">${p.code} — ${p.name}</option>`).join('');
+ if(products.some(p=>p.code===current))sel.value=current;
+ body.innerHTML=products.map(p=>`<tr><td>${p.code}</td><td>${p.name}</td><td>${p.category||''}</td><td>${money(p.price)}</td><td>${p.active===false?'NO':'YES'}</td><td><button type="button" onclick="editSellableItem('${p.code.replaceAll("'","\\'")}')">EDIT</button></td></tr>`).join('');
+}
+function clearSellableItemEditor(){
+ const sel=document.getElementById('sellableEditSelect'); if(sel)sel.value='';
+ const code=document.getElementById('sellableEditCode'); if(code){code.value='';code.disabled=false;}
+ document.getElementById('sellableEditName').value='';
+ document.getElementById('sellableEditCategory').value='';
+ document.getElementById('sellableEditPrice').value='0';
+ document.getElementById('sellableEditActive').value='true';
+ document.getElementById('sellableEditStatus').textContent='';
+}
+function editSellableItem(code){
+ const p=products.find(x=>x.code===code); if(!p)return;
+ document.getElementById('sellableEditSelect').value=code;
+ const codeEl=document.getElementById('sellableEditCode'); codeEl.value=p.code; codeEl.disabled=true;
+ document.getElementById('sellableEditName').value=p.name||'';
+ document.getElementById('sellableEditCategory').value=p.category||'';
+ document.getElementById('sellableEditPrice').value=Number(p.price||0);
+ document.getElementById('sellableEditActive').value=p.active===false?'false':'true';
+}
+function loadSellableForEdit(){
+ const code=document.getElementById('sellableEditSelect').value;
+ if(code) editSellableItem(code); else clearSellableItemEditor();
+}
+async function saveSellableItemEdit(){
+ if(!currentUser || currentUser.role!=='manager'){alert('Manager access required.');return;}
+ const selectCode=document.getElementById('sellableEditSelect').value;
+ const code=(document.getElementById('sellableEditCode').value||'').trim().toUpperCase();
+ const name=(document.getElementById('sellableEditName').value||'').trim();
+ const category=(document.getElementById('sellableEditCategory').value||'').trim();
+ const price=Number(document.getElementById('sellableEditPrice').value||0);
+ const active=document.getElementById('sellableEditActive').value!=='false';
+ const status=document.getElementById('sellableEditStatus');
+ if(!code||!name||!category||price<0){status.textContent='Enter code, item name, category and a valid price.';return;}
+ let p=selectCode?products.find(x=>x.code===selectCode):products.find(x=>x.code===code);
+ if(!selectCode && p){status.textContent='That product code already exists. Select it from Existing Sellable Item to edit it.';return;}
+ if(p){p.name=name;p.category=category;p.price=price;p.active=active;}
+ else{p={code,name,category,price,active};products.push(p);if(typeof inventory!=='undefined'&&!inventory[code])inventory[code]={opening:0,stockIn:0,count:0,reorder:5};}
+ localStorage.setItem('feastervilleProducts',JSON.stringify(products));
+ try{if(typeof pushState==='function')await pushState('products',products);}catch(e){console.warn(e);}
+ cats(); const first=document.querySelector('#categories .cat'); if(first)filterCat('ALL',first);
+ try{initRecipes();}catch(e){}
+ try{if(typeof initSeparatedInventory==='function')initSeparatedInventory();}catch(e){}
+ renderSellableItemsEditor();
+ document.getElementById('sellableEditSelect').value=code; editSellableItem(code);
+ status.textContent='Sellable item saved to the live product list.';
+}
+window.renderSellableItemsEditor=renderSellableItemsEditor;
+window.editSellableItem=editSellableItem;
+window.loadSellableForEdit=loadSellableForEdit;
+window.clearSellableItemEditor=clearSellableItemEditor;
+window.saveSellableItemEdit=saveSellableItemEdit;
+
+function completeSale(){
+ if(!cart.length){alert('Please add items to the order.');return}
+ const sub=cart.reduce((s,i)=>s+i.qty*i.price,0), disc=Number(document.getElementById('discount').value||0), total=Math.max(sub-disc,0);
+ const payment=document.getElementById('payment').value, received=Number(document.getElementById('received').value||0);
+ if(payment==='Cash' && received<total){alert('Amount received is less than the total.');return}
+ const now=new Date();
+ const sale={orderNo:orderCounter,date:document.getElementById('date').value,time:now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'}),cashier:document.getElementById('cashier').value,orderType:document.getElementById('orderType').value,payment,received,total,items:cart.map(x=>({code:x.code,name:x.name,category:x.category,qty:x.qty,price:x.price}))};
+ sales.push(sale);
+ sale.items.forEach(i=>{ if(!inventory[i.code]) inventory[i.code]={opening:0,stockIn:0,count:0,reorder:5}; });
+ sale.items.forEach(i=>{
+   const links=recipes[i.code]||[];
+   links.forEach(link=>{
+     if(rawInventory[link.inputCode]){
+       rawInventory[link.inputCode].stockIn-=Number(link.qty)*Number(i.qty);
+     }
+   });
+ });
+ localStorage.setItem('feastervilleRawInventory',JSON.stringify(rawInventory)); if(typeof refreshProductionInputs==='function')refreshProductionInputs();
+ localStorage.setItem('feastervilleSales',JSON.stringify(sales)); saveInventory(); localStorage.setItem('feastervilleOrderNo',orderCounter);
+ alert('Sale completed — Order #'+String(orderCounter).padStart(4,'0'));
+ showReceipt(sale);
+ orderCounter++; document.getElementById('orderNo').textContent='Order #'+String(orderCounter).padStart(4,'0');
+ cart=[]; document.getElementById('discount').value=0; document.getElementById('received').value=0; render(); summary();
+}
+function showReceipt(s){
+ const r=document.getElementById('receiptPrint'); r.style.display='block'; r.scrollIntoView({behavior:'smooth',block:'center'});
+ r.innerHTML='<h2>FEASTERVILLE FOOD</h2><div>51 Senagal Street, Isivana Section, Tembisa</div><div>Order #'+String(s.orderNo).padStart(4,'0')+'</div><div>Date: '+s.date+' | Time: '+(s.time||'')+'</div><div>'+s.orderType+'</div><hr>'+
+ s.items.map(i=>`${i.code}  x${i.qty}  ${money(i.qty*i.price)}`).join('<br>')+
+ '<hr><b>TOTAL: '+money(s.total)+'</b><br>Payment: '+s.payment+'<br>Received: '+money(s.received)+'<br>Change: '+money(Math.max(s.received-s.total,0));
+}
+function printReceipt(){
+  const receipt=document.getElementById('receiptPrint');
+  if(!receipt || !receipt.innerText.trim()){
+    alert('Complete a sale first to generate a receipt.');
+    return;
+  }
+
+  const w=window.open('','_blank','width=420,height=700');
+  if(!w){
+    alert('Please allow pop-ups for this POS so the receipt can print.');
+    return;
+  }
+
+  const receiptHtml=receipt.innerHTML;
+
+  const doc='<!doctype html><html><head><meta charset="utf-8">'+
+    '<title>Feasterville Receipt</title>'+
+    '<style>'+
+    '@page{size:80mm auto;margin:0}'+
+    'html,body{margin:0;padding:0;width:80mm;background:#fff}'+
+    'body{font-family:monospace;font-size:11px;line-height:1.3}'+
+    '.receipt-wrap{width:80mm;padding:4mm;box-sizing:border-box}'+
+    '.receipt-item-description{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere!important;word-break:normal!important}'+
+    '.receipt-item-values{display:flex!important;justify-content:space-between!important;gap:8px!important}'+
+    'hr{border:0;border-top:1px dashed #000;margin:5px 0}'+
+    'button{display:none!important}'+
+    '</style></head><body><div class="receipt-wrap">'+
+    receiptHtml+
+    '</div></body></html>';
+
+  w.document.open();
+  w.document.write(doc);
+  w.document.close();
+  w.focus();
+
+  setTimeout(function(){
+    w.print();
+  },300);
+}
+function summary(){
+ const today=document.getElementById('date').value, ss=sales.filter(s=>s.date===today), total=ss.reduce((a,s)=>a+s.total,0);
+ document.getElementById('salesSummary').innerHTML=`<b>Orders:</b> ${ss.length} &nbsp;&nbsp; <b>Total Sales:</b> ${money(total)}</div>`;
+}
+
+let inventory=JSON.parse(localStorage.getItem('feastervilleInventory')||'{}');
+let stockMovements=JSON.parse(localStorage.getItem('feastervilleStockMovements')||'[]');
+
+function initInventory(){
+  products.forEach(p=>{
+    if(!inventory[p.code]) inventory[p.code]={opening:0,stockIn:0,count:0,reorder:5};
+  });
+  saveInventory();
+  showInventory();
+}
+function saveInventory(){
+  localStorage.setItem('feastervilleInventory',JSON.stringify(inventory));
+  localStorage.setItem('feastervilleStockMovements',JSON.stringify(stockMovements));
+}
+function soldQty(code){
+  return sales.reduce((n,s)=>n+s.items.reduce((a,i)=>a+(i.code===code?Number(i.qty):0),0),0);
+}
+function invRows(){
+  return products.map(p=>{
+    const x=inventory[p.code]||{opening:0,stockIn:0,count:0,reorder:5};
+    const sold=soldQty(p.code), expected=Number(x.opening)+Number(x.stockIn)-sold, variance=Number(x.count)-expected;
+    return {...p,...x,sold,expected,variance};
+  });
+}
+function showInventory(){
+  const rows=invRows(), totalStock=rows.reduce((a,r)=>a+Math.max(r.expected,0),0);
+  const low=rows.filter(r=>r.expected<=r.reorder).length, variances=rows.filter(r=>r.variance!==0).length;
+  document.getElementById('inventoryContent').innerHTML=`
+    <div class="inv-grid">
+      <div class="inv-card">Stock Units Expected<br><b>${totalStock}</b></div>
+      <div class="inv-card">Low / Reorder<br><b>${low}</b></div>
+      <div class="inv-card">Variances<br><b>${variances}</b></div>
+      <div class="inv-card">Products Tracked<br><b>${rows.length}</b></div>
+    </div>
+    <table class="inv-table"><thead><tr><th>Code</th><th>Product</th><th>Opening</th><th>Stock In</th><th>Sold</th><th>Expected</th><th>Count</th><th>Variance</th><th>Reorder</th><th>Status</th></tr></thead>
+    <tbody>${rows.map(r=>`<tr>
+      <td>${r.code}</td><td>${r.name}</td><td>${r.opening}</td><td>${r.stockIn}</td><td>${r.sold}</td><td>${r.expected}</td><td>${r.count}</td><td>${r.variance}</td><td>${r.reorder}</td>
+      <td>${r.expected<=0?'<span class="badge bad">OUT</span>':r.expected<=r.reorder?'<span class="badge warn">REORDER</span>':'<span class="badge ok">OK</span>'}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+function showStockIn(){
+ document.getElementById('inventoryContent').innerHTML=`
+ <h3>Receive Stock</h3><p class="small">Enter stock received. This is added to the selected product's inventory.</p>
+ <div class="order-head"><select id="stockProduct">${products.map(p=>`<option value="${p.code}">${p.code} — ${p.name}</option>`).join('')}</select>
+ <input id="stockQty" type="number" min="1" value="1" class="stock-input"><button class="primary" onclick="addStock()">ADD STOCK</button></div>
+ <h3>Recent Stock-In</h3><table class="inv-table"><thead><tr><th>Date</th><th>Code</th><th>Product</th><th>Qty</th></tr></thead><tbody>
+ ${stockMovements.slice(-20).reverse().map(m=>`<tr><td>${m.date}</td><td>${m.code}</td><td>${m.name}</td><td>${m.qty}</td></tr>`).join('')}</tbody></table>`;
+}
+function addStock(){
+ const code=document.getElementById('stockProduct').value, qty=Number(document.getElementById('stockQty').value||0), p=products.find(x=>x.code===code);
+ if(!p||qty<=0)return;
+ inventory[code].stockIn+=qty;
+ stockMovements.push({date:new Date().toISOString().slice(0,10),code,name:p.name,qty});
+ saveInventory(); showStockIn();
+}
+function showCount(){
+ document.getElementById('inventoryContent').innerHTML=`
+ <h3>Physical Stock Count</h3><p class="small">Enter the quantity physically counted. Variance will be calculated against expected stock.</p>
+ <table class="inv-table"><thead><tr><th>Code</th><th>Product</th><th>Expected</th><th>Physical Count</th><th>Variance</th></tr></thead><tbody>
+ ${invRows().map(r=>`<tr><td>${r.code}</td><td>${r.name}</td><td>${r.expected}</td><td><input class="stock-input" type="number" min="0" value="${r.count}" onchange="setCount('${r.code}',this.value)"></td><td>${r.variance}</td></tr>`).join('')}</tbody></table>`;
+}
+function setCount(code,value){ inventory[code].count=Number(value||0); saveInventory(); showCount(); }
+function showVariance(){
+ const rows=invRows().filter(r=>r.variance!==0);
+ document.getElementById('inventoryContent').innerHTML=`<h3>Stock Variances</h3><table class="inv-table"><thead><tr><th>Code</th><th>Product</th><th>Expected</th><th>Count</th><th>Variance</th><th>Action</th></tr></thead><tbody>
+ ${rows.length?rows.map(r=>`<tr><td>${r.code}</td><td>${r.name}</td><td>${r.expected}</td><td>${r.count}</td><td><b>${r.variance}</b></td><td>${r.variance<0?'<span class="badge bad">SHORT</span>':'<span class="badge warn">SURPLUS</span>'}</td></tr>`).join(''):'<tr><td colspan="6">No variances recorded.</td></tr>'}</tbody></table>`;
+}
+function showReorder(){
+ const rows=invRows().filter(r=>r.expected<=r.reorder);
+ document.getElementById('inventoryContent').innerHTML=`<h3>Reorder List</h3><table class="inv-table"><thead><tr><th>Code</th><th>Product</th><th>Expected</th><th>Reorder Level</th><th>Suggested Qty</th></tr></thead><tbody>
+ ${rows.length?rows.map(r=>`<tr><td>${r.code}</td><td>${r.name}</td><td>${r.expected}</td><td>${r.reorder}</td><td><b>${Math.max(r.reorder*2-r.expected,1)}</b></td></tr>`).join(''):'<tr><td colspan="5">No products currently require reorder.</td></tr>'}</tbody></table>`;
+}
+
+
+const rawMaterials=[{"code": "RAW-001", "name": "Potatoes / Chips", "category": "Produce / Ingredient", "unit": "KG"}, {"code": "RAW-002", "name": "Polony", "category": "Processed Meat", "unit": "KG"}, {"code": "RAW-003", "name": "Special", "category": "Processed Meat", "unit": "KG"}, {"code": "RAW-004", "name": "Cheese", "category": "Dairy", "unit": "KG"}, {"code": "RAW-005", "name": "Vienna", "category": "Processed Meat", "unit": "EA"}, {"code": "RAW-006", "name": "Egg", "category": "Egg", "unit": "EA"}, {"code": "RAW-007", "name": "Russian", "category": "Processed Meat", "unit": "EA"}, {"code": "RAW-008", "name": "Beef Burger Patty", "category": "Processed Meat", "unit": "EA"}, {"code": "RAW-009", "name": "Chicken Burger Patty", "category": "Processed Meat", "unit": "EA"}, {"code": "RAW-010", "name": "Pork Rib Patty", "category": "Processed Meat", "unit": "EA"}, {"code": "RAW-011", "name": "Chicken Rib Patty", "category": "Processed Meat", "unit": "EA"}, {"code": "RAW-012", "name": "Ham", "category": "Processed Meat", "unit": "KG"}, {"code": "RAW-013", "name": "Bacon", "category": "Processed Meat", "unit": "KG"}, {"code": "RAW-014", "name": "Chicken Breast", "category": "Poultry", "unit": "KG"}, {"code": "RAW-015", "name": "Chicken Polony", "category": "Processed Meat", "unit": "KG"}, {"code": "RAW-016", "name": "Chicken Vienna", "category": "Processed Meat", "unit": "EA"}, {"code": "RAW-017", "name": "Lettuce", "category": "Fresh Produce", "unit": "EA"}, {"code": "RAW-018", "name": "Tomato", "category": "Fresh Produce", "unit": "KG"}, {"code": "RAW-019", "name": "Atchar", "category": "Condiment", "unit": "KG"}, {"code": "RAW-020", "name": "Chicken Wings", "category": "Poultry", "unit": "KG"}, {"code": "RAW-021", "name": "Pork Ribs", "category": "Meat", "unit": "KG"}, {"code": "RAW-022", "name": "Popcorn", "category": "Snack Ingredient", "unit": "KG"}];
+let rawInventory=JSON.parse(localStorage.getItem('feastervilleRawInventory')||'{}');
+
+
+function printCurrentReport(){
+  if(!currentUser || currentUser.role!=='manager'){
+    alert('Manager access required to export reports.');
+    return;
+  }
+  document.body.classList.add('print-report');
+  window.print();
+  setTimeout(()=>document.body.classList.remove('print-report'),500);
+}
+
+
+
+
+
+let productionReceipts=JSON.parse(localStorage.getItem('feastervilleProductionReceipts')||'[]');
+
+function saveProductionReceipts(){
+ localStorage.setItem('feastervilleProductionReceipts',JSON.stringify(productionReceipts));
+}
+function initStockMovement(){
+ const d=document.getElementById('movementDate');
+ if(d)d.value=new Date().toISOString().slice(0,10);
+ const sel=document.getElementById('movementInput');
+ if(sel)sel.innerHTML=rawMaterials.map(p=>`<option value="${p.code}">${p.code} — ${p.name} (${p.unit})</option>`).join('');
+ renderMovementHistory();
+ renderUsageDetails();
+}
+function recordProductionReceipt(){
+ if(!currentUser||currentUser.role!=='manager'){alert('Manager access required.');return;}
+ const date=document.getElementById('movementDate').value;
+ const supplier=document.getElementById('movementSupplier').value.trim();
+ const ref=document.getElementById('movementRef').value.trim();
+ const code=document.getElementById('movementInput').value;
+ const qty=Number(document.getElementById('movementQty').value||0);
+ const cost=Number(document.getElementById('movementCost').value||0);
+ if(!date||!code||qty<=0){alert('Please enter date, input and quantity.');return;}
+ const p=rawMaterials.find(x=>x.code===code);
+ if(!rawInventory[code])rawInventory[code]={opening:0,stockIn:0,count:0,reorder:5};
+ rawInventory[code].stockIn+=qty;
+ productionReceipts.push({date,supplier,ref,code,name:p.name,unit:p.unit,qty,cost,total:qty*cost,receivedBy:currentUser.name});
+ localStorage.setItem('feastervilleRawInventory',JSON.stringify(rawInventory));
+ saveProductionReceipts();
+ renderMovementHistory();
+ refreshProductionInputs();
+ document.getElementById('movementSupplier').value='';
+ document.getElementById('movementRef').value='';
+ document.getElementById('movementQty').value=1;
+ document.getElementById('movementCost').value=0;
+}
+function renderMovementHistory(){
+ const body=document.getElementById('movementHistory'); if(!body)return;
+ body.innerHTML=productionReceipts.slice().reverse().map(r=>`<tr><td>${r.date}</td><td>${r.supplier||'-'}</td><td>${r.ref||'-'}</td><td>${r.name}</td><td>${r.qty}</td><td>${r.unit}</td><td>${money(r.cost)}</td><td>${money(r.total)}</td><td>${r.receivedBy||'-'}</td></tr>`).join('');
+}
+function renderUsageDetails(){
+ const body=document.getElementById('usageBody'); if(!body)return;
+ const lines=[];
+ sales.forEach(s=>s.items.forEach(item=>{
+   (recipes[item.code]||[]).forEach(link=>{
+     const raw=rawMaterials.find(r=>r.code===link.inputCode);
+     if(raw)lines.push({input:raw.name,product:item.name,units:item.qty,per:link.qty,total:Number(link.qty)*Number(item.qty),unit:raw.unit});
+   });
+ }));
+ body.innerHTML=lines.length?lines.map(x=>`<tr><td>${x.input}</td><td>${x.product}</td><td>${x.units}</td><td>${x.per}</td><td>${x.total}</td><td>${x.unit}</td></tr>`).join(''):'<tr><td colspan="6">No recipe-linked sales usage yet.</td></tr>';
+}
+
+
+
+
+
+function saveProductionReceipts(){
+ localStorage.setItem('feastervilleProductionReceipts',JSON.stringify(productionReceipts));
+}
+function initStockMovement(){
+ const d=document.getElementById('movementDate');
+ if(d)d.value=new Date().toISOString().slice(0,10);
+ const sel=document.getElementById('movementInput');
+ if(sel)sel.innerHTML=rawMaterials.map(p=>`<option value="${p.code}">${p.code} — ${p.name} (${p.unit})</option>`).join('');
+ renderMovementHistory();
+ renderUsageDetails();
+}
+function recordProductionReceipt(){
+ if(!currentUser||currentUser.role!=='manager'){alert('Manager access required.');return;}
+ const date=document.getElementById('movementDate').value;
+ const supplier=document.getElementById('movementSupplier').value.trim();
+ const ref=document.getElementById('movementRef').value.trim();
+ const code=document.getElementById('movementInput').value;
+ const qty=Number(document.getElementById('movementQty').value||0);
+ const cost=Number(document.getElementById('movementCost').value||0);
+ if(!date||!code||qty<=0){alert('Please enter date, input and quantity.');return;}
+ const p=rawMaterials.find(x=>x.code===code);
+ if(!rawInventory[code])rawInventory[code]={opening:0,stockIn:0,count:0,reorder:5};
+ rawInventory[code].stockIn+=qty;
+ productionReceipts.push({date,supplier,ref,code,name:p.name,unit:p.unit,qty,cost,total:qty*cost,receivedBy:currentUser.name});
+ localStorage.setItem('feastervilleRawInventory',JSON.stringify(rawInventory));
+ saveProductionReceipts();
+ renderMovementHistory();
+ refreshProductionInputs();
+ document.getElementById('movementSupplier').value='';
+ document.getElementById('movementRef').value='';
+ document.getElementById('movementQty').value=1;
+ document.getElementById('movementCost').value=0;
+}
+function renderMovementHistory(){
+ const body=document.getElementById('movementHistory'); if(!body)return;
+ body.innerHTML=productionReceipts.slice().reverse().map(r=>`<tr><td>${r.date}</td><td>${r.supplier||'-'}</td><td>${r.ref||'-'}</td><td>${r.name}</td><td>${r.qty}</td><td>${r.unit}</td><td>${money(r.cost)}</td><td>${money(r.total)}</td><td>${r.receivedBy||'-'}</td></tr>`).join('');
+}
+function renderUsageDetails(){
+ const body=document.getElementById('usageBody'); if(!body)return;
+ const lines=[];
+ sales.forEach(s=>s.items.forEach(item=>{
+   (recipes[item.code]||[]).forEach(link=>{
+     const raw=rawMaterials.find(r=>r.code===link.inputCode);
+     if(raw)lines.push({input:raw.name,product:item.name,units:item.qty,per:link.qty,total:Number(link.qty)*Number(item.qty),unit:raw.unit});
+   });
+ }));
+ body.innerHTML=lines.length?lines.map(x=>`<tr><td>${x.input}</td><td>${x.product}</td><td>${x.units}</td><td>${x.per}</td><td>${x.total}</td><td>${x.unit}</td></tr>`).join(''):'<tr><td colspan="6">No recipe-linked sales usage yet.</td></tr>';
+}
+function productionUsage(code){
+ let total=0;
+ sales.forEach(s=>{
+   s.items.forEach(item=>{
+     const links=recipes[item.code]||[];
+     links.forEach(link=>{if(link.inputCode===code) total+=Number(link.qty)*Number(item.qty);});
+   });
+ });
+ return total;
+}
+function productionRows(){
+ return rawMaterials.map(p=>{
+   const x=rawInventory[p.code]||{opening:0,stockIn:0,count:0,reorder:5};
+   const used=productionUsage(p.code);
+   const expected=Number(x.opening)+Number(x.stockIn)-used;
+   return {...p,...x,used,expected,variance:Number(x.count)-expected};
+ });
+}
+function refreshProductionInputs(){
+ const rows=productionRows();
+ document.getElementById('piCount').textContent=rows.length;
+ document.getElementById('piReceived').textContent=rows.reduce((a,r)=>a+Number(r.stockIn||0),0).toFixed(2);
+ document.getElementById('piUsed').textContent=rows.reduce((a,r)=>a+Number(r.used||0),0).toFixed(2);
+ document.getElementById('piReorder').textContent=rows.filter(r=>r.expected<=r.reorder).length;
+ document.getElementById('productionLedgerBody').innerHTML=rows.map(r=>
+ `<tr><td>${r.code}</td><td>${r.name}</td><td>${r.unit}</td><td>${r.opening}</td><td>${r.stockIn}</td><td>${r.used}</td><td>${r.expected}</td><td>${r.count}</td><td>${r.variance}</td><td>${r.reorder}</td><td>${status(r)}</td></tr>`).join('');
+ document.getElementById('productionCountBody').innerHTML=rows.map(r=>
+ `<tr><td>${r.code}</td><td>${r.name}</td><td>${r.unit}</td><td>${r.expected}</td><td><input class="stock-input" type="number" min="0" step="0.001" value="${r.count}" onchange="setProductionCount('${r.code}',this.value)"></td><td>${r.variance}</td><td>${r.variance<0?'INVESTIGATE SHORTAGE':r.variance>0?'CHECK SURPLUS':'OK'}</td></tr>`).join('');
+}
+function showProductionInputs(){
+ if(!currentUser || currentUser.role!=='manager')return;
+ const input=document.getElementById('piStockInput');
+ const masterInputs=(typeof getRecipeMasterInputs==='function'?getRecipeMasterInputs():rawMaterials);
+ if(input)input.innerHTML=masterInputs.map(p=>`<option value="${p.code}">${p.code} — ${p.name} (${p.unit||''})</option>`).join('');
+ const product=document.getElementById('piRecipeProduct');
+ if(product)product.innerHTML=products.map(p=>`<option value="${p.code}">${p.code} — ${p.name}</option>`).join('');
+ loadPIRecipe();
+ refreshProductionInputs();
+}
+function receiveProductionStock(){
+ const code=document.getElementById('piStockInput').value, qty=Number(document.getElementById('piStockQty').value||0);
+ if(qty<=0)return;
+ if(!rawInventory[code])rawInventory[code]={opening:0,stockIn:0,count:0,reorder:5};
+ rawInventory[code].stockIn+=qty;
+ localStorage.setItem('feastervilleRawInventory',JSON.stringify(rawInventory));
+ showProductionInputs();initStockMovement();easyInit();
+}
+function setProductionCount(code,value){
+ if(!rawInventory[code])rawInventory[code]={opening:0,stockIn:0,count:0,reorder:5};
+ rawInventory[code].count=Number(value||0);
+ localStorage.setItem('feastervilleRawInventory',JSON.stringify(rawInventory));
+ refreshProductionInputs();
+}
+function loadPIRecipe(){
+ const p=document.getElementById('piRecipeProduct'), input=document.getElementById('piRecipeInput');
+ if(!p||!input)return;
+ const masterInputs=(typeof getRecipeMasterInputs==='function'?getRecipeMasterInputs():rawMaterials);
+ input.innerHTML=masterInputs.map(x=>`<option value="${x.code}">${x.code} — ${x.name} (${x.unit||''})</option>`).join('');
+ const list=recipes[p.value]||[];
+ document.getElementById('piRecipeList').innerHTML='<table class="inv-table"><tr><th>Product</th><th>Input</th><th>Qty per Sale</th><th>Unit</th><th>Action</th></tr>'+
+ list.map((x,i)=>{const r=(typeof getRecipeMasterInputs==='function'?getRecipeMasterInputs():rawMaterials).find(a=>a.code===x.inputCode);return `<tr><td>${p.value}</td><td>${r?r.name:x.inputCode}</td><td>${x.qty}</td><td>${r?r.unit:''}</td><td><button class="remove" onclick="removePIRecipe(${i})">REMOVE</button></td></tr>`}).join('')+'</table>';
+}
+function addPIRecipe(){
+ const product=document.getElementById('piRecipeProduct').value,inputCode=document.getElementById('piRecipeInput').value,qty=Number(document.getElementById('piRecipeQty').value||0);
+ if(!product||!inputCode||qty<=0)return;
+ if(!recipes[product])recipes[product]=[];
+ const existing=recipes[product].find(x=>x.inputCode===inputCode);
+ if(existing)existing.qty=qty;else recipes[product].push({inputCode,qty});
+ localStorage.setItem('feastervilleRecipes',JSON.stringify(recipes));
+ loadPIRecipe();refreshProductionInputs();renderUsageDetails();
+}
+async function removePIRecipe(i){
+ const product=document.getElementById('piRecipeProduct').value;
+ recipes[product].splice(i,1);
+ localStorage.setItem('feastervilleRecipes',JSON.stringify(recipes));
+ try{if(typeof pushState==='function')await pushState('recipes',recipes);}catch(e){console.error('Recipe cloud save failed',e);}
+ loadPIRecipe();refreshProductionInputs();renderUsageDetails();
+}
+
+function showProductionInputs(){
+ if(!currentUser || currentUser.role!=='manager'){alert('Manager access required.');return;}
+ const rows=rawRows();
+ document.getElementById('productionInputsBody').innerHTML=rows.map(r=>{
+   const used=Number(r.stockIn)-Number(r.expected)+Number(r.opening);
+   return '<tr><td>'+r.code+'</td><td>'+r.name+'</td><td>'+r.category+'</td><td>'+r.unit+'</td><td>'+r.opening+'</td><td>'+r.stockIn+'</td><td>'+Math.max(used,0)+'</td><td>'+r.expected+'</td><td>'+r.count+'</td><td>'+r.variance+'</td><td>'+r.reorder+'</td><td>'+status(r)+'</td></tr>';
+ }).join('');
+}
+function printProductionInputs(){
+ if(!currentUser || currentUser.role!=='manager'){alert('Manager access required.');return;}
+ const panel=document.getElementById('productionInputsPanel');
+ panel.style.display='block';
+ document.body.classList.add('print-production');
+ window.print();
+ setTimeout(()=>document.body.classList.remove('print-production'),500);
+}
+
+function showRecon(type,btn){
+ if(btn){document.querySelectorAll('#reconPanel .cat').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+ const rows=type==='raw'?rawRows():finishedRows();
+ const title=type==='raw'?'Production Input Reconciliation':'Finished Product Reconciliation';
+ const totalVariance=rows.reduce((a,r)=>a+Number(r.variance||0),0);
+ const shortages=rows.filter(r=>r.variance<0).length;
+ const surpluses=rows.filter(r=>r.variance>0).length;
+ document.getElementById('reconContent').innerHTML=
+ '<h3>'+title+'</h3>'+
+ '<div class="inv-grid"><div class="inv-card">Items Checked<br><b>'+rows.length+'</b></div>'+
+ '<div class="inv-card">Shortages<br><b>'+shortages+'</b></div>'+
+ '<div class="inv-card">Surpluses<br><b>'+surpluses+'</b></div>'+
+ '<div class="inv-card">Net Variance<br><b>'+totalVariance+'</b></div></div>'+
+ '<table class="inv-table"><thead><tr><th>Code</th><th>Item</th><th>Unit</th><th>Opening</th><th>Stock In / Purchases</th><th>POS Usage / Sold</th><th>Expected Closing</th><th>Physical Count</th><th>Variance</th><th>Action</th></tr></thead><tbody>'+
+ rows.map(r=>{
+   const action=r.variance<0?'INVESTIGATE SHORTAGE':r.variance>0?'CHECK SURPLUS':'OK';
+   return '<tr><td>'+r.code+'</td><td>'+r.name+'</td><td>'+r.unit+'</td><td>'+r.opening+'</td><td>'+r.stockIn+'</td><td>'+(r.sold||0)+'</td><td>'+r.expected+'</td><td>'+r.count+'</td><td><b>'+r.variance+'</b></td><td>'+action+'</td></tr>';
+ }).join('')+
+ '</tbody></table>';
+}
+function printRecon(){
+ if(!currentUser||currentUser.role!=='manager'){alert('Manager access required.');return;}
+ window.print();
+}
+
+function showReport(type,btn){
+ if(btn){document.querySelectorAll('#reportsPanel .cat').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+ const box=document.getElementById('reportContent');
+ if(type==='sales'){
+   const today=document.getElementById('date').value;
+   const ss=sales.filter(s=>s.date===today);
+   const total=ss.reduce((a,s)=>a+s.total,0);
+   const cash=ss.filter(s=>s.payment==='Cash').reduce((a,s)=>a+s.total,0);
+   const card=ss.filter(s=>s.payment==='Card').reduce((a,s)=>a+s.total,0);
+   const eft=ss.filter(s=>s.payment==='EFT').reduce((a,s)=>a+s.total,0);
+   const other=ss.filter(s=>s.payment==='Other').reduce((a,s)=>a+s.total,0);
+   const itemMap={};
+   ss.forEach(s=>s.items.forEach(i=>{itemMap[i.code]??={name:i.name,qty:0,value:0};itemMap[i.code].qty+=i.qty;itemMap[i.code].value+=i.qty*i.price;}));
+   const items=Object.entries(itemMap).sort((a,b)=>b[1].value-a[1].value);
+   box.innerHTML=`<h3>Sales Report — ${today}</h3>
+   <div class="inv-grid">
+   <div class="inv-card">Orders<br><b>${ss.length}</b></div><div class="inv-card">Total Sales<br><b>${money(total)}</b></div>
+   <div class="inv-card">Units Sold<br><b>${ss.reduce((a,s)=>a+s.items.reduce((n,i)=>n+i.qty,0),0)}</b></div>
+   <div class="inv-card">Average Order<br><b>${money(ss.length?total/ss.length:0)}</b></div></div>
+   <table class="inv-table"><tr><th>Payment</th><th>Sales</th></tr>
+   <tr><td>Cash</td><td>${money(cash)}</td></tr><tr><td>Card</td><td>${money(card)}</td></tr>
+   <tr><td>EFT</td><td>${money(eft)}</td></tr><tr><td>Other</td><td>${money(other)}</td></tr></table>
+   <h3>Product Sales</h3><table class="inv-table"><tr><th>Code</th><th>Product</th><th>Qty</th><th>Sales Value</th></tr>
+   ${items.map(([c,v])=>`<tr><td>${c}</td><td>${v.name}</td><td>${v.qty}</td><td>${money(v.value)}</td></tr>`).join('')}</table>`;
+ } else {
+   let rows=type==='inventory'?finishedRows().concat(rawRows()):type==='variance'?finishedRows().concat(rawRows()).filter(r=>r.variance!==0):rawRows().filter(r=>r.expected<=r.reorder);
+   let title=type==='inventory'?'Inventory Report':type==='variance'?'Inventory Variance Report':'Inventory Reorder Report';
+   box.innerHTML=`<h3>${title}</h3><table class="inv-table"><tr><th>Type</th><th>Code</th><th>Item</th><th>Unit</th><th>Opening</th><th>Stock In</th><th>Sold</th><th>Expected</th><th>Physical</th><th>Variance</th><th>Reorder</th><th>Status</th></tr>
+   ${rows.map(r=>`<tr><td>${r.sold===undefined?'Production Input':'Sellable Product'}</td><td>${r.code}</td><td>${r.name}</td><td>${r.unit||'EA'}</td><td>${r.opening}</td><td>${r.stockIn}</td><td>${r.sold||0}</td><td>${r.expected}</td><td>${r.count}</td><td>${r.variance}</td><td>${r.reorder}</td><td>${status(r)}</td></tr>`).join('')}</table>`;
+ }
+}
+
+function initSeparatedInventory(){
+ rawMaterials.forEach(p=>{if(!rawInventory[p.code])rawInventory[p.code]={opening:0,stockIn:0,count:0,reorder:5};});
+ localStorage.setItem('feastervilleRawInventory',JSON.stringify(rawInventory));
+ showInvMaster('all',document.querySelector('.inventory-actions .cat'));
+}
+function finishedRows(){
+ return products.map(p=>{let x=inventory[p.code]||{opening:0,stockIn:0,count:0,reorder:5};let sold=soldQty(p.code);let expected=Number(x.opening)+Number(x.stockIn)-sold;return Object.assign({},p,x,{sold,expected,variance:Number(x.count)-expected,unit:'EA'});});
+}
+function rawRows(){
+ return rawMaterials.map(p=>{let x=rawInventory[p.code];let expected=Number(x.opening)+Number(x.stockIn);return Object.assign({},p,x,{expected,variance:Number(x.count)-expected});});
+}
+function status(r){return r.expected<=0?'<span class="badge bad">OUT</span>':r.expected<=r.reorder?'<span class="badge warn">REORDER</span>':'<span class="badge ok">OK</span>';}
+function showInvMaster(mode,btn){
+ if(btn){document.querySelectorAll('.inventory-actions .cat').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+ let rows=mode==='raw'?rawRows():mode==='finished'?finishedRows():finishedRows().concat(rawRows());
+ document.getElementById('inventoryMasterContent').innerHTML='<div class="inv-grid"><div class="inv-card">Sellable Products<br><b>'+finishedRows().length+'</b></div><div class="inv-card">Production Inputs<br><b>'+rawRows().length+'</b></div><div class="inv-card">Reorder Items<br><b>'+rows.filter(r=>r.expected<=r.reorder).length+'</b></div><div class="inv-card">Variances<br><b>'+rows.filter(r=>r.variance!==0).length+'</b></div></div>'+
+ '<table class="inv-table"><thead><tr><th>Type</th><th>Code</th><th>Item</th><th>Category</th><th>Unit</th><th>Opening</th><th>Stock In</th><th>Sold</th><th>Expected</th><th>Count</th><th>Variance</th><th>Reorder</th><th>Status</th></tr></thead><tbody>'+
+ rows.map(r=>'<tr><td>'+ (r.sold===undefined?'PURCHASED TO PRODUCE':'PURCHASED & SOLD') +'</td><td>'+r.code+'</td><td>'+r.name+'</td><td>'+r.category+'</td><td>'+r.unit+'</td><td>'+r.opening+'</td><td>'+r.stockIn+'</td><td>'+(r.sold||0)+'</td><td>'+r.expected+'</td><td>'+r.count+'</td><td>'+r.variance+'</td><td>'+r.reorder+'</td><td>'+status(r)+'</td></tr>').join('')+
+ '</tbody></table>';
+}
+function showInvCount(type,btn){
+ if(btn){document.querySelectorAll('.inventory-actions .cat').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+ let rows=type==='raw'?rawRows():finishedRows();
+ document.getElementById('inventoryMasterContent').innerHTML='<h3>'+(type==='raw'?'RAW MATERIAL / PRODUCTION INPUT COUNT SHEET':'SELLABLE / FINISHED PRODUCT COUNT SHEET')+'</h3>'+
+ '<p class="small">'+(type==='raw'?'Items purchased to produce menu products; they are not sold directly.':'Finished items that can be purchased and sold directly.')+'</p>'+
+ '<table class="inv-table"><thead><tr><th>Code</th><th>Item</th><th>Unit</th><th>Opening</th><th>Stock In</th><th>Sold</th><th>Expected</th><th>Physical Count</th><th>Variance</th><th>Reorder</th></tr></thead><tbody>'+
+ rows.map(r=>'<tr><td>'+r.code+'</td><td>'+r.name+'</td><td>'+r.unit+'</td><td>'+r.opening+'</td><td>'+r.stockIn+'</td><td>'+(r.sold||0)+'</td><td>'+r.expected+'</td><td><input class="stock-input" type="number" min="0" value="'+r.count+'" onchange="setSeparatedCount(\''+type+'\',\''+r.code+'\',this.value)"></td><td>'+r.variance+'</td><td>'+r.reorder+'</td></tr>').join('')+
+ '</tbody></table>';
+}
+function setSeparatedCount(type,code,value){
+ if(type==='raw')rawInventory[code].count=Number(value||0);else inventory[code].count=Number(value||0);
+ localStorage.setItem('feastervilleRawInventory',JSON.stringify(rawInventory));saveInventory();showInvCount(type,null);
+}
+function showInvStockIn(btn){
+ if(btn){document.querySelectorAll('.inventory-actions .cat').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+ document.getElementById('inventoryMasterContent').innerHTML='<h3>Stock In</h3><p class="small">Separate purchases into items bought ready to sell and items bought for production.</p>'+
+ '<div class="order-head"><select id="stockType" onchange="reloadSeparatedProducts()"><option value="raw">Purchased to Produce</option><option value="finished">Purchased & Sold</option></select><select id="stockProduct"></select><input id="stockQty" type="number" min="1" value="1" class="stock-input"><button class="primary" onclick="addSeparatedStock()">ADD STOCK</button></div><div id="stockExplanation" class="inv-card"></div>';
+ reloadSeparatedProducts();
+}
+function reloadSeparatedProducts(){
+ let type=document.getElementById('stockType').value,rows=type==='raw'?rawMaterials:products,sel=document.getElementById('stockProduct');
+ sel.innerHTML=rows.map(p=>'<option value="'+p.code+'">'+p.code+' — '+p.name+'</option>').join('');
+ document.getElementById('stockExplanation').textContent=type==='raw'?'Purchased to produce sold products.':'Purchased ready to sell to customers.';
+}
+function addSeparatedStock(){
+ let type=document.getElementById('stockType').value,code=document.getElementById('stockProduct').value,qty=Number(document.getElementById('stockQty').value||0);if(qty<=0)return;
+ if(type==='raw'){rawInventory[code].stockIn+=qty;localStorage.setItem('feastervilleRawInventory',JSON.stringify(rawInventory));}
+ else{inventory[code].stockIn+=qty;saveInventory();}
+ showInvStockIn(null);
+}
+
+document.getElementById('discount').addEventListener('input',render);
+cats(); filterCat('ALL',document.querySelector('.cat')); render(); summary(); initInventory();initSeparatedInventory();initRecipes();applyRights();showReport('sales',document.querySelector('#reportsPanel .cat'));showRecon('finished',document.querySelector('#reconPanel .cat'));showProductionInputs();renderSellableItemsEditor();
+</script>
+<script>
+function getRecipeMasterInputs(){
+  // Always use the same Master Production Inputs list that is synced from Supabase.
+  try{
+    const live=JSON.parse(localStorage.getItem('feastervilleMasterProductionInputs')||'[]');
+    if(Array.isArray(live) && live.length) return live;
+  }catch(e){}
+  if(typeof oldEditableMasterInputs!=='undefined' && Array.isArray(oldEditableMasterInputs) && oldEditableMasterInputs.length){
+    return oldEditableMasterInputs;
+  }
+  if(typeof rawMaterials!=='undefined' && Array.isArray(rawMaterials)) return rawMaterials;
+  return [];
+}
+
+function oldLayoutRecipeInputOptions(selectedCode=''){
+  const inputs=getRecipeMasterInputs();
+  return '<option value="">-- Select Production Input --</option>' +
+    inputs.map(p=>`<option value="${p.code}" ${p.code===selectedCode?'selected':''}>${p.code} — ${p.name} (${p.unit||''})</option>`).join('');
+}
+
+function refreshOldRecipeInputDropdowns(){
+  document.querySelectorAll('.oldRecipeInput').forEach(sel=>{
+    const selected=sel.value;
+    sel.innerHTML=oldLayoutRecipeInputOptions(selected);
+  });
+  if(document.getElementById('savedRecipeOld')){
+    try{ renderSavedRecipeOld(); }catch(e){ console.warn('Recipe display refresh:',e); }
+  }
+}
+
+function initOldLayoutRecipeBuilder(){
+  const product=document.getElementById('recipeFinalProduct');
+  if(!product)return;
+  product.addEventListener('change',function(){
+    const area=document.getElementById('recipeBuilderArea');
+    const rows=document.getElementById('recipeInputRows');
+    if(!this.value){
+      area.style.display='none';
+      document.getElementById('savedRecipeOld').innerHTML='';
+      return;
+    }
+    area.style.display='block';
+    rows.innerHTML='';
+    addRecipeInputRowOld();
+    renderSavedRecipeOld();
+  });
+}
+
+function addRecipeInputRowOld(){
+  const rows=document.getElementById('recipeInputRows');
+  if(!rows)return;
+  const row=document.createElement('div');
+  row.className='order-head old-recipe-row';
+  row.style.margin='8px 0';
+  row.innerHTML=`<select class="oldRecipeInput" style="min-width:280px">${oldLayoutRecipeInputOptions()}</select>
+  <input class="oldRecipeQty" type="number" min="0.001" step="0.001" value="1" style="width:120px">
+  <button type="button" onclick="this.parentElement.remove()">REMOVE</button>`;
+  rows.appendChild(row);
+}
+
+async function saveOldLayoutRecipe(){
+  const product=document.getElementById('recipeFinalProduct').value;
+  if(!product){alert('Please select a final product first.');return;}
+  const rows=[...document.querySelectorAll('.old-recipe-row')];
+  const links=[];
+  rows.forEach(function(row){
+    const input=row.querySelector('.oldRecipeInput').value;
+    const qty=Number(row.querySelector('.oldRecipeQty').value||0);
+    if(input && qty>0)links.push({inputCode:input,qty:qty});
+  });
+  if(!links.length){alert('Please add at least one production input.');return;}
+
+  let savedRecipes={};
+  try{savedRecipes=JSON.parse(localStorage.getItem('feastervilleRecipes')||'{}')||{};}catch(e){savedRecipes={};}
+  savedRecipes[product]=links;
+
+  // Keep the in-memory recipe map and browser storage in sync.
+  try{recipes=savedRecipes;}catch(e){}
+  localStorage.setItem('feastervilleRecipes',JSON.stringify(savedRecipes));
+
+  // IMPORTANT: persist recipe changes to the shared Supabase pos_state.
+  try{
+    if(typeof pushState==='function'){
+      await pushState('recipes',savedRecipes);
+    }
+  }catch(e){
+    console.error('Recipe cloud save failed',e);
+    alert('Recipe was saved on this device, but the shared database save failed. Please check the internet connection and try again.');
+    return;
+  }
+
+  renderSavedRecipeOld();
+  try{if(typeof loadRecipe==='function')loadRecipe();}catch(e){}
+  try{if(typeof loadPIRecipe==='function')loadPIRecipe();}catch(e){}
+  try{if(typeof refreshProductionInputs==='function')refreshProductionInputs();}catch(e){}
+  try{if(typeof renderProductionInputUsageFromSales==='function')renderProductionInputUsageFromSales();}catch(e){}
+  alert('Recipe saved successfully to the shared POS.');
+}
+
+function renderSavedRecipeOld(){
+  const product=document.getElementById('recipeFinalProduct').value;
+  const box=document.getElementById('savedRecipeOld');
+  if(!box||!product)return;
+  let recipes={};
+  try{recipes=JSON.parse(localStorage.getItem('feastervilleRecipes')||'{}')||{};}catch(e){recipes={};}
+  const list=recipes[product]||[];
+  const inputMap={};
+  getRecipeMasterInputs().forEach(x=>inputMap[x.code]=x);
+  box.innerHTML='<h3>Saved Recipe</h3><table class="inv-table"><thead><tr><th>Production Input</th><th>Qty</th><th>Unit</th></tr></thead><tbody>'+
+    (list.length?list.map(x=>`<tr><td>${inputMap[x.inputCode]?.name||x.inputCode}</td><td>${x.qty}</td><td>${inputMap[x.inputCode]?.unit||''}</td></tr>`).join(''):'<tr><td colspan="3">No inputs linked yet.</td></tr>')+
+    '</tbody></table>';
+}
+
+document.addEventListener('DOMContentLoaded',initOldLayoutRecipeBuilder);
+</script><script>
+function getOldMasterInputs(){
+  try{
+    const saved=JSON.parse(localStorage.getItem('feastervilleMasterProductionInputs')||'null');
+    if(Array.isArray(saved)&&saved.length)return saved;
+  }catch(e){}
+  if(typeof rawMaterials!=='undefined'&&Array.isArray(rawMaterials))return rawMaterials.map(x=>({...x}));
+  return [];
+}
+let oldEditableMasterInputs=getOldMasterInputs();
+
+function saveOldMasterList(){
+  localStorage.setItem('feastervilleMasterProductionInputs',JSON.stringify(oldEditableMasterInputs));
+}
+
+function renderOldMasterEditor(){
+  const sel=document.getElementById('masterEditSelect');
+  const body=document.getElementById('oldMasterEditorBody');
+  if(!sel||!body)return;
+  const inv=JSON.parse(localStorage.getItem('feastervilleRawInventory')||'{}');
+
+  sel.innerHTML='<option value="">-- Add New / Select Existing --</option>'+
+    oldEditableMasterInputs.map(p=>`<option value="${p.code}">${p.code} — ${p.name}</option>`).join('');
+
+  body.innerHTML=oldEditableMasterInputs.map(p=>`<tr>
+    <td>${p.code}</td><td>${p.name}</td><td>${p.category||''}</td><td>${p.unit}</td>
+    <td>${Number(inv[p.code]?.reorder??5)}</td>
+    <td><button type="button" onclick="editOldMasterInput('${p.code}')">EDIT</button></td>
+  </tr>`).join('');
+}
+
+function editOldMasterInput(code){
+  const p=oldEditableMasterInputs.find(x=>x.code===code);
+  if(!p)return;
+  const inv=JSON.parse(localStorage.getItem('feastervilleRawInventory')||'{}');
+  document.getElementById('masterEditSelect').value=code;
+  document.getElementById('masterEditCode').value=p.code;
+  document.getElementById('masterEditCode').disabled=true;
+  document.getElementById('masterEditName').value=p.name;
+  document.getElementById('masterEditCategory').value=p.category||'Ingredient';
+  document.getElementById('masterEditUnit').value=p.unit||'EA';
+  document.getElementById('masterEditReorder').value=Number(inv[p.code]?.reorder??5);
+}
+
+function clearOldMasterEditor(){
+  document.getElementById('masterEditSelect').value='';
+  const c=document.getElementById('masterEditCode');
+  c.disabled=false;c.value='';
+  document.getElementById('masterEditName').value='';
+  document.getElementById('masterEditCategory').value='Ingredient';
+  document.getElementById('masterEditUnit').value='EA';
+  document.getElementById('masterEditReorder').value=5;
+}
+
+async function saveOldMasterInput(){
+  const code=document.getElementById('masterEditCode').value.trim().toUpperCase();
+  const name=document.getElementById('masterEditName').value.trim();
+  const category=document.getElementById('masterEditCategory').value.trim()||'Ingredient';
+  const unit=document.getElementById('masterEditUnit').value;
+  const reorder=Number(document.getElementById('masterEditReorder').value||0);
+
+  if(!code||!name){alert('Please enter the input code and name.');return;}
+
+  // Shared master-data changes must have a real Supabase session.
+  if(!window.feastervilleLiveSignedIn){
+    alert('Please sign in to the LIVE POS email/password section first, then save the input again.');
+    return;
+  }
+
+  // Build a new list first. Do not report success until cloud verification succeeds.
+  const nextInputs=(Array.isArray(oldEditableMasterInputs)?oldEditableMasterInputs:[]).map(x=>({...x}));
+  let p=nextInputs.find(x=>String(x.code||'').toUpperCase()===code);
+  if(p){
+    p.name=name;p.category=category;p.unit=unit;p.reorder=reorder;
+  }else{
+    nextInputs.push({code,name,category,unit,reorder});
+  }
+
+  let inv={};
+  try{inv=JSON.parse(localStorage.getItem('feastervilleRawInventory')||'{}')||{};}catch(e){}
+  if(!inv[code])inv[code]={opening:0,stockIn:0,used:0,count:0,reorder:reorder};
+  inv[code].reorder=reorder;
+
+  try{
+    if(typeof window.feastervillePushState!=='function')throw new Error('Live POS cloud save function is unavailable.');
+    await window.feastervillePushState('master_inputs',nextInputs);
+    await window.feastervillePushState('raw_inventory',inv);
+
+    // Read the shared state back and verify this exact input exists.
+    const checkRows = (typeof window.feastervilleApi==='function')
+      ? await window.feastervilleApi('/rest/v1/pos_state?key=eq.master_inputs&select=value,updated_at')
+      : [];
+    const cloudInputs = Array.isArray(checkRows)&&checkRows[0]&&Array.isArray(checkRows[0].value)
+      ? checkRows[0].value : [];
+    const confirmed = cloudInputs.some(x=>String(x.code||'').toUpperCase()===code && String(x.name||'')===name);
+    if(!confirmed)throw new Error('The database did not confirm the new Master Production Input.');
+
+    // Only now commit local copies from the confirmed cloud value.
+    oldEditableMasterInputs = cloudInputs.map(x=>({...x}));
+    localStorage.setItem('feastervilleMasterProductionInputs',JSON.stringify(oldEditableMasterInputs));
+    localStorage.setItem('feastervilleRawInventory',JSON.stringify(inv));
+
+    renderOldMasterEditor();
+    clearOldMasterEditor();
+    if(typeof refreshOldRecipeInputDropdowns==='function')try{refreshOldRecipeInputDropdowns();}catch(e){}
+    if(typeof populateProductionInputDropdowns==='function')try{populateProductionInputDropdowns();}catch(e){}
+    if(typeof loadRecipe==='function')try{loadRecipe();}catch(e){}
+    if(typeof loadPIRecipe==='function')try{loadPIRecipe();}catch(e){}
+    if(typeof refreshProductionInputs==='function')try{refreshProductionInputs();}catch(e){}
+    if(typeof refreshProductionLedgerAndCount==='function')try{refreshProductionLedgerAndCount();}catch(e){}
+
+    alert('Production input saved to the LIVE Master Production Inputs and confirmed.');
+  }catch(e){
+    console.error('Master input live save failed',e);
+    alert('Master Production Input was NOT updated in the live database. '+(e&&e.message?e.message:'Please sign in to the Live POS and try again.'));
+  }
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+  renderOldMasterEditor();
+  const sel=document.getElementById('masterEditSelect');
+  if(sel)sel.addEventListener('change',function(){
+    if(this.value)editOldMasterInput(this.value);
+    else clearOldMasterEditor();
+  });
+});
+</script><script>
+function filterSalesProductsOldLayout(){
+  const box=document.getElementById('salesProductSearch');
+  if(!box)return;
+  const q=box.value.trim().toLowerCase();
+
+  const productContainer =
+    document.getElementById('products') ||
+    document.getElementById('salesCatalogue') ||
+    document.getElementById('productGrid');
+
+  if(!productContainer)return;
+
+  const cards=[...productContainer.children];
+  cards.forEach(function(card){
+    const text=(card.innerText||card.textContent||'').toLowerCase();
+    const code=(card.dataset?.code||'').toLowerCase();
+    const category=(card.dataset?.category||'').toLowerCase();
+    card.style.display=(!q || text.includes(q) || code.includes(q) || category.includes(q))?'':'none';
+  });
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+  const search=document.getElementById('salesProductSearch');
+  const clear=document.getElementById('clearSalesProductSearch');
+  if(search){
+    search.addEventListener('input',filterSalesProductsOldLayout);
+  }
+  if(clear){
+    clear.addEventListener('click',function(){
+      search.value='';
+      filterSalesProductsOldLayout();
+      search.focus();
+    });
+  }
+
+  // Re-apply the search if categories or catalogue are rebuilt.
+  const productContainer =
+    document.getElementById('products') ||
+    document.getElementById('salesCatalogue') ||
+    document.getElementById('productGrid');
+
+  if(productContainer && window.MutationObserver){
+    new MutationObserver(filterSalesProductsOldLayout)
+      .observe(productContainer,{childList:true,subtree:false});
+  }
+});
+</script><script>
+async function renderProductionInputUsageFromSales(){
+  const body=document.getElementById('usageFromSalesBody');
+  const status=document.getElementById('usageFromSalesStatus');
+  if(!body)return;
+
+  body.innerHTML='<tr><td colspan="8">Loading live production usage...</td></tr>';
+  if(status)status.textContent='Loading from shared database...';
+
+  const SUPABASE_URL='https://sflyjcgbxbcwspfuzone.supabase.co';
+  const API_KEY='sb_publishable_iASq-tni6KYrFK0R2S35zA_mpwt4MqM';
+  const accessToken=sessionStorage.getItem('feastervilleCloudAccessToken')||'';
+
+  function fmtQty(v){
+    const n=Number(v||0);
+    return Number.isInteger(n) ? String(n) : n.toFixed(3).replace(/0+$/,'').replace(/\.$/,'');
+  }
+
+  try{
+    let salesData=[];
+    let recipeMap={};
+    let inputs=[];
+
+    // Prefer the live Supabase database whenever the user is signed in.
+    if(accessToken){
+      const headers={
+        'apikey':API_KEY,
+        'Authorization':'Bearer '+accessToken,
+        'Content-Type':'application/json'
+      };
+
+      const [salesRes,stateRes]=await Promise.all([
+        fetch(
+          SUPABASE_URL+
+          '/rest/v1/pos_sales?select=id,order_no,sale_date,sale_time,cashier,total,pos_sale_items(code,name,category,qty,price)&order=order_no.desc&limit=2000',
+          {headers}
+        ),
+        fetch(
+          SUPABASE_URL+
+          '/rest/v1/pos_state?select=key,value&key=in.(recipes,master_inputs)',
+          {headers}
+        )
+      ]);
+
+      if(!salesRes.ok){
+        throw new Error('Could not load live sales: '+await salesRes.text());
+      }
+      if(!stateRes.ok){
+        throw new Error('Could not load live recipes: '+await stateRes.text());
+      }
+
+      const liveSales=await salesRes.json();
+      const liveState=await stateRes.json();
+      const stateMap={};
+      (liveState||[]).forEach(r=>stateMap[r.key]=r.value);
+
+      recipeMap=stateMap.recipes||{};
+      inputs=Array.isArray(stateMap.master_inputs)?stateMap.master_inputs:[];
+
+      salesData=(liveSales||[]).map(s=>({
+        date:s.sale_date||'',
+        orderNo:s.order_no||'',
+        items:(s.pos_sale_items||[]).map(i=>({
+          code:i.code,
+          name:i.name,
+          category:i.category,
+          qty:Number(i.qty||0),
+          price:Number(i.price||0)
+        }))
+      }));
+
+      // Keep local copies aligned for the rest of the older POS.
+      localStorage.setItem('feastervilleSales',JSON.stringify(salesData));
+      localStorage.setItem('feastervilleRecipes',JSON.stringify(recipeMap));
+      localStorage.setItem('feastervilleMasterProductionInputs',JSON.stringify(inputs));
+    }else{
+      try{salesData=JSON.parse(localStorage.getItem('feastervilleSales')||'[]')||[];}catch(e){salesData=[];}
+      try{recipeMap=JSON.parse(localStorage.getItem('feastervilleRecipes')||'{}')||{};}catch(e){recipeMap={};}
+      try{
+        inputs=JSON.parse(localStorage.getItem('feastervilleMasterProductionInputs')||'[]')||[];
+      }catch(e){inputs=[];}
+    }
+
+    if(!inputs.length && typeof rawMaterials!=='undefined' && Array.isArray(rawMaterials)){
+      inputs=rawMaterials;
+    }
+
+    const inputMap={};
+    inputs.forEach(x=>inputMap[x.code]=x);
+
+    const rows=[];
+    let soldItemCount=0;
+    let recipeLinkedSaleLines=0;
+
+    salesData.forEach(sale=>{
+      (sale.items||[]).forEach(item=>{
+        soldItemCount++;
+        const links=recipeMap[item.code]||[];
+        if(links.length)recipeLinkedSaleLines++;
+
+        links.forEach(link=>{
+          const input=inputMap[link.inputCode]||{
+            code:link.inputCode,
+            name:link.inputCode,
+            unit:''
+          };
+          const units=Number(item.qty||0);
+          const per=Number(link.qty||0);
+
+          rows.push({
+            date:sale.date||sale.sale_date||'',
+            order:sale.orderNo||sale.order_no||'',
+            productCode:item.code||'',
+            product:item.name||item.code||'',
+            units:units,
+            inputCode:link.inputCode||'',
+            input:input.name||link.inputCode||'',
+            per:per,
+            total:per*units,
+            unit:input.unit||''
+          });
+        });
+      });
+    });
+
+    body.innerHTML=rows.length ? rows.map(r=>`<tr>
+      <td>${r.date}</td>
+      <td>${r.order}</td>
+      <td><b>${r.productCode}</b><br><span class="small">${r.product}</span></td>
+      <td>${fmtQty(r.units)}</td>
+      <td><b>${r.inputCode}</b><br><span class="small">${r.input}</span></td>
+      <td>${fmtQty(r.per)}</td>
+      <td><b>${fmtQty(r.total)}</b></td>
+      <td>${r.unit}</td>
+    </tr>`).join('') :
+    `<tr><td colspan="8">
+      No production-input usage can be calculated yet.
+      ${soldItemCount===0
+        ? 'No completed live sales were found.'
+        : 'Sales exist, but the sold products do not yet have saved recipes under Final Product → Production Inputs.'}
+    </td></tr>`;
+
+    if(status){
+      status.textContent=rows.length
+        ? `${rows.length} production-usage line(s) calculated from ${recipeLinkedSaleLines} recipe-linked sold product line(s).`
+        : `${soldItemCount} sold product line(s) checked; ${recipeLinkedSaleLines} had recipes.`;
+    }
+  }catch(err){
+    console.error('Production Input Usage From Sales',err);
+    body.innerHTML='<tr><td colspan="8">Unable to load live production usage: '+String(err.message||err)+'</td></tr>';
+    if(status)status.textContent='Live usage load failed.';
+  }
+}
+
+document.addEventListener('DOMContentLoaded',renderProductionInputUsageFromSales);
+</script>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  try{
+    if(typeof completeSale==='function'){
+      const _oldCompleteSale=completeSale;
+      window.completeSale=function(){
+        const result=_oldCompleteSale.apply(this,arguments);
+        setTimeout(renderProductionInputUsageFromSales,50);
+        return result;
+      };
+    }
+  }catch(e){}
+
+  try{
+    if(typeof saveOldLayoutRecipe==='function'){
+      const _oldSaveRecipe=saveOldLayoutRecipe;
+      window.saveOldLayoutRecipe=function(){
+        const result=_oldSaveRecipe.apply(this,arguments);
+        setTimeout(renderProductionInputUsageFromSales,50);
+        return result;
+      };
+    }
+  }catch(e){}
+});
+</script>
+
+<script>
+(function(){
+  const SAFE_USERS=[
+    {id:'USR001',name:'Manager',username:'manager',password:'admin123',role:'manager'},
+    {id:'USR002',name:'Salesperson 1',username:'salesperson1',password:'1234',role:'salesperson'}
+  ];
+
+  window.fillLogin=function(username,password,role){
+    const r=document.getElementById('loginRole');
+    const u=document.getElementById('loginUsername');
+    const p=document.getElementById('loginPassword');
+    if(r)r.value=role;
+    if(u)u.value=username;
+    if(p)p.value=password;
+    const e=document.getElementById('loginError');
+    if(e)e.textContent='';
+  };
+
+  function fmt(v){
+    const n=Number(v||0);
+    return 'R'+(Number.isFinite(n)?n:0).toFixed(2);
+  }
+
+  window.showReceipt=function(sale){
+    const box=document.getElementById('receiptPrint');
+    if(!box||!sale)return;
+
+    function desc(item){
+      const code=String(item.code||'').trim();
+      let name=String(item.name||item.description||'').trim();
+      if(code && name.toLowerCase().startsWith(code.toLowerCase())){
+        name=name.slice(code.length).replace(/^[\s\-–—:]+/,'').trim();
+      }
+      return name||code;
+    }
+
+    box.innerHTML=
+      '<div style="font-family:monospace;max-width:80mm;margin:auto">'+
+      '<div style="text-align:center"><b>FEASTERVILLE FOOD</b><br>51 Senagal Street, Isivana Section, Tembisa</div>'+
+      '<hr>'+
+      '<div>Order #'+String(sale.orderNo||'').padStart(4,'0')+'</div>'+
+      '<div>Date: '+(sale.date||'')+'</div>'+
+      '<div>Time: '+(sale.time||'')+'</div>'+
+      '<div>Cashier: '+(sale.cashier||'')+'</div>'+
+      '<hr>'+
+      (sale.items||[]).map(function(item){
+        const q=Number(item.qty||0), p=Number(item.price||0);
+        return '<div style="margin:8px 0">'+
+          '<div><b>'+String(item.code||'')+'</b></div>'+
+          '<div style="white-space:normal;overflow:visible;overflow-wrap:anywhere;line-height:1.35">'+desc(item)+'</div>'+
+          '<div style="display:flex;justify-content:space-between;gap:8px"><span>'+q+' × '+fmt(p)+'</span><span>'+fmt(q*p)+'</span></div>'+
+        '</div>';
+      }).join('')+
+      '<hr>'+
+      '<div><b>Total: '+fmt(sale.total)+'</b></div>'+
+      '<div>Payment: '+(sale.payment||'')+'</div>'+
+      '<div>Received: '+fmt(sale.received)+'</div>'+
+      '<div>Change: '+fmt(Math.max(Number(sale.received||0)-Number(sale.total||0),0))+'</div>'+
+      '<div style="text-align:center;margin-top:10px">Thank you for your support</div>'+
+      '</div>';
+    box.style.display='block';
+  };
+
+  window.completeSale=function(){
+    try{
+      if(typeof cart==='undefined'||!Array.isArray(cart)||cart.length===0){
+        alert('Please add items to the order.');
+        return;
+      }
+
+      const subtotal=cart.reduce(function(a,i){return a+(Number(i.qty)||0)*(Number(i.price)||0);},0);
+      const discount=Number(document.getElementById('discount')?.value||0);
+      const total=Math.max(subtotal-discount,0);
+      const payment=document.getElementById('payment')?.value||'Cash';
+      const received=Number(document.getElementById('received')?.value||0);
+
+      if(payment==='Cash'&&received<total){
+        alert('Amount received is less than the total.');
+        return;
+      }
+
+      let ss=[];
+      try{ss=JSON.parse(localStorage.getItem('feastervilleSales')||'[]')||[];}catch(e){}
+      let orderNo=Number(localStorage.getItem('feastervilleOrderNo')||0);
+      if(!orderNo||orderNo<1){
+        orderNo=ss.length?Math.max.apply(null,ss.map(function(s){return Number(s.orderNo)||0;}))+1:1;
+      }
+
+      const now=new Date();
+      const date=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+      const sale={
+        orderNo:orderNo,
+        date:date,
+        time:now.toLocaleTimeString(),
+        cashier:window.currentUser?.name||'Manager',
+        orderType:document.getElementById('orderType')?.value||'Take Away',
+        payment:payment,
+        received:received,
+        total:total,
+        items:cart.map(function(i){
+          return {code:i.code,name:i.name,category:i.category,qty:Number(i.qty)||0,price:Number(i.price)||0};
+        })
+      };
+
+      ss.push(sale);
+      localStorage.setItem('feastervilleSales',JSON.stringify(ss));
+      localStorage.setItem('feastervilleOrderNo',String(orderNo+1));
+      localStorage.setItem('feastervilleLastReceipt',JSON.stringify(sale));
+
+      let rec={}, inv={};
+      try{rec=JSON.parse(localStorage.getItem('feastervilleRecipes')||'{}')||{};}catch(e){}
+      try{inv=JSON.parse(localStorage.getItem('feastervilleRawInventory')||'{}')||{};}catch(e){}
+      sale.items.forEach(function(item){
+        (rec[item.code]||[]).forEach(function(link){
+          if(!inv[link.inputCode])inv[link.inputCode]={opening:0,stockIn:0,used:0,count:0,reorder:5};
+          inv[link.inputCode].used=Number(inv[link.inputCode].used||0)+(Number(link.qty)||0)*(Number(item.qty)||0);
+        });
+      });
+      localStorage.setItem('feastervilleRawInventory',JSON.stringify(inv));
+
+      window.showReceipt(sale);
+
+      cart=[];
+      const discountEl=document.getElementById('discount');
+      const receivedEl=document.getElementById('received');
+      if(discountEl)discountEl.value=0;
+      if(receivedEl)receivedEl.value=0;
+
+      const orderEl=document.getElementById('orderNo');
+      if(orderEl)orderEl.textContent='Order #'+String(orderNo+1).padStart(4,'0');
+
+      try{if(typeof render==='function')render();}catch(e){}
+      try{if(typeof summary==='function')summary();}catch(e){}
+      try{if(typeof refreshProductionInputs==='function')refreshProductionInputs();}catch(e){}
+      try{if(typeof renderProductionInputUsageFromSales==='function')renderProductionInputUsageFromSales();}catch(e){}
+      alert('Sale completed — Order #'+String(orderNo).padStart(4,'0'));
+    }catch(err){
+      console.error(err);
+      alert('The sale could not be completed. Error: '+err.message);
+    }
+  };
+
+  window.printReceipt=function(){
+    const receipt=document.getElementById('receiptPrint');
+    if(!receipt||!receipt.innerText.trim()){
+      alert('Complete a sale first.');
+      return;
+    }
+    const w=window.open('','_blank','width=420,height=700');
+    if(!w){alert('Please allow pop-ups to print the receipt.');return;}
+    const html='<!doctype html><html><head><meta charset="utf-8"><title>Receipt</title>'+
+      '<style>@page{size:80mm auto;margin:0}body{width:80mm;margin:0;padding:4mm;box-sizing:border-box;font:11px monospace}hr{border:0;border-top:1px dashed #000}</style>'+
+      '</head><body>'+receipt.innerHTML+'</body></html>';
+    w.document.open();w.document.write(html);w.document.close();w.focus();
+    setTimeout(function(){w.print();},200);
+  };
+
+  
+})();
+</script>
+
+
+<script>
+(function(){
+  'use strict';
+
+  const SUPABASE_URL = 'https://sflyjcgbxbcwspfuzone.supabase.co';
+  const API_KEY = 'sb_publishable_iASq-tni6KYrFK0R2S35zA_mpwt4MqM';
+  const TOKEN_KEY = 'feastervilleCloudAccessToken';
+  const REFRESH_KEY = 'feastervilleCloudRefreshToken';
+
+  const el = id => document.getElementById(id);
+  let accessToken = sessionStorage.getItem(TOKEN_KEY) || '';
+  let currentLiveUser = null;
+  let currentProfile = null;
+
+  function setMessage(text, bad) {
+    const node = el('liveMessage');
+    if (!node) return;
+    node.textContent = text || '';
+    node.style.color = bad ? '#a00' : '#155b00';
+  }
+
+  function setStatus(text) {
+    const node = el('liveStatus');
+    if (node) node.textContent = text;
+  }
+
+  async function api(path, options) {
+    options = options || {};
+    const headers = Object.assign({
+      'apikey': API_KEY,
+      'Content-Type': 'application/json'
+    }, options.headers || {});
+
+    if (accessToken) headers.Authorization = 'Bearer ' + accessToken;
+
+    const response = await fetch(SUPABASE_URL + path, Object.assign({}, options, {headers}));
+    const raw = await response.text();
+    let body = null;
+
+    if (raw) {
+      try { body = JSON.parse(raw); }
+      catch (_) { body = raw; }
+    }
+
+    if (!response.ok) {
+      const detail =
+        (body && typeof body === 'object' &&
+          (body.msg || body.message || body.error_description || body.error)) ||
+        raw || ('HTTP ' + response.status);
+      throw new Error(detail);
+    }
+    return body;
+  }
+
+  async function getProfile(user) {
+    const rows = await api(
+      '/rest/v1/pos_profiles?user_id=eq.' +
+      encodeURIComponent(user.id) +
+      '&select=user_id,display_name,role'
+    );
+    return Array.isArray(rows) && rows.length
+      ? rows[0]
+      : {user_id:user.id, display_name:user.email, role:'salesperson'};
+  }
+
+  function applyProfile(user, profile) {
+    currentLiveUser = user;
+    currentProfile = profile;
+
+    currentUser = window.currentUser = {
+      id: user.id,
+      username: user.email,
+      name: profile.display_name || user.email,
+      role: profile.role || 'salesperson',
+      label: (profile.role === 'manager' ? 'Manager: ' : 'Salesperson: ') +
+             (profile.display_name || user.email)
+    };
+
+    const badge = document.getElementById('userBadge');
+    if (badge) badge.textContent = window.currentUser.label;
+
+    const cloudUser = el('liveUser');
+    if (cloudUser) cloudUser.textContent = window.currentUser.label;
+
+    document.querySelectorAll('.manager-only').forEach(function(node) {
+      node.style.display = profile.role === 'manager' ? '' : 'none';
+    });
+
+    try {
+      if (typeof applyRights === 'function') applyRights();
+    } catch (_) {}
+    try {
+      if (typeof window.restoreLiveManagerPanels === 'function') window.restoreLiveManagerPanels();
+    } catch (_) {}
+  }
+
+  async function pullState() {
+    const rows = await api('/rest/v1/pos_state?select=key,value');
+    const keyMap = {
+      products: 'feastervilleProducts',
+      recipes: 'feastervilleRecipes',
+      master_inputs: 'feastervilleMasterProductionInputs',
+      raw_inventory: 'feastervilleRawInventory'
+    };
+
+    (rows || []).forEach(function(row) {
+      if (keyMap[row.key]) {
+        localStorage.setItem(keyMap[row.key], JSON.stringify(row.value));
+      }
+      if(row.key==='products' && Array.isArray(row.value)){
+        products.splice(0, products.length, ...row.value.map(function(p){return Object.assign({active:true},p);}));
+      }
+    });
+
+    // Rebind every recipe-input dropdown to the LIVE Master Production Inputs list.
+    try {
+      if (typeof getOldMasterInputs === 'function') oldEditableMasterInputs = getOldMasterInputs();
+      if (typeof refreshOldRecipeInputDropdowns === 'function') refreshOldRecipeInputDropdowns();
+      if (typeof loadRecipe === 'function') loadRecipe();
+      if (typeof loadPIRecipe === 'function') loadPIRecipe();
+    } catch (e) { console.warn('Master input dropdown refresh:', e); }
+
+    try { if (typeof rebuildSalesCatalogueReliable === 'function') rebuildSalesCatalogueReliable(); } catch (_) {}
+    try { if (typeof renderProducts === 'function') renderProducts(); } catch (_) {}
+    try { if (typeof renderSellableItemsEditor === 'function') renderSellableItemsEditor(); } catch (_) {}
+    try { if (typeof renderOldMasterEditor === 'function') renderOldMasterEditor(); } catch (_) {}
+    try { if (typeof renderProductionInputUsageFromSales === 'function') renderProductionInputUsageFromSales(); } catch (_) {}
+  }
+
+  async function pullSales() {
+    const rows = await api(
+      '/rest/v1/pos_sales?select=id,order_no,sale_date,sale_time,cashier,order_type,payment,received,total,pos_sale_items(code,name,category,qty,price)&order=order_no.desc&limit=1000'
+    );
+
+    const sales = (rows || []).map(function(s) {
+      return {
+        cloudId: s.id,
+        orderNo: s.order_no,
+        date: s.sale_date,
+        time: String(s.sale_time || '').slice(0,8),
+        cashier: s.cashier || '',
+        orderType: s.order_type || '',
+        payment: s.payment || '',
+        received: Number(s.received || 0),
+        total: Number(s.total || 0),
+        items: (s.pos_sale_items || []).map(function(i) {
+          return {
+            code:i.code, name:i.name, category:i.category,
+            qty:Number(i.qty || 0), price:Number(i.price || 0)
+          };
+        })
+      };
+    });
+
+    localStorage.setItem('feastervilleSales', JSON.stringify(sales));
+    try { if (typeof summary === 'function') summary(); } catch (_) {}
+    try { if (typeof refreshSalesInventoryReports === 'function') refreshSalesInventoryReports(); } catch (_) {}
+    try { if (typeof renderProductionInputUsageFromSales === 'function') renderProductionInputUsageFromSales(); } catch (_) {}
+  }
+
+  async function activate(authData) {
+    if (!authData || !authData.access_token || !authData.user) {
+      throw new Error('No login session was returned.');
+    }
+
+    accessToken = authData.access_token;
+    window.feastervilleLiveSignedIn = true;
+    sessionStorage.setItem(TOKEN_KEY, accessToken);
+    if (authData.refresh_token) sessionStorage.setItem(REFRESH_KEY, authData.refresh_token);
+
+    const profile = await getProfile(authData.user);
+    applyProfile(authData.user, profile);
+
+    el('liveLoginOverlay').style.display = 'none';
+    el('liveLogout').style.display = '';
+    setStatus('ONLINE - shared database');
+
+    await pullState();
+    await pullSales();
+  }
+
+  async function signIn() {
+    try {
+      setMessage('Signing in...');
+      const email = el('liveEmail').value.trim();
+      const password = el('livePassword').value;
+
+      if (!email || !password) throw new Error('Enter email and password.');
+
+      const data = await api('/auth/v1/token?grant_type=password', {
+        method:'POST',
+        body:JSON.stringify({email:email, password:password})
+      });
+
+      await activate(data);
+      setMessage('');
+    } catch (err) {
+      console.error(err);
+      setMessage(err.message, true);
+      setStatus('Login failed');
+    }
+  }
+
+  async function createAccount() {
+    try {
+      setMessage('Creating account...');
+      const email = el('liveEmail').value.trim();
+      const password = el('livePassword').value;
+      const displayName = el('liveDisplayName').value.trim();
+
+      if (!email || !password || !displayName) {
+        throw new Error('Enter email, password and display name.');
+      }
+
+      const data = await api('/auth/v1/signup', {
+        method:'POST',
+        body:JSON.stringify({
+          email:email,
+          password:password,
+          data:{display_name:displayName}
+        })
+      });
+
+      if (data && data.access_token) {
+        await activate(data);
+        setMessage('Account created and signed in.');
+      } else {
+        setMessage('Account created. If email confirmation is enabled, confirm your email and then sign in.');
+      }
+    } catch (err) {
+      console.error(err);
+      setMessage(err.message, true);
+    }
+  }
+
+  async function claimManager() {
+    try {
+      if (!accessToken) throw new Error('Sign in first.');
+      const code = el('liveManagerCode').value;
+
+      const result = await api('/rest/v1/rpc/claim_pos_manager', {
+        method:'POST',
+        body:JSON.stringify({setup_code:code})
+      });
+
+      if (result !== true) throw new Error('Manager setup code is incorrect.');
+
+      const user = await api('/auth/v1/user');
+      const profile = await getProfile(user);
+      applyProfile(user, profile);
+      setMessage('Manager access enabled.');
+    } catch (err) {
+      console.error(err);
+      setMessage(err.message, true);
+    }
+  }
+
+  async function pushState(key, value) {
+    if (!accessToken) {
+      throw new Error('Live POS sign-in is required before shared changes can be saved.');
+    }
+    try {
+      await api('/rest/v1/pos_state?on_conflict=key', {
+        method:'POST',
+        headers:{'Prefer':'resolution=merge-duplicates,return=minimal'},
+        body:JSON.stringify({
+          key:key,
+          value:value,
+          updated_at:new Date().toISOString()
+        })
+      });
+      return true;
+    } catch (err) {
+      console.error('Cloud state sync failed', key, err);
+      throw err;
+    }
+  }
+
+  // Expose live database helpers to manager/master-data screens outside this IIFE.
+  window.feastervilleApi = api;
+  window.feastervillePushState = pushState;
+  window.feastervilleLiveSignedIn = !!accessToken;
+
+
+  window.completeSale = async function() {
+    try {
+      if (!accessToken) throw new Error('Please sign in to the live POS.');
+      if (typeof cart === 'undefined' || !Array.isArray(cart) || !cart.length) {
+        throw new Error('Please add items to the order.');
+      }
+
+      const subtotal = cart.reduce(function(sum, item) {
+        return sum + (Number(item.qty) || 0) * (Number(item.price) || 0);
+      }, 0);
+
+      const discount = Math.max(Number(document.getElementById('discount')?.value || 0), 0);
+      const total = Math.max(subtotal - discount, 0);
+      const payment = document.getElementById('payment')?.value || 'Cash';
+      const received = Number(document.getElementById('received')?.value || 0);
+
+      if (payment === 'Cash' && received < total) {
+        throw new Error('Amount received is less than the total.');
+      }
+
+      const items = cart.map(function(item) {
+        return {
+          code:String(item.code || ''),
+          name:String(item.name || item.description || item.code || ''),
+          category:String(item.category || ''),
+          qty:Number(item.qty) || 0,
+          price:Number(item.price) || 0
+        };
+      });
+
+      const result = await api('/rest/v1/rpc/create_pos_sale', {
+        method:'POST',
+        body:JSON.stringify({
+          p_order_type:document.getElementById('orderType')?.value || 'Take Away',
+          p_payment:payment,
+          p_received:received,
+          p_total:total,
+          p_cashier:window.currentUser?.name || 'POS User',
+          p_items:items
+        })
+      });
+
+      const saved = Array.isArray(result) ? result[0] : result;
+      if (!saved) throw new Error('Live database did not return the saved sale.');
+
+      const sale = {
+        cloudId:saved.sale_id,
+        orderNo:saved.order_no,
+        date:saved.sale_date,
+        time:String(saved.sale_time || '').slice(0,8),
+        cashier:window.currentUser?.name || '',
+        orderType:document.getElementById('orderType')?.value || 'Take Away',
+        payment:payment,
+        received:received,
+        total:total,
+        items:items
+      };
+
+      localStorage.setItem('feastervilleLastReceipt', JSON.stringify(sale));
+
+      let recipes = {};
+      let inv = {};
+      try { recipes = JSON.parse(localStorage.getItem('feastervilleRecipes') || '{}') || {}; } catch (_) {}
+      try { inv = JSON.parse(localStorage.getItem('feastervilleRawInventory') || '{}') || {}; } catch (_) {}
+
+      sale.items.forEach(function(item) {
+        (recipes[item.code] || []).forEach(function(link) {
+          if (!inv[link.inputCode]) {
+            inv[link.inputCode] = {opening:0,stockIn:0,used:0,count:0,reorder:5};
+          }
+          inv[link.inputCode].used =
+            Number(inv[link.inputCode].used || 0) +
+            (Number(link.qty) || 0) * (Number(item.qty) || 0);
+        });
+      });
+
+      localStorage.setItem('feastervilleRawInventory', JSON.stringify(inv));
+      await pushState('raw_inventory', inv);
+
+      try { if (typeof showReceipt === 'function') showReceipt(sale); } catch (err) { console.error(err); }
+
+      cart = [];
+      const d = document.getElementById('discount');
+      const r = document.getElementById('received');
+      if (d) d.value = 0;
+      if (r) r.value = 0;
+
+      try { if (typeof render === 'function') render(); } catch (_) {}
+      try { if (typeof renderCartReliable === 'function') renderCartReliable(); } catch (_) {}
+
+      await pullSales();
+      alert('LIVE sale completed - Order #' + String(saved.order_no).padStart(4,'0'));
+    } catch (err) {
+      console.error(err);
+      alert('The live sale could not be completed. Error: ' + err.message);
+    }
+  };
+
+  el('liveSignIn').addEventListener('click', signIn);
+  el('liveCreate').addEventListener('click', createAccount);
+  el('liveClaimManager').addEventListener('click', claimManager);
+  el('liveLogout').addEventListener('click', function() {
+    sessionStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(REFRESH_KEY);
+    window.feastervilleLiveSignedIn = false;
+    location.reload();
+  });
+
+  setInterval(function() {
+    if (!accessToken) return;
+    pullState().catch(function(err) { console.error(err); });
+    pullSales().catch(function(err) { console.error(err); });
+  }, 5000);
+
+  (async function restoreSession() {
+    if (!accessToken) return;
+    try {
+      const user = await api('/auth/v1/user');
+      await activate({
+        access_token:accessToken,
+        refresh_token:sessionStorage.getItem(REFRESH_KEY),
+        user:user
+      });
+    } catch (err) {
+      console.error(err);
+      sessionStorage.removeItem(TOKEN_KEY);
+      sessionStorage.removeItem(REFRESH_KEY);
+      accessToken = '';
+      setStatus('Sign in required');
+    }
+  })();
+})();
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  const btn=document.getElementById('refreshUsageFromSalesBtn');
+  if(btn){
+    btn.addEventListener('click',function(){
+      renderProductionInputUsageFromSales();
+    });
+  }
+
+  // Refresh shortly after the POS becomes interactive.
+  setTimeout(function(){
+    if(sessionStorage.getItem('feastervilleCloudAccessToken')){
+      renderProductionInputUsageFromSales();
+    }
+  },800);
+});
+</script>
+
+<script>
+(function(){
+const U='https://sflyjcgbxbcwspfuzone.supabase.co',K='sb_publishable_iASq-tni6KYrFK0R2S35zA_mpwt4MqM',TK='feastervilleCloudAccessToken';
+const $=id=>document.getElementById(id);
+function sm(t,b){if($('staffMessage')){$('staffMessage').textContent=t||'';$('staffMessage').style.color=b?'#a00':'#155b00';}}
+async function ac(p){const t=sessionStorage.getItem(TK)||'';if(!t)throw Error('Sign in as Manager first.');const r=await fetch(U+'/functions/v1/pos-user-admin',{method:'POST',headers:{apikey:K,Authorization:'Bearer '+t,'Content-Type':'application/json'},body:JSON.stringify(p)});const x=await r.text();let d={};try{d=x?JSON.parse(x):{};}catch(_){d={error:x};}if(!r.ok)throw Error(d.error||x||('HTTP '+r.status));return d;}
+async function loadStaff(){const b=$('staffRows');if(!b)return;b.innerHTML='<tr><td colspan="6">Loading live users...</td></tr>';try{const d=await ac({action:'list'}),u=d.users||[];b.innerHTML=u.length?u.map(x=>`<tr><td>${x.display_name||''}</td><td>${x.email||''}</td><td>${x.role||'salesperson'}</td><td><b>${x.active===false?'INACTIVE':'ACTIVE'}</b></td><td>${x.last_sign_in_at?new Date(x.last_sign_in_at).toLocaleString():'Never'}</td><td><button type="button" onclick="ftStaffActive('${x.id}',${x.active===false})">${x.active===false?'ACTIVATE':'DEACTIVATE'}</button> <button type="button" onclick="ftStaffPassword('${x.id}',${JSON.stringify(x.email||'')})">RESET PASSWORD</button></td></tr>`).join(''):'<tr><td colspan="6">No users found.</td></tr>';sm(u.length+' live user(s) loaded.');}catch(e){b.innerHTML='<tr><td colspan="6">'+e.message+'</td></tr>';sm(e.message,true);}}
+window.ftStaffActive=async(id,a)=>{try{await ac({action:'active',user_id:id,active:a});sm(a?'User activated.':'User deactivated.');await loadStaff();}catch(e){sm(e.message,true);}};
+window.ftStaffPassword=async(id,email)=>{const p=prompt('New temporary password for '+email+' (minimum 6 characters):');if(p===null)return;if(p.length<6)return alert('Password must be at least 6 characters.');try{await ac({action:'password',user_id:id,password:p});alert('Password reset successfully.');}catch(e){alert(e.message);}};
+document.addEventListener('DOMContentLoaded',()=>{$('createStaffBtn')?.addEventListener('click',async()=>{try{const email=$('staffEmail').value.trim(),display=$('staffDisplayName').value.trim(),password=$('staffPassword').value;if(!email||!display||password.length<6)throw Error('Enter email, display name and a password of at least 6 characters.');sm('Creating salesperson...');await ac({action:'create',email,display_name:display,password});$('staffEmail').value='';$('staffDisplayName').value='';$('staffPassword').value='';sm('Salesperson created.');await loadStaff();}catch(e){sm(e.message,true);}});$('refreshStaffBtn')?.addEventListener('click',loadStaff);setTimeout(()=>{if(sessionStorage.getItem(TK))loadStaff();},1200);});
+window.loadLiveStaffUsers=loadStaff;
+})();
+</script>
+
+<script>
+(function(){
+  const managerPanelIds=[
+    'managerInventoryNav',
+    'productionInputsPanel',
+    'usagePanel',
+    'stockMovementPanel',
+    'reconPanel',
+    'reportsPanel',
+    'userPanel',
+    'recipePanel',
+    'easyLinkPanel',
+    'masterProductionEditorPanel',
+    'sellableItemsEditorPanel'
+  ];
+
+  function restoreLiveManagerPanels(){
+    const u=window.currentUser;
+    const manager=!!(u && u.role==='manager');
+
+    managerPanelIds.forEach(function(id){
+      const panel=document.getElementById(id);
+      if(panel)panel.style.display=manager?'block':'none';
+    });
+
+    if(!manager)return;
+
+    // Initialize every restored manager section independently.
+    const functions=[
+      'showProductionInputs',
+      'initStockMovement',
+      'refreshProductionInputs',
+      'renderProductionInputUsageFromSales',
+      'renderOldMasterEditor',
+      'renderSellableItemsEditor',
+      'showRecon',
+      'showReport',
+      'summary'
+    ];
+    functions.forEach(function(name){
+      try{
+        if(typeof window[name]==='function'){
+          if(name==='showRecon') window[name]('finished',null);
+          else if(name==='showReport') window[name]('sales',null);
+          else window[name]();
+        }
+      }catch(e){console.warn('Manager panel init:',name,e);}
+    });
+
+    try{
+      if(typeof window.loadLiveStaffUsers==='function')window.loadLiveStaffUsers();
+    }catch(e){console.warn(e);}
+  }
+
+  document.addEventListener('DOMContentLoaded',function(){
+    document.querySelectorAll('[data-manager-target]').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        const panel=document.getElementById(btn.getAttribute('data-manager-target'));
+        if(panel){
+          panel.style.display='block';
+          panel.scrollIntoView({behavior:'smooth',block:'start'});
+        }
+      });
+    });
+
+    // Live authentication may complete after DOMContentLoaded.
+    let attempts=0;
+    const timer=setInterval(function(){
+      attempts++;
+      if(window.currentUser){
+        restoreLiveManagerPanels();
+        clearInterval(timer);
+      }else if(attempts>60){
+        clearInterval(timer);
+      }
+    },250);
+
+    setTimeout(restoreLiveManagerPanels,1200);
+  });
+
+  // Expose it so the Supabase auth layer can explicitly refresh Manager visibility.
+  window.restoreLiveManagerPanels=restoreLiveManagerPanels;
+})();
+</script>
+
+</body>
+</html>
