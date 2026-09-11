@@ -7277,11 +7277,13 @@ window.openHistoricalCashupV59=open;window.loadHistoricalCashupV59=load;
  if(window.__fvCashupRoleVisibilityV60)return;window.__fvCashupRoleVisibilityV60=true;
 
  function activeRole(){
+   // A manager session takes priority over stale salesperson browser state.
+   const cu=window.currentUser;
+   if(String(cu?.role||'').toLowerCase()==='manager') return 'manager';
    const su=window.salesSessionUser;
    if(su && String(su.role||'').toLowerCase()==='salesperson') return 'salesperson';
    const iu=window.inventorySessionUser;
    if(iu && ['inventory_control','inventory controller','inventory_controller'].includes(String(iu.role||'').toLowerCase())) return 'inventory_control';
-   const cu=window.currentUser;
    return String(cu?.role||'').toLowerCase();
  }
  function activeUser(){
@@ -7346,6 +7348,7 @@ window.openHistoricalCashupV59=open;window.loadHistoricalCashupV59=load;
  'use strict';
  if(window.__fvSalesActionsStableV61)return; window.__fvSalesActionsStableV61=true;
  function role(){
+   if(String(window.currentUser?.role||'').toLowerCase()==='manager')return 'manager';
    if(window.salesSessionUser&&String(window.salesSessionUser.role||'').toLowerCase()==='salesperson')return 'salesperson';
    if(window.inventorySessionUser)return String(window.inventorySessionUser.role||'').toLowerCase();
    return String(window.currentUser?.role||'').toLowerCase();
