@@ -7453,5 +7453,68 @@ window.openHistoricalCashupV59=open;window.loadHistoricalCashupV59=load;
 })();
 </script>
 <!-- BUILD: V68.2_STABLE_REPORT_PDF_OUTPUT_20260912 -->
+<script>
+/* V68.3 — VISIBLE REPORT PREVIEW BEFORE PDF
+   Some browsers print an automatically opened pop-up before it has rendered.
+   This opens a completed report preview; the user then chooses Save / Print PDF
+   from inside that preview, ensuring the report is visible before printing. */
+(function(){
+ 'use strict';
+ function esc(value){
+   return String(value??'').replace(/[&<>"']/g,function(ch){
+     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+   });
+ }
+ function preview(title,body){
+   if(!body || !String(body).replace(/<[^>]*>/g,'').trim()){
+     alert('There is no report to save. Open the report first.');
+     return;
+   }
+   var popup=window.open('','_blank','width=1150,height=850');
+   if(!popup){
+     alert('Please allow pop-ups for this POS, then try again.');
+     return;
+   }
+   popup.document.open();
+   popup.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>'+
+     '@page{size:A4 landscape;margin:8mm}'+
+     'html,body{margin:0;padding:0;background:#f3f5f0;color:#111;font-family:Arial,sans-serif;font-size:10pt}'+
+     '.toolbar{position:sticky;top:0;background:#111;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;z-index:2}'+
+     '.toolbar button{background:#8cc63f;color:#111;border:0;border-radius:5px;padding:10px 16px;font-weight:bold;cursor:pointer}'+
+     '.sheet{box-sizing:border-box;width:min(1120px,calc(100% - 28px));margin:14px auto;background:#fff;padding:18px;box-shadow:0 1px 6px #999}'+
+     'h1,h2,h3,h4{margin:5px 0 8px;page-break-after:avoid}p{margin:4px 0 8px}'+
+     'table,.inv-table{width:100%;border-collapse:collapse;table-layout:auto}'+
+     'th,td,.inv-table th,.inv-table td{border:1px solid #999;padding:4px;text-align:left;vertical-align:top}'+
+     'th,.inv-table th{background:#eee!important;color:#111!important}thead{display:table-header-group}tr{page-break-inside:avoid}'+
+     '.inv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}.inv-card{border:1px solid #bbb;padding:6px}'+
+     '.sheet button,.sheet input,.sheet select{display:none!important}'+
+     '@media print{html,body{background:#fff}.toolbar{display:none!important}.sheet{width:100%;margin:0;padding:0;box-shadow:none}body{font-size:9pt}}'+
+     '</style></head><body><div class="toolbar"><b>Report preview — check the report, then save it as PDF</b><button type="button" onclick="window.print()">SAVE / PRINT PDF</button></div><main class="sheet">'+body+'</main></body></html>');
+   popup.document.close();
+   popup.focus();
+ }
+ function currentReport(){
+   if(String(window.currentUser?.role||'').toLowerCase()!=='manager'){
+     alert('Manager access required to export reports.');
+     return;
+   }
+   var content=document.getElementById('reportContent');
+   var heading=(content&&content.querySelector('h1,h2,h3,h4')||{}).textContent||'Feasterville Report';
+   preview(heading,content&&content.innerHTML);
+ }
+ function salesReport(){
+   if(String(window.currentUser?.role||'').toLowerCase()!=='manager'){
+     alert('Manager access required to export reports.');
+     return;
+   }
+   var content=document.getElementById('fvSelectedSalesPrintV45')||document.getElementById('reportContent');
+   preview('Feasterville Daily Sales Report',content&&content.innerHTML);
+ }
+ window.printCurrentReport=currentReport;
+ window.printSelectedSalesV45=salesReport;
+ try{printCurrentReport=currentReport;printSelectedSalesV45=salesReport;}catch(_){ }
+})();
+</script>
+<!-- BUILD: V68.3_VISIBLE_REPORT_PREVIEW_PDF_20260912 -->
 </body>
 </html>
