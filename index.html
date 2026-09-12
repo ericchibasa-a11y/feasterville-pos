@@ -7375,4 +7375,35 @@ window.openHistoricalCashupV59=open;window.loadHistoricalCashupV59=load;
 })();
 </script>
 <!-- BUILD: V61_SALESPERSON_ACTION_BUTTON_STABILITY_20260910 -->\n</body>
+<script>
+/* V68.1 — HISTORICAL CASH-UP MANAGER BUTTON AFTER LIVE LOGIN */
+(function(){
+ 'use strict';
+ if(window.__fvHistoricalCashupMountV681)return;window.__fvHistoricalCashupMountV681=true;
+ function isManager(){return String(window.currentUser?.role||'').toLowerCase()==='manager'}
+ function ensure(){
+   const existing=document.getElementById('fvHistoricalCashupBtnV59');
+   if(!isManager()){
+     if(existing)existing.style.setProperty('display','none','important');
+     return;
+   }
+   const header=document.querySelector('header'); if(!header)return;
+   let button=existing;
+   if(!button){
+     button=document.createElement('button');
+     button.id='fvHistoricalCashupBtnV59';button.type='button';button.textContent='HISTORICAL CASH-UP';
+     button.onclick=function(){if(typeof window.openHistoricalCashupV59==='function')window.openHistoricalCashupV59();else alert('Historical Cash-Up is still loading. Please try again.');};
+     const before=document.getElementById('fvManagerCashupHeaderV58')||Array.from(header.querySelectorAll('button')).find(b=>/LOGOUT/i.test(b.textContent||''));
+     header.insertBefore(button,before||null);
+   }
+   button.style.setProperty('display','inline-block','important');
+ }
+ [50,300,800,1500,3000,6000].forEach(ms=>setTimeout(ensure,ms));
+ document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')ensure()});
+ document.addEventListener('click',function(){setTimeout(ensure,25)},true);
+ window.fvHistoricalCashupMountV681=ensure;
+})();
+</script>
+<!-- BUILD: V68.1_HISTORICAL_CASHUP_MANAGER_LOGIN_FIX_20260912 -->
+</body>
 </html>
