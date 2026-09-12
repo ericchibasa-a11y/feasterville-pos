@@ -7405,5 +7405,53 @@ window.openHistoricalCashupV59=open;window.loadHistoricalCashupV59=load;
 })();
 </script>
 <!-- BUILD: V68.1_HISTORICAL_CASHUP_MANAGER_LOGIN_FIX_20260912 -->
+<script>
+/* V68.2 — STABLE REPORT PDF OUTPUT
+   Prints only the selected report in a clean pop-up document. This replaces the
+   older whole-page browser print route that can produce a blank PDF. */
+(function(){
+ 'use strict';
+ function esc(value){
+   return String(value??'').replace(/[&<>"']/g,function(ch){
+     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+   });
+ }
+ function printReport(){
+   if(String(window.currentUser?.role||'').toLowerCase()!=='manager'){
+     alert('Manager access required to export reports.');
+     return;
+   }
+   var content=document.getElementById('reportContent');
+   if(!content || !content.textContent.trim()){
+     alert('Open a report first, then choose SAVE REPORT AS PDF.');
+     return;
+   }
+   var heading=(content.querySelector('h1,h2,h3,h4')||{}).textContent||'Feasterville Report';
+   var popup=window.open('','_blank','width=1100,height=800');
+   if(!popup){
+     alert('Please allow pop-ups for this POS, then try again.');
+     return;
+   }
+   popup.document.open();
+   popup.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(heading)+'</title><style>'+
+     '@page{size:A4 landscape;margin:8mm}'+
+     'html,body{margin:0;padding:0;background:#fff;color:#111;font-family:Arial,sans-serif;font-size:9pt}'+
+     'h1,h2,h3,h4{margin:5px 0 8px;page-break-after:avoid}p{margin:4px 0 8px}'+
+     'table,.inv-table{width:100%;border-collapse:collapse;table-layout:auto}'+
+     'th,td,.inv-table th,.inv-table td{border:1px solid #999;padding:4px;text-align:left;vertical-align:top}'+
+     'th,.inv-table th{background:#eee!important;color:#111!important}'+
+     'thead{display:table-header-group}tr{page-break-inside:avoid}'+
+     '.inv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}.inv-card{border:1px solid #bbb;padding:6px}'+
+     'button,input,select{display:none!important}'+
+     '</style></head><body>'+content.innerHTML+'</body></html>');
+   popup.document.close();
+   popup.focus();
+   setTimeout(function(){popup.print();},500);
+ }
+ window.printCurrentReport=printReport;
+ try{printCurrentReport=printReport;}catch(_){ }
+})();
+</script>
+<!-- BUILD: V68.2_STABLE_REPORT_PDF_OUTPUT_20260912 -->
 </body>
 </html>
