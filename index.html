@@ -4067,8 +4067,10 @@ document.addEventListener('DOMContentLoaded',function(){
   <div id="fvCashupIdentity" class="small"></div>
   <div id="fvCashupSummary">Loading today's sales...</div>
   <label><b>Opening Cash Float (R)</b></label><input id="fvOpeningFloat" type="number" min="0" step="0.01" value="0">
+  <label><b>Cash Expense Type</b></label><select id="fvCashExpenseType"><option value="">No cash expense</option><option value="Kota Bread">Kota Bread</option><option value="Transport">Transport</option><option value="Electricity">Electricity</option><option value="Other Expenses">Other Expense</option></select>
+  <label><b>Cash Expense Paid (R)</b></label><input id="fvCashExpense" type="number" min="0" step="0.01" value="0" placeholder="Amount paid from till">
   <label><b>Actual Cash Counted (R)</b></label><input id="fvActualCash" type="number" min="0" step="0.01" placeholder="Enter cash counted">
-  <label><b>Notes</b></label><textarea id="fvCashupNotes" rows="2" placeholder="Optional notes"></textarea>
+  <label><b>Notes</b></label><textarea id="fvCashupNotes" rows="2" placeholder="Required for Other Expense"></textarea>
   <div id="fvCashupVariance" style="font-weight:700;margin:8px 0 14px"></div>
   <div id="fvCashupActions"><button type="button" onclick="closeFvCashupModal()">CANCEL</button><button type="button" class="primary" id="fvSubmitCashup">CLOSE DAY</button></div>
  </div>
@@ -4125,7 +4127,7 @@ document.addEventListener('DOMContentLoaded',function(){
    rows.forEach(r=>{let v=Number(r.total||0),b=payBucket(r.payment);x[b]+=v;x.total+=v});return x;
  }
  async function existing(){const me=u();if(!me||!me.id)return[];return api('pos_daily_cashups?store_code=eq.'+encodeURIComponent(store())+'&cashup_date=eq.'+day()+'&user_id=eq.'+encodeURIComponent(me.id)+'&select=*')}
- function variance(){if(!totals)return;let f=Number(document.getElementById('fvOpeningFloat').value||0),a=Number(document.getElementById('fvActualCash').value||0),expected=totals.cash+f,v=a-expected;document.getElementById('fvCashupVariance').textContent='Expected cash: '+money(expected)+' | Difference: '+money(v)}
+ function variance(){if(!totals)return;let f=Number(document.getElementById('fvOpeningFloat').value||0),e=Number(document.getElementById('fvCashExpense').value||0),a=Number(document.getElementById('fvActualCash').value||0),expected=totals.cash+f-e,v=a-expected;document.getElementById('fvCashupVariance').textContent='Expected cash: '+money(expected)+' (after cash expense '+money(e)+') | Difference: '+money(v)}
  window.openFvCashup=async function(){
    try{
     const me=u();if(!me||!['salesperson','manager'].includes(me.role)){alert('Cash-up is available to Salesperson and Manager accounts only.');return}
@@ -4143,14 +4145,14 @@ document.addEventListener('DOMContentLoaded',function(){
    }catch(e){console.error(e);alert('Could not prepare cash-up: '+e.message)}
  }
  window.closeFvCashupModal=function(){document.getElementById('fvCashupModal').style.display='none'};
- document.getElementById('fvOpeningFloat').addEventListener('input',variance);document.getElementById('fvActualCash').addEventListener('input',variance);
+ document.getElementById('fvOpeningFloat').addEventListener('input',variance);document.getElementById('fvCashExpense').addEventListener('input',variance);document.getElementById('fvActualCash').addEventListener('input',variance);
  document.getElementById('fvSubmitCashup').onclick=async function(){
    try{
     const me=u();if(!me||!totals)return;let actualRaw=document.getElementById('fvActualCash').value;if(actualRaw===''){alert('Enter the actual cash counted.');return}
     let ex=await existing();if(ex.length){alert('This day is already closed.');return}
-    let f=Number(document.getElementById('fvOpeningFloat').value||0),a=Number(actualRaw),expected=totals.cash+f;
-    let payload={store_code:store(),cashup_date:day(),user_id:me.id,salesperson_name:me.role==='manager'?('Manager — '+(store()==='SIVANA'?'Sivana':'Ndayeni')):(me.name||me.display_name||me.email||'Salesperson'),opening_float:f,cash_sales:totals.cash,card_sales:totals.card,mr_d_sales:totals.mrd,uber_eats_sales:totals.uber,other_sales:totals.other,total_sales:totals.total,expected_cash:expected,actual_cash:a,sale_count:totals.count,notes:document.getElementById('fvCashupNotes').value||null,status:'CLOSED'};
-    await api('pos_daily_cashups',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify(payload)});closeFvCashupModal();alert('Day closed successfully. Expected cash '+money(expected)+' | Actual cash '+money(a)+' | Difference '+money(a-expected));
+    let f=Number(document.getElementById('fvOpeningFloat').value||0),e=Number(document.getElementById('fvCashExpense').value||0),expenseType=document.getElementById('fvCashExpenseType').value,expenseNotes=document.getElementById('fvCashupNotes').value.trim();if(e>0&&!expenseType){alert('Select the cash expense type.');return}if(e>0&&expenseType==='Other Expenses'&&!expenseNotes){alert('Describe the Other Expense in Notes.');return}let a=Number(actualRaw),expected=totals.cash+f-e,notes=(e>0?'Cash expense: '+expenseType+' — '+money(e)+(expenseNotes?' | '+expenseNotes:''):(expenseNotes||null));
+    let payload={store_code:store(),cashup_date:day(),user_id:me.id,salesperson_name:me.role==='manager'?('Manager — '+(store()==='SIVANA'?'Sivana':'Ndayini')):(me.name||me.display_name||me.email||'Salesperson'),opening_float:f,cash_sales:totals.cash,card_sales:totals.card,mr_d_sales:totals.mrd,uber_eats_sales:totals.uber,other_sales:totals.other,total_sales:totals.total,expected_cash:expected,actual_cash:a,sale_count:totals.count,notes:notes,status:'CLOSED'};
+    await api('pos_daily_cashups',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify(payload)});if(e>0)await api('pos_store_expenses',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({store_code:store(),expense_date:day(),category:expenseType,supplier:null,description:expenseNotes||('Cash paid from till — '+expenseType),payment_method:'Cash',amount:e,reference:'Cash-Up '+day()})});closeFvCashupModal();alert('Day closed successfully. Expected cash '+money(expected)+' | Actual cash '+money(a)+' | Difference '+money(a-expected));
    }catch(e){console.error(e);alert('Cash-up could not be saved: '+e.message)}
  };
  function addButton(){let me=u();if(!me||!['salesperson','manager'].includes(me.role)||document.getElementById('fvCashupBtn'))return;let target=document.querySelector('header .actions')||document.querySelector('header')||document.querySelector('.topbar')||document.body;let b=document.createElement('button');b.id='fvCashupBtn';b.type='button';b.textContent=me.role==='manager'?'STORE CASH-UP / CLOSE DAY':'CLOSE DAY / CASH-UP';b.onclick=openFvCashup;target.appendChild(b)}
