@@ -6527,7 +6527,7 @@ const boot=setInterval(()=>{
 },500);
 
 setInterval(()=>{if(user()&&uid(user())&&token())heartbeat(false).catch(()=>{});},15000);
-setInterval(()=>{if(user()?.role==='manager'&&document.visibilityState==='visible')managerLiveSales().catch(()=>{});},5000);
+setInterval(()=>{const rp=document.getElementById('reportsPanel')||document.getElementById('reportPanel');if(user()?.role==='manager'&&document.visibilityState==='visible'&&rp&&rp.offsetParent!==null)managerLiveSales().catch(()=>{});},60000);
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible'){
     heartbeat(false).catch(()=>{});
@@ -6650,7 +6650,7 @@ async function render(){
  document.getElementById('fvCountRefreshV62').onclick=()=>render().catch(console.error);
 }
 window.refreshProductionInputCountSheetV62=render;
-setInterval(()=>{if(document.visibilityState==='visible')render().catch(()=>{})},5000);
+setInterval(()=>{const h=document.getElementById('piCountSheet')||document.getElementById('productionInputCountSheet')||document.getElementById('countSheetContent');const a=document.activeElement;if(document.visibilityState==='visible'&&h&&h.offsetParent!==null&&!(a&&h.contains(a)))render().catch(()=>{})},60000);
 document.addEventListener('click',e=>{if(/production input count sheet/i.test(e.target?.textContent||''))setTimeout(()=>render().catch(console.error),200)},true);
 const old=window.receiveProductionStock;
 if(typeof old==='function')window.receiveProductionStock=async function(){let r=await old.apply(this,arguments);setTimeout(()=>render().catch(console.error),900);return r};
@@ -6866,9 +6866,9 @@ async function touch(){if(!T())return;await A('rpc/touch_pos_presence',{method:'
 window.fvPresenceTouchV68=touch;
 setInterval(touch,15000);setTimeout(touch,800);
 async function liveUsers(){if(U()?.role!=='manager'||!T())return;let host=document.getElementById('fvAllUsersV59')||document.getElementById('fvPresencePanel');if(!host)return;let [profiles,pres]=await Promise.all([A('pos_profiles?select=user_id,display_name,role,store_code,active&active=eq.true&order=store_code.asc,display_name.asc'),A('pos_user_presence?select=user_id,logged_in_at,last_seen_at,status,signed_off_at')]);let pm={};(pres||[]).forEach(x=>pm[x.user_id]=x);let now=Date.now();host.innerHTML='<h3>Currently Logged In Users</h3><div class="small">Live status refreshes every 5 seconds. ONLINE requires a heartbeat within 2 minutes.</div><div style="overflow:auto"><table><thead><tr><th>User</th><th>Role</th><th>Store</th><th>Login Date & Time</th><th>Last Seen</th><th>Status</th></tr></thead><tbody>'+profiles.map(u=>{let p=pm[u.user_id]||{},last=p.last_seen_at?new Date(p.last_seen_at).getTime():0,on=p.status==='ONLINE'&&last&&(now-last)<120000;return '<tr><td>'+E(u.display_name)+'</td><td>'+E(u.role==='inventory_control'?'Inventory Controller':u.role)+'</td><td>'+E(u.store_code||'All Stores')+'</td><td>'+ZA(p.logged_in_at)+'</td><td>'+ZA(p.last_seen_at)+'</td><td><b>'+(on?'ONLINE':'OFFLINE')+'</b></td></tr>'}).join('')+'</tbody></table></div>'}
-window.refreshAllUsersV68=liveUsers;setInterval(()=>{if(document.visibilityState==='visible')liveUsers().catch(()=>{})},5000);
+window.refreshAllUsersV68=liveUsers;setInterval(()=>{const h=document.getElementById('fvAllUsersV59')||document.getElementById('fvPresencePanel');if(document.visibilityState==='visible'&&h&&h.offsetParent!==null)liveUsers().catch(()=>{})},60000);
 async function itemSales(){if(U()?.role!=='manager'||!T())return;let rp=document.getElementById('reportsPanel')||document.getElementById('reportPanel');if(!rp)return;let box=document.getElementById('fvLiveItemSalesV68');if(!box){box=document.createElement('section');box.id='fvLiveItemSalesV68';box.style.marginTop='16px';rp.appendChild(box)}let f=document.getElementById('fvSalesFromV45')?.value||D(),t=document.getElementById('fvSalesToV45')?.value||f,sc=S();let sales=await A('pos_sales?select=id,store_code,sale_date,sale_time,cashier,payment,total&store_code=eq.'+encodeURIComponent(sc)+'&sale_date=gte.'+f+'&sale_date=lte.'+t+'&order=sale_date.desc,sale_time.desc')||[];let ids=sales.map(x=>x.id);let items=[];if(ids.length)items=await A('pos_sale_items?select=sale_id,code,name,qty,price&sale_id=in.('+ids.join(',')+')')||[];let im={};items.forEach(i=>(im[i.sale_id]||(im[i.sale_id]=[])).push(i));let rows=[];sales.forEach(s=>(im[s.id]||[]).forEach(i=>rows.push({s,i})));box.innerHTML='<h3>Live Items Sold — '+E(sc)+'</h3><div class="small">Date, time, salesperson and quantity direct from live database. Updated '+new Date().toLocaleTimeString('en-ZA',{timeZone:'Africa/Johannesburg'})+'</div><div style="overflow:auto"><table><thead><tr><th>Date</th><th>Time</th><th>Salesperson</th><th>Code</th><th>Item Sold</th><th>Qty</th><th>Price</th></tr></thead><tbody>'+(rows.map(x=>'<tr><td>'+E(x.s.sale_date)+'</td><td>'+E(String(x.s.sale_time||'').slice(0,8))+'</td><td>'+E(x.s.cashier||'—')+'</td><td>'+E(x.i.code)+'</td><td>'+E(x.i.name)+'</td><td><b>'+Number(x.i.qty||0).toFixed(3).replace(/\.000$/,'')+'</b></td><td>R'+Number(x.i.price||0).toFixed(2)+'</td></tr>').join('')||'<tr><td colspan="7">No items sold for selected period.</td></tr>')+'</tbody></table></div>'}
-window.refreshLiveItemSalesV68=itemSales;setInterval(()=>{if(document.visibilityState==='visible')itemSales().catch(()=>{})},5000);setTimeout(()=>{liveUsers().catch(()=>{});itemSales().catch(()=>{})},1500);
+window.refreshLiveItemSalesV68=itemSales;setInterval(()=>{const rp=document.getElementById('reportsPanel')||document.getElementById('reportPanel');if(document.visibilityState==='visible'&&rp&&rp.offsetParent!==null)itemSales().catch(()=>{})},60000);setTimeout(()=>{liveUsers().catch(()=>{});itemSales().catch(()=>{})},1500);
 })();
 </script>
 <!-- BUILD: LIVE_USERS_ITEM_SALES_V68 -->
@@ -6975,7 +6975,7 @@ async function render(){
 async function confirmSave(){const entries=Object.entries(drafts);if(!entries.length)return alert('No count changes to confirm. Enter the physical counts first.');if(!confirm('Confirm and save '+entries.length+' count change(s) for '+store()+'?'))return;const b=document.getElementById('fv48CountConfirm');b.disabled=true;b.textContent='SAVING COUNTS...';try{for(const [code,val] of entries){const c=current[code]||{};await req('pos_store_input_counts?on_conflict=store_code,input_code,count_date',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({store_code:store(),input_code:code,count_date:day(),opening_qty:Number(c.opening_qty)||0,received_qty:Number(c.received_qty)||0,used_qty:Number(c.used_qty)||0,physical_count:Number(val)||0})})}Object.keys(drafts).forEach(k=>delete drafts[k]);await render();if(window.refreshLiveReconV55)await window.refreshLiveReconV55();alert('Count sheet confirmed and saved successfully.')}catch(e){alert('Could not confirm count sheet: '+e.message)}finally{b.disabled=false;b.textContent='CONFIRM & SAVE COUNT SHEET'}}
 window.refreshProductionInputCountSheetV63=render;window.refreshProductionInputCountSheetV48=render;
 setTimeout(()=>render().catch(()=>{}),900);
-setInterval(()=>{const b=document.getElementById('productionCountBody'),a=document.activeElement;if(document.visibilityState==='visible'&&b&&!(a&&b.contains(a))&&!Object.keys(drafts).length)render().catch(()=>{})},6000);
+setInterval(()=>{const b=document.getElementById('productionCountBody'),a=document.activeElement;if(document.visibilityState==='visible'&&b&&b.offsetParent!==null&&!(a&&b.contains(a))&&!Object.keys(drafts).length)render().catch(()=>{})},60000);
 document.addEventListener('click',e=>{if(/production input count sheet|inventory/i.test(e.target?.textContent||''))setTimeout(()=>render().catch(()=>{}),350)},true);
 })();
 </script>
@@ -7372,5 +7372,6 @@ window.openHistoricalCashupV59=open;window.loadHistoricalCashupV59=load;
  window.fvSalesActionsStableV61=apply;
 })();
 </script>
-<!-- BUILD: V61_SALESPERSON_ACTION_BUTTON_STABILITY_20260910 -->\n</body>
+<!-- BUILD: V61_SALESPERSON_ACTION_BUTTON_STABILITY_20260910 -->\n<!-- BUILD: MANAGER_STABILITY_FIX_20260915 -->
+</body>
 </html>
