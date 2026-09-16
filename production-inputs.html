@@ -33,7 +33,7 @@
 <div><label>Preferred Unit Cost (R)<input id="cost" type="number" step="0.01"></label></div>
 <div><label>Status<select id="active"><option value="true">Active</option><option value="false">Inactive</option></select></label></div>
 </div><div class="actions"><button class="save" onclick="saveInput()">SAVE INPUT</button><button class="secondary" onclick="clearForm()">CLEAR FORM</button></div><div id="msg" class="msg"></div></div>
-<div class="card" id="list"><h2>Existing Production Inputs</h2><div class="toolbar"><select id="listStore" onchange="loadInputs()"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select><input id="search" placeholder="Search code, name or category" oninput="render()"></div><div class="tablewrap"><table><thead><tr><th>Code</th><th>Name</th><th>Category</th><th>Unit</th><th>Reorder</th><th>Status</th><th>Action</th></tr></thead><tbody id="tbody"></tbody></table></div></div>
+<div class="card" id="list"><h2>Existing Production Inputs</h2><div class="toolbar"><select id="listStore" onchange="loadInputs()"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select><input id="search" placeholder="Search code, name or category" oninput="render()"></div><div class="tablewrap"><div id="listMsg" class="msg"></div><table><thead><tr><th>Code</th><th>Name</th><th>Category</th><th>Unit</th><th>Reorder</th><th>Status</th><th>Action</th></tr></thead><tbody id="tbody"></tbody></table></div></div>
 </div>
 <script>
 const ROOT='https://sflyjcgbxbcwspfuzone.supabase.co';
@@ -117,7 +117,26 @@ async function api(path,opt={}){
   return request(p,opt);
 }
 async function refreshAdmin(){if(await verifyManager())await loadInputs()}
-async function loadInputs(){if(!guard())return;let s=val('listStore');try{rows=await api('pos_store_production_inputs?store_code=eq.'+encodeURIComponent(s)+'&select=*&order=code.asc');render()}catch(e){document.getElementById('tbody').innerHTML='<tr><td colspan="7" class="bad">'+esc(e.message)+'</td></tr>'}}
+async function loadInputs(){
+  if(!guard())return;
+  const store=document.getElementById('listStore').value||'NDAYENI';
+  const body=document.getElementById('rows');
+  const msg=document.getElementById('listMsg');
+  if(body)body.innerHTML='<tr><td colspan="7">Loading live Production Inputs...</td></tr>';
+  if(msg){msg.textContent='Loading from shared database...';msg.className='msg'}
+  try{
+    const rows=await request('/rest/v1/pos_store_production_inputs?store_code=eq.'+
+      encodeURIComponent(store)+
+      '&select=id,store_code,code,name,category,unit,reorder_level,safety_stock,target_stock,purchase_cycle_days,purchase_group,preferred_supplier,preferred_unit_cost,active&order=category.asc,code.asc');
+    inputs=Array.isArray(rows)?rows:[];
+    render();
+    if(msg){msg.textContent=inputs.length+' Production Input(s) loaded for '+(store==='SIVANA'?'Sivana':'Ndayeni')+'.';msg.className='msg ok'}
+  }catch(e){
+    inputs=[];
+    if(body)body.innerHTML='<tr><td colspan="7">'+esc(e.message)+'</td></tr>';
+    if(msg){msg.textContent='Could not load Production Inputs: '+e.message;msg.className='msg bad'}
+  }
+}
 function render(){let q=val('search').toLowerCase(),a=rows.filter(x=>!q||[x.code,x.name,x.category].some(v=>String(v||'').toLowerCase().includes(q)));document.getElementById('tbody').innerHTML=a.map(x=>`<tr><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${esc(x.category||'')}</td><td>${esc(x.unit)}</td><td>${esc(x.reorder_level)}</td><td><span class="pill ${x.active?'':'inactive'}">${x.active?'ACTIVE':'INACTIVE'}</span></td><td><button class="secondary" onclick='edit(${JSON.stringify(x).replace(/'/g,"&#39;")})'>EDIT</button></td></tr>`).join('')||'<tr><td colspan="7">No inputs found.</td></tr>'}
 function edit(x){document.getElementById('store').value=x.store_code;document.getElementById('code').value=x.code;document.getElementById('name').value=x.name;document.getElementById('category').value=x.category||'';document.getElementById('unit').value=x.unit||'EA';document.getElementById('reorder').value=x.reorder_level||0;document.getElementById('safety').value=x.safety_stock||0;document.getElementById('target').value=x.target_stock||0;document.getElementById('cycle').value=x.purchase_cycle_days||7;document.getElementById('group').value=x.purchase_group||'WEEKLY';document.getElementById('supplier').value=x.preferred_supplier||'';document.getElementById('cost').value=x.preferred_unit_cost??'';document.getElementById('active').value=String(x.active!==false);go('add')}
 document.getElementById('store').value=localStorage.getItem('feastervilleStoreCode')||'NDAYENI';document.getElementById('listStore').value=document.getElementById('store').value;refreshAdmin();
