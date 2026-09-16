@@ -346,6 +346,10 @@ let receiptHistoryRows=[];
 function moneyH(v){return 'R'+Number(v||0).toFixed(2)}
 async function loadReceiptHistory(){
  const store=document.getElementById('h_store')?.value||'NDAYENI',from=document.getElementById('h_from')?.value||'',to=document.getElementById('h_to')?.value||'',st=document.getElementById('h_status');
+ if(!verifiedUser||verifiedUser.role!=='manager'){
+   if(st)st.textContent='Waiting for Manager session...';
+   return;
+ }
  if(st)st.textContent='Loading receipt history...';
  try{
   let p='/rest/v1/pos_stock_receipts?store_code=eq.'+encodeURIComponent(store)+'&select=id,receipt_date,supplier,reference,input_code,input_name,unit,qty,unit_cost,received_by,created_at,store_code&order=receipt_date.desc,created_at.desc';
@@ -370,6 +374,19 @@ document.getElementById('h_from').addEventListener('change',loadReceiptHistory);
 document.getElementById('h_to').addEventListener('change',loadReceiptHistory);
 document.getElementById('h_search').addEventListener('input',renderReceiptHistory);
 document.getElementById('h_refresh').addEventListener('click',loadReceiptHistory);
-setTimeout(loadReceiptHistory,1000);
+let historyTries=0;
+const historyTimer=setInterval(()=>{
+  historyTries++;
+  if(verifiedUser&&verifiedUser.role==='manager'){
+    clearInterval(historyTimer);
+    const activeStore=document.getElementById('listStore')?.value||document.getElementById('store')?.value||'NDAYENI';
+    document.getElementById('h_store').value=activeStore;
+    loadReceiptHistory();
+  }else if(historyTries>=20){
+    clearInterval(historyTimer);
+    const st=document.getElementById('h_status');
+    if(st)st.textContent='Manager session not ready. Click REFRESH HISTORY after signing in.';
+  }
+},500);
 });document.getElementById('r_input')?.addEventListener('change',applyReceiptDefaults);
 </script></body></html>
