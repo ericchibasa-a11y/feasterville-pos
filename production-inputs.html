@@ -102,10 +102,10 @@
 <div class="toolbar"><select id="h_store"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select>
 <input id="h_from" type="date" title="From date"><input id="h_to" type="date" title="To date">
 <input id="h_search" placeholder="Search supplier, reference, code or product">
-<button id="h_refresh">REFRESH HISTORY</button></div>
+<button id="h_refresh" type="button" onclick="loadReceiptHistory()">REFRESH HISTORY</button></div>
 <div id="h_status" class="msg"></div>
 <div style="overflow-x:auto"><table><thead><tr><th>Date</th><th>Supplier</th><th>Reference</th><th>Code</th><th>Product</th><th>Qty</th><th>Unit</th><th>Unit Cost</th><th>Total Cost</th><th>Received By</th></tr></thead>
-<tbody id="h_body"></tbody><tfoot><tr><th colspan="5" style="text-align:right">TOTAL</th><th id="h_qty_total">0</th><th></th><th></th><th id="h_cost_total">R0.00</th><th></th></tr></tfoot></table></div></div>
+<tbody id="h_body"><tr><td colspan="10">Loading receipt history...</td></tr></tbody><tfoot><tr><th colspan="5" style="text-align:right">TOTAL</th><th id="h_qty_total">0</th><th></th><th></th><th id="h_cost_total">R0.00</th><th></th></tr></tfoot></table></div></div>
 <div class="card" id="list"><span id="existingInputsAnchor"></span><h2>Existing Production Inputs</h2><p><strong>Search the item by code or name, then click the large green RECEIVE button.</strong> Matching products are shown as full rows below.</p><div class="toolbar"><select id="listStore" onchange="loadInputs()"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select><input id="search" placeholder="Search code, name or category" oninput="render()"></div><div class="tablewrap"><div id="listMsg" class="msg"></div><table><thead><tr><th>Code</th><th>Name</th><th>Category</th><th>Unit</th><th>Reorder</th><th>Status</th><th>Action</th></tr></thead><tbody id="tbody"></tbody></table></div></div>
 </div>
 <script>
@@ -189,7 +189,15 @@ async function api(path,opt={}){
   let p=path.startsWith('/')?path:'/rest/v1/'+path;
   return request(p,opt);
 }
-async function refreshAdmin(){if(await verifyManager())await loadInputs()}
+async function refreshAdmin(){
+  if(await verifyManager()){
+    await loadInputs();
+    if(document.getElementById('h_store')){
+      document.getElementById('h_store').value=document.getElementById('listStore')?.value||document.getElementById('store')?.value||'NDAYENI';
+      await loadReceiptHistory();
+    }
+  }
+}
 function val(id){return (document.getElementById(id)?.value||'').trim()}
 function go(where){
   const el=document.getElementById(where==='add'?'add':'list');
