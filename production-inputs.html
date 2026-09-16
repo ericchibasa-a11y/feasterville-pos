@@ -36,7 +36,8 @@
 <div class="card" id="list"><h2>Existing Production Inputs</h2><div class="toolbar"><select id="listStore" onchange="loadInputs()"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select><input id="search" placeholder="Search code, name or category" oninput="render()"></div><div class="tablewrap"><table><thead><tr><th>Code</th><th>Name</th><th>Category</th><th>Unit</th><th>Reorder</th><th>Status</th><th>Action</th></tr></thead><tbody id="tbody"></tbody></table></div></div>
 </div>
 <script>
-const BASE='https://sflyjcgbxbcwspfuzone.supabase.co/rest/v1';
+const ROOT='https://sflyjcgbxbcwspfuzone.supabase.co';
+const BASE=ROOT+'/rest/v1';
 const KEY='sb_publishable_iASq-tni6KYrFK0R2S35zA_mpwt4MqM';let rows=[];
 function tok(){
   let v=sessionStorage.getItem('feastervilleCloudAccessToken')||localStorage.getItem('feastervilleCloudAccessToken');
@@ -52,7 +53,7 @@ function tok(){
 let verifiedUser=null;
 function user(){return verifiedUser}
 function headers(prefer){let h={apikey:KEY,Authorization:'Bearer '+tok(),'Content-Type':'application/json'};if(prefer)h.Prefer=prefer;return h}
-async function api(path,opt={}){let r=await fetch(URL+'/rest/v1/'+path,{...opt,headers:{...headers(opt.prefer),...(opt.headers||{})}});let txt=await r.text();if(!r.ok)throw Error(txt||('HTTP '+r.status));return txt?JSON.parse(txt):null}
+async function api(path,opt={}){let r=await fetch(ROOT+'/rest/v1/'+path,{...opt,headers:{...headers(opt.prefer),...(opt.headers||{})}});let txt=await r.text();if(!r.ok)throw Error(txt||('HTTP '+r.status));return txt?JSON.parse(txt):null}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function guard(){
   let u=user(), w=document.getElementById('who'), box=document.getElementById('adminLogin');
@@ -69,7 +70,7 @@ async function verifyManager(){
   let token=tok();
   if(!token){verifiedUser=null;guard();return false}
   try{
-    let r=await fetch(URL+'/auth/v1/user',{headers:{apikey:KEY,Authorization:'Bearer '+token}});
+    let r=await fetch(ROOT+'/auth/v1/user',{headers:{apikey:KEY,Authorization:'Bearer '+token}});
     if(!r.ok)throw Error('Session expired');
     let au=await r.json();
     let p=await api('pos_profiles?user_id=eq.'+encodeURIComponent(au.id)+'&select=user_id,display_name,role,store_code,active&limit=1');
@@ -94,7 +95,7 @@ async function adminSignIn(){
   m.textContent='Signing in...'; m.className='msg';
   if(!email||!password){m.textContent='Enter Manager email and password.';m.className='msg bad';return}
   try{
-    let r=await fetch(URL+'/auth/v1/token?grant_type=password',{
+    let r=await fetch(ROOT+'/auth/v1/token?grant_type=password',{
       method:'POST',
       headers:{apikey:KEY,'Content-Type':'application/json'},
       body:JSON.stringify({email,password})
