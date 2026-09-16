@@ -117,27 +117,79 @@ async function api(path,opt={}){
   return request(p,opt);
 }
 async function refreshAdmin(){if(await verifyManager())await loadInputs()}
+function val(id){return (document.getElementById(id)?.value||'').trim()}
+function go(where){
+  const el=document.getElementById(where==='add'?'add':'list');
+  if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function clearForm(){
+  ['code','name','category','supplier','cost'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});
+  document.getElementById('unit').value='EA';
+  document.getElementById('reorder').value='0';
+  document.getElementById('safety').value='0';
+  document.getElementById('target').value='0';
+  document.getElementById('cycle').value='7';
+  document.getElementById('group').value='WEEKLY';
+  document.getElementById('active').value='true';
+  const m=document.getElementById('msg');if(m){m.textContent='';m.className='msg'}
+}
+async function saveInput(){
+  if(!guard())return;
+  const m=document.getElementById('msg');
+  const store=document.getElementById('store').value;
+  const code=String(document.getElementById('code').value||'').trim().toUpperCase();
+  const name=String(document.getElementById('name').value||'').trim();
+  if(!code||!name){m.textContent='Input Code and Input Name are required.';m.className='msg bad';return}
+  const payload={
+    store_code:store,code,name,category:String(document.getElementById('category').value||'').trim()||null,
+    unit:document.getElementById('unit').value||'EA',
+    reorder_level:Number(document.getElementById('reorder').value||0),
+    safety_stock:Number(document.getElementById('safety').value||0),
+    target_stock:Number(document.getElementById('target').value||0),
+    purchase_cycle_days:Number(document.getElementById('cycle').value||7),
+    purchase_group:document.getElementById('group').value||'WEEKLY',
+    preferred_supplier:String(document.getElementById('supplier').value||'').trim()||null,
+    preferred_unit_cost:String(document.getElementById('cost').value||'').trim()===''?null:Number(document.getElementById('cost').value),
+    active:document.getElementById('active').value==='true'
+  };
+  try{
+    m.textContent='Saving Production Input...';m.className='msg';
+    await request('/rest/v1/pos_store_production_inputs?on_conflict=store_code,code',{
+      method:'POST',
+      headers:{Prefer:'resolution=merge-duplicates,return=representation'},
+      body:JSON.stringify(payload)
+    });
+    m.textContent='Production Input saved successfully.';m.className='msg ok';
+    document.getElementById('listStore').value=store;
+    await loadInputs();
+  }catch(e){m.textContent='Could not save Production Input: '+e.message;m.className='msg bad'}
+}
 async function loadInputs(){
   if(!guard())return;
   const store=document.getElementById('listStore').value||'NDAYENI';
-  const body=document.getElementById('rows');
+  const body=document.getElementById('tbody');
   const msg=document.getElementById('listMsg');
   if(body)body.innerHTML='<tr><td colspan="7">Loading live Production Inputs...</td></tr>';
   if(msg){msg.textContent='Loading from shared database...';msg.className='msg'}
   try{
-    const rows=await request('/rest/v1/pos_store_production_inputs?store_code=eq.'+
+    const data=await request('/rest/v1/pos_store_production_inputs?store_code=eq.'+
       encodeURIComponent(store)+
       '&select=id,store_code,code,name,category,unit,reorder_level,safety_stock,target_stock,purchase_cycle_days,purchase_group,preferred_supplier,preferred_unit_cost,active&order=category.asc,code.asc');
-    inputs=Array.isArray(rows)?rows:[];
+    rows=Array.isArray(data)?data:[];
     render();
-    if(msg){msg.textContent=inputs.length+' Production Input(s) loaded for '+(store==='SIVANA'?'Sivana':'Ndayeni')+'.';msg.className='msg ok'}
+    if(msg){msg.textContent=rows.length+' Production Input(s) loaded for '+(store==='SIVANA'?'Sivana':'Ndayeni')+'.';msg.className='msg ok'}
   }catch(e){
-    inputs=[];
+    rows=[];
     if(body)body.innerHTML='<tr><td colspan="7">'+esc(e.message)+'</td></tr>';
     if(msg){msg.textContent='Could not load Production Inputs: '+e.message;msg.className='msg bad'}
   }
 }
-function render(){let q=val('search').toLowerCase(),a=rows.filter(x=>!q||[x.code,x.name,x.category].some(v=>String(v||'').toLowerCase().includes(q)));document.getElementById('tbody').innerHTML=a.map(x=>`<tr><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${esc(x.category||'')}</td><td>${esc(x.unit)}</td><td>${esc(x.reorder_level)}</td><td><span class="pill ${x.active?'':'inactive'}">${x.active?'ACTIVE':'INACTIVE'}</span></td><td><button class="secondary" onclick='edit(${JSON.stringify(x).replace(/'/g,"&#39;")})'>EDIT</button></td></tr>`).join('')||'<tr><td colspan="7">No inputs found.</td></tr>'}
+function render(){
+  const searchEl=document.getElementById('search');
+  const q=String(searchEl?searchEl.value:'').trim().toLowerCase();
+  const a=rows.filter(x=>!q||[x.code,x.name,x.category].some(v=>String(v||'').toLowerCase().includes(q)));
+  document.getElementById('tbody').innerHTML=a.map(x=>`<tr><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${esc(x.category||'')}</td><td>${esc(x.unit)}</td><td>${esc(x.reorder_level)}</td><td><span class="pill ${x.active?'':'inactive'}">${x.active?'ACTIVE':'INACTIVE'}</span></td><td><button class="secondary" onclick='edit(${JSON.stringify(x).replace(/'/g,"&#39;")})'>EDIT</button></td></tr>`).join('')||'<tr><td colspan="7">No inputs found.</td></tr>';
+}
 function edit(x){document.getElementById('store').value=x.store_code;document.getElementById('code').value=x.code;document.getElementById('name').value=x.name;document.getElementById('category').value=x.category||'';document.getElementById('unit').value=x.unit||'EA';document.getElementById('reorder').value=x.reorder_level||0;document.getElementById('safety').value=x.safety_stock||0;document.getElementById('target').value=x.target_stock||0;document.getElementById('cycle').value=x.purchase_cycle_days||7;document.getElementById('group').value=x.purchase_group||'WEEKLY';document.getElementById('supplier').value=x.preferred_supplier||'';document.getElementById('cost').value=x.preferred_unit_cost??'';document.getElementById('active').value=String(x.active!==false);go('add')}
 document.getElementById('store').value=localStorage.getItem('feastervilleStoreCode')||'NDAYENI';document.getElementById('listStore').value=document.getElementById('store').value;refreshAdmin();
 </script></body></html>
