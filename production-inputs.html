@@ -180,39 +180,11 @@ async function saveInput(){
   }catch(e){m.textContent='Could not save Production Input: '+e.message;m.className='msg bad'}
 }
 
-function receiptStatus(msg,ok=true){const e=document.getElementById('receipt_status');if(!e)return;e.textContent=msg||'';e.style.color=ok?'#166534':'#b91c1c';}
-function setReceiptDate(){const e=document.getElementById('r_date');if(e&&!e.value)e.value=new Date().toISOString().slice(0,10);}
-function clearReceipt(){['r_supplier','r_reference','r_qty','r_cost'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});setReceiptDate();receiptStatus('');}
-async function populateReceiptInputs(){
-  const storeEl=document.getElementById('r_store');
-  const sel=document.getElementById('r_input');
-  if(!storeEl||!sel)return;
-  const store=storeEl.value||'NDAYENI';
-  sel.disabled=true;
-  sel.innerHTML='<option value="">Loading Production Inputs...</option>';
-  try{
-    const path='/rest/v1/pos_store_production_inputs?store_code=eq.'+encodeURIComponent(store)+'&active=eq.true&select=code,name,unit,preferred_unit_cost,preferred_supplier&order=name.asc';
-    const items=await api(path);
-    if(!Array.isArray(items)) throw new Error('Unexpected Production Input response');
-    sel.innerHTML='<option value="">Select Production Input</option>';
-    items.forEach(x=>{
-      const o=document.createElement('option');
-      o.value=x.code;
-      o.textContent=x.code+' — '+x.name;
-      o.dataset.name=x.name||'';
-      o.dataset.unit=x.unit||'EA';
-      o.dataset.cost=(x.preferred_unit_cost??'');
-      o.dataset.supplier=x.preferred_supplier||'';
-      sel.appendChild(o);
-    });
-    sel.disabled=false;
-    receiptStatus(items.length+' Production Input(s) ready for '+(store==='SIVANA'?'Sivana':'Ndayeni')+'.', true);
-  }catch(e){
-    sel.disabled=false;
-    sel.innerHTML='<option value="">Could not load Production Inputs</option>';
-    receiptStatus('Could not load Production Inputs: '+(e?.message||e), false);
-  }
+function receiptStatus(text,ok){
+ const el=document.getElementById('receiptMsg'); if(!el)return;
+ el.textContent=text||''; el.className='msg '+(ok?'ok':'bad');
 }
+
 function applyReceiptDefaults(){const s=document.getElementById('r_input'),o=s?.options[s.selectedIndex];if(!o||!o.value)return;const a=document.getElementById('r_supplier'),c=document.getElementById('r_cost');if(a&&!a.value)a.value=o.dataset.supplier||'';if(c&&!c.value)c.value=o.dataset.cost||'';}
 async function saveReceipt(){
  if(!verifiedUser||String(verifiedUser.role||'').toLowerCase()!=='manager'){receiptStatus('Manager sign-in is required before saving stock receipts.',false);return;}
@@ -256,5 +228,5 @@ function render(){
 }
 function edit(x){document.getElementById('store').value=x.store_code;document.getElementById('code').value=x.code;document.getElementById('name').value=x.name;document.getElementById('category').value=x.category||'';document.getElementById('unit').value=x.unit||'EA';document.getElementById('reorder').value=x.reorder_level||0;document.getElementById('safety').value=x.safety_stock||0;document.getElementById('target').value=x.target_stock||0;document.getElementById('cycle').value=x.purchase_cycle_days||7;document.getElementById('group').value=x.purchase_group||'WEEKLY';document.getElementById('supplier').value=x.preferred_supplier||'';document.getElementById('cost').value=x.preferred_unit_cost??'';document.getElementById('active').value=String(x.active!==false);go('add')}
 document.getElementById('store').value=localStorage.getItem('feastervilleStoreCode')||'NDAYENI';document.getElementById('listStore').value=document.getElementById('store').value;refreshAdmin();
-document.addEventListener('DOMContentLoaded',()=>{setReceiptDate();setTimeout(()=>populateReceiptInputs(),1200);document.getElementById('r_store')?.addEventListener('change',()=>populateReceiptInputs());});document.getElementById('r_input')?.addEventListener('change',applyReceiptDefaults);
+document.addEventListener('DOMContentLoaded',()=>{setReceiptDate();setTimeout(()=>populateReceiptInputs(),1500);document.getElementById('r_store')?.addEventListener('change',()=>populateReceiptInputs());});document.getElementById('r_input')?.addEventListener('change',applyReceiptDefaults);
 </script></body></html>
