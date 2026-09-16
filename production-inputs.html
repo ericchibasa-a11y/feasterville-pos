@@ -183,15 +183,39 @@ async function saveInput(){
 function receiptStatus(msg,ok=true){const e=document.getElementById('receipt_status');if(!e)return;e.textContent=msg||'';e.style.color=ok?'#166534':'#b91c1c';}
 function setReceiptDate(){const e=document.getElementById('r_date');if(e&&!e.value)e.value=new Date().toISOString().slice(0,10);}
 function clearReceipt(){['r_supplier','r_reference','r_qty','r_cost'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});setReceiptDate();receiptStatus('');}
-function populateReceiptInputs(){
- const store=document.getElementById('r_store')?.value||'NDAYENI', sel=document.getElementById('r_input'); if(!sel)return;
- const current=sel.value, items=rows.filter(x=>x.store_code===store&&x.active!==false);
- sel.innerHTML='<option value="">Select Production Input</option>'+items.map(x=>'<option value="'+esc(x.code)+'" data-name="'+esc(x.name)+'" data-unit="'+esc(x.unit||'EA')+'" data-cost="'+esc(x.preferred_unit_cost??'')+'" data-supplier="'+esc(x.preferred_supplier||'')+'">'+esc(x.code)+' — '+esc(x.name)+'</option>').join('');
- if(items.some(x=>x.code===current))sel.value=current;
+async function populateReceiptInputs(){
+  const storeEl=document.getElementById('r_store');
+  const sel=document.getElementById('r_input');
+  if(!storeEl||!sel)return;
+  const store=storeEl.value||'NDAYENI';
+  sel.disabled=true;
+  sel.innerHTML='<option value="">Loading Production Inputs...</option>';
+  try{
+    const path='/rest/v1/pos_store_production_inputs?store_code=eq.'+encodeURIComponent(store)+'&active=eq.true&select=code,name,unit,preferred_unit_cost,preferred_supplier&order=name.asc';
+    const items=await api(path);
+    if(!Array.isArray(items)) throw new Error('Unexpected Production Input response');
+    sel.innerHTML='<option value="">Select Production Input</option>';
+    items.forEach(x=>{
+      const o=document.createElement('option');
+      o.value=x.code;
+      o.textContent=x.code+' — '+x.name;
+      o.dataset.name=x.name||'';
+      o.dataset.unit=x.unit||'EA';
+      o.dataset.cost=(x.preferred_unit_cost??'');
+      o.dataset.supplier=x.preferred_supplier||'';
+      sel.appendChild(o);
+    });
+    sel.disabled=false;
+    receiptStatus(items.length+' Production Input(s) ready for '+(store==='SIVANA'?'Sivana':'Ndayeni')+'.', true);
+  }catch(e){
+    sel.disabled=false;
+    sel.innerHTML='<option value="">Could not load Production Inputs</option>';
+    receiptStatus('Could not load Production Inputs: '+(e?.message||e), false);
+  }
 }
 function applyReceiptDefaults(){const s=document.getElementById('r_input'),o=s?.options[s.selectedIndex];if(!o||!o.value)return;const a=document.getElementById('r_supplier'),c=document.getElementById('r_cost');if(a&&!a.value)a.value=o.dataset.supplier||'';if(c&&!c.value)c.value=o.dataset.cost||'';}
 async function saveReceipt(){
- if(!window.currentUser||String(window.currentUser.role||'').toLowerCase()!=='manager'){receiptStatus('Manager sign-in is required before saving stock receipts.',false);return;}
+ if(!verifiedUser||String(verifiedUser.role||'').toLowerCase()!=='manager'){receiptStatus('Manager sign-in is required before saving stock receipts.',false);return;}
  const store=document.getElementById('r_store').value,sel=document.getElementById('r_input'),o=sel.options[sel.selectedIndex];
  const input_code=sel.value,input_name=o?.dataset.name||'',unit=o?.dataset.unit||'EA',receipt_date=document.getElementById('r_date').value;
  const supplier=String(document.getElementById('r_supplier').value||'').trim(),reference=String(document.getElementById('r_reference').value||'').trim();
@@ -199,7 +223,7 @@ async function saveReceipt(){
  if(!input_code){receiptStatus('Select a Production Input.',false);return;} if(!receipt_date){receiptStatus('Enter the receipt date.',false);return;}
  if(!Number.isFinite(qty)||qty<=0){receiptStatus('Quantity received must be greater than zero.',false);return;}
  if(!Number.isFinite(unit_cost)||unit_cost<0){receiptStatus('Unit cost cannot be negative.',false);return;}
- const payload={receipt_date,supplier:supplier||null,reference:reference||null,input_code,input_name,unit,qty,unit_cost,received_by:window.currentUser.name||window.currentUser.username||'Manager',created_by:window.currentUser.id,store_code:store};
+ const payload={receipt_date,supplier:supplier||null,reference:reference||null,input_code,input_name,unit,qty,unit_cost,received_by:verifiedUser.name||verifiedUser.display_name||'Manager',created_by:verifiedUser.id,store_code:store};
  try{receiptStatus('Saving stock receipt...');await request('/rest/v1/pos_stock_receipts',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(payload)});receiptStatus('Stock receipt saved successfully.');}
  catch(e){receiptStatus('Could not save stock receipt: '+e.message,false);}
 }
@@ -232,5 +256,5 @@ function render(){
 }
 function edit(x){document.getElementById('store').value=x.store_code;document.getElementById('code').value=x.code;document.getElementById('name').value=x.name;document.getElementById('category').value=x.category||'';document.getElementById('unit').value=x.unit||'EA';document.getElementById('reorder').value=x.reorder_level||0;document.getElementById('safety').value=x.safety_stock||0;document.getElementById('target').value=x.target_stock||0;document.getElementById('cycle').value=x.purchase_cycle_days||7;document.getElementById('group').value=x.purchase_group||'WEEKLY';document.getElementById('supplier').value=x.preferred_supplier||'';document.getElementById('cost').value=x.preferred_unit_cost??'';document.getElementById('active').value=String(x.active!==false);go('add')}
 document.getElementById('store').value=localStorage.getItem('feastervilleStoreCode')||'NDAYENI';document.getElementById('listStore').value=document.getElementById('store').value;refreshAdmin();
-document.addEventListener('DOMContentLoaded',()=>{setReceiptDate();document.getElementById('r_store')?.addEventListener('change',async()=>{const s=document.getElementById('r_store').value;document.getElementById('listStore').value=s;await loadInputs();});document.getElementById('r_input')?.addEventListener('change',applyReceiptDefaults);});
+document.addEventListener('DOMContentLoaded',()=>{setReceiptDate();setTimeout(()=>populateReceiptInputs(),1200);document.getElementById('r_store')?.addEventListener('change',()=>populateReceiptInputs());});document.getElementById('r_input')?.addEventListener('change',applyReceiptDefaults);
 </script></body></html>
