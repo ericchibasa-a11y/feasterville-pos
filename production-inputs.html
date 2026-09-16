@@ -99,7 +99,8 @@ async function adminSignIn(){
       headers:{apikey:KEY,'Content-Type':'application/json'},
       body:JSON.stringify({email,password})
     });
-    let d=await r.json();
+    let raw=await r.text(), d={};
+    try{d=raw?JSON.parse(raw):{}}catch(_){throw Error('Cloud sign-in returned an unexpected response.')}
     if(!r.ok||!d.access_token)throw Error(d.error_description||d.msg||d.message||'Sign in failed');
     sessionStorage.setItem('feastervilleCloudAccessToken',d.access_token);
     if(d.refresh_token)sessionStorage.setItem('feastervilleCloudRefreshToken',d.refresh_token);
