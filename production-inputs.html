@@ -26,6 +26,19 @@
  #existingInputsCard tbody td:before{font-weight:700;margin-right:8px}
 }
 </style>
+
+<style>
+#existingInputsCard{height:auto!important;max-height:none!important;overflow:visible!important;padding-bottom:24px!important}
+#existingInputsCard .table-wrap{height:auto!important;max-height:none!important;overflow:visible!important;padding-bottom:16px!important}
+#existingInputsCard table{display:table!important;width:100%!important;table-layout:auto!important}
+#existingInputsCard thead{display:table-header-group!important}
+#existingInputsCard tbody{display:table-row-group!important}
+#existingInputsCard tbody tr{display:table-row!important;height:58px!important;background:#fff!important;border:0!important}
+#existingInputsCard tbody td{display:table-cell!important;padding:12px 8px!important;vertical-align:middle!important;overflow:visible!important;white-space:normal!important;border-bottom:1px solid #e5e7eb!important}
+#existingInputsCard tbody td:nth-child(2){min-width:220px!important}
+#existingInputsCard tbody td:last-child{min-width:210px!important;white-space:nowrap!important}
+#existingInputsCard .receive-action{display:inline-block!important;visibility:visible!important;padding:10px 16px!important}
+</style>
 </head><body>
 <div class="top"><div class="nav">
 <a href="index.html">POS HOME</a><button class="primary" onclick="go('add')">ADD PRODUCTION INPUT</button><button onclick="go('list')">EXISTING INPUTS</button><button onclick="go('receipt')">RECEIVE STOCK</button><button onclick="refreshAdmin()">REFRESH</button><button onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>
