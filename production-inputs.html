@@ -34,7 +34,7 @@
 <div><label>Status<select id="active"><option value="true">Active</option><option value="false">Inactive</option></select></label></div>
 </div><div class="actions"><button class="save" onclick="saveInput()">SAVE INPUT</button><button class="secondary" onclick="clearForm()">CLEAR FORM</button></div><div id="msg" class="msg"></div></div>
 <div class="card" id="receipt">
-<h2>Receive Production Input Stock</h2>
+<span id="receiveStock"></span><h2>Receive Production Input Stock</h2>
 <p class="muted">Capture opening stock or supplier receipts. Each receipt is saved to the live stock receipt register for audit and reconciliation.</p>
 <div class="grid">
 <label>Store<select id="r_store"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select></label>
@@ -259,9 +259,29 @@ function render(){
   const searchEl=document.getElementById('search');
   const q=String(searchEl?searchEl.value:'').trim().toLowerCase();
   const a=rows.filter(x=>!q||[x.code,x.name,x.category].some(v=>String(v||'').toLowerCase().includes(q)));
-  document.getElementById('tbody').innerHTML=a.map(x=>`<tr><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${esc(x.category||'')}</td><td>${esc(x.unit)}</td><td>${esc(x.reorder_level)}</td><td><span class="pill ${x.active?'':'inactive'}">${x.active?'ACTIVE':'INACTIVE'}</span></td><td><button class="secondary" onclick='edit(${JSON.stringify(x).replace(/'/g,"&#39;")})'>EDIT</button></td></tr>`).join('')||'<tr><td colspan="7">No inputs found.</td></tr>';
+  document.getElementById('tbody').innerHTML=a.map(x=>`<tr><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${esc(x.category||'')}</td><td>${esc(x.unit)}</td><td>${esc(x.reorder_level)}</td><td><span class="pill ${x.active?'':'inactive'}">${x.active?'ACTIVE':'INACTIVE'}</span></td><td><button class="secondary" onclick='edit(${JSON.stringify(x).replace(/'/g,"&#39;")})'>EDIT</button> <button class="save" onclick='receive(${JSON.stringify(x).replace(/'/g,"&#39;")})'>RECEIVE</button></td></tr>`).join('')||'<tr><td colspan="7">No inputs found.</td></tr>';
+}
+function receive(x){
+  if(!x)return;
+  const rStore=document.getElementById('r_store');
+  const rInput=document.getElementById('r_input');
+  if(rStore)rStore.value=x.store_code||'NDAYENI';
+  if(rInput){
+    rInput.innerHTML='';
+    const o=document.createElement('option');
+    o.value=x.code;o.textContent=x.code+' — '+x.name;o.selected=true;
+    o.dataset.name=x.name||'';o.dataset.unit=x.unit||'EA';
+    o.dataset.cost=x.preferred_unit_cost??'';o.dataset.supplier=x.preferred_supplier||'';
+    rInput.appendChild(o);
+  }
+  const s=document.getElementById('r_supplier'),c=document.getElementById('r_cost');
+  if(s)s.value=x.preferred_supplier||'';
+  if(c)c.value=x.preferred_unit_cost??'';
+  setReceiptDate();
+  receiptStatus('Selected '+x.code+' — '+x.name+'. Enter reference and quantity received.',true);
+  document.getElementById('receiveStock')?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function edit(x){document.getElementById('store').value=x.store_code;document.getElementById('code').value=x.code;document.getElementById('name').value=x.name;document.getElementById('category').value=x.category||'';document.getElementById('unit').value=x.unit||'EA';document.getElementById('reorder').value=x.reorder_level||0;document.getElementById('safety').value=x.safety_stock||0;document.getElementById('target').value=x.target_stock||0;document.getElementById('cycle').value=x.purchase_cycle_days||7;document.getElementById('group').value=x.purchase_group||'WEEKLY';document.getElementById('supplier').value=x.preferred_supplier||'';document.getElementById('cost').value=x.preferred_unit_cost??'';document.getElementById('active').value=String(x.active!==false);go('add')}
 document.getElementById('store').value=localStorage.getItem('feastervilleStoreCode')||'NDAYENI';document.getElementById('listStore').value=document.getElementById('store').value;refreshAdmin();
-document.addEventListener('DOMContentLoaded',()=>{setReceiptDate();setTimeout(()=>populateReceiptInputs(),1500);document.getElementById('r_store')?.addEventListener('change',()=>populateReceiptInputs());});document.getElementById('r_input')?.addEventListener('change',applyReceiptDefaults);
+document.addEventListener('DOMContentLoaded',()=>{setReceiptDate();});document.getElementById('r_input')?.addEventListener('change',applyReceiptDefaults);
 </script></body></html>
