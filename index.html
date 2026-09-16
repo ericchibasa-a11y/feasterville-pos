@@ -216,6 +216,7 @@ body.print-report #reportContent { position:absolute; left:0; top:0; width:100%;
 <button class="cat active" onclick="showInvMaster('all',this)">Inventory Listing</button>
 <button class="cat" onclick="showInvMaster('finished',this)">Sellable Products</button>
 <button class="cat" onclick="showInvMaster('raw',this)">Production Inputs</button>
+<button class="cat" type="button" onclick="document.getElementById('masterProductionEditorPanel').scrollIntoView({behavior:'smooth',block:'start'})">ADD INPUT</button>
 <button class="cat" onclick="showInvCount('finished',this)">Finished Count Sheet</button>
 <button class="cat" onclick="showInvCount('raw',this)">Raw Material Count Sheet</button>
 <button class="cat" onclick="showInvStockIn(this)">Stock In</button>
@@ -388,7 +389,7 @@ body.print-report #reportContent { position:absolute; left:0; top:0; width:100%;
 
 
 <section class="panel" id="masterProductionEditorPanel" style="grid-column:1/-1">
-<h2>Master Production Inputs — Add / Edit Products</h2>
+<h2>ADD INPUT — Production Inputs</h2>
 <p class="small">Add new production inputs or edit existing production inputs. Changes are saved and used by recipes, stock movements, ledger, count sheet and reconciliation.</p>
 
 <div class="order-head">
@@ -4067,10 +4068,8 @@ document.addEventListener('DOMContentLoaded',function(){
   <div id="fvCashupIdentity" class="small"></div>
   <div id="fvCashupSummary">Loading today's sales...</div>
   <label><b>Opening Cash Float (R)</b></label><input id="fvOpeningFloat" type="number" min="0" step="0.01" value="0">
-  <label><b>Cash Expense Type</b></label><select id="fvCashExpenseType"><option value="">No cash expense</option><option value="Kota Bread">Kota Bread</option><option value="Transport">Transport</option><option value="Electricity">Electricity</option><option value="Other Expenses">Other Expense</option></select>
-  <label><b>Cash Expense Paid (R)</b></label><input id="fvCashExpense" type="number" min="0" step="0.01" value="0" placeholder="Amount paid from till">
   <label><b>Actual Cash Counted (R)</b></label><input id="fvActualCash" type="number" min="0" step="0.01" placeholder="Enter cash counted">
-  <label><b>Notes</b></label><textarea id="fvCashupNotes" rows="2" placeholder="Required for Other Expense"></textarea>
+  <label><b>Notes</b></label><textarea id="fvCashupNotes" rows="2" placeholder="Optional notes"></textarea>
   <div id="fvCashupVariance" style="font-weight:700;margin:8px 0 14px"></div>
   <div id="fvCashupActions"><button type="button" onclick="closeFvCashupModal()">CANCEL</button><button type="button" class="primary" id="fvSubmitCashup">CLOSE DAY</button></div>
  </div>
@@ -4127,7 +4126,7 @@ document.addEventListener('DOMContentLoaded',function(){
    rows.forEach(r=>{let v=Number(r.total||0),b=payBucket(r.payment);x[b]+=v;x.total+=v});return x;
  }
  async function existing(){const me=u();if(!me||!me.id)return[];return api('pos_daily_cashups?store_code=eq.'+encodeURIComponent(store())+'&cashup_date=eq.'+day()+'&user_id=eq.'+encodeURIComponent(me.id)+'&select=*')}
- function variance(){if(!totals)return;let f=Number(document.getElementById('fvOpeningFloat').value||0),e=Number(document.getElementById('fvCashExpense').value||0),a=Number(document.getElementById('fvActualCash').value||0),expected=totals.cash+f-e,v=a-expected;document.getElementById('fvCashupVariance').textContent='Expected cash: '+money(expected)+' (after cash expense '+money(e)+') | Difference: '+money(v)}
+ function variance(){if(!totals)return;let f=Number(document.getElementById('fvOpeningFloat').value||0),a=Number(document.getElementById('fvActualCash').value||0),expected=totals.cash+f,v=a-expected;document.getElementById('fvCashupVariance').textContent='Expected cash: '+money(expected)+' | Difference: '+money(v)}
  window.openFvCashup=async function(){
    try{
     const me=u();if(!me||!['salesperson','manager'].includes(me.role)){alert('Cash-up is available to Salesperson and Manager accounts only.');return}
@@ -4145,14 +4144,14 @@ document.addEventListener('DOMContentLoaded',function(){
    }catch(e){console.error(e);alert('Could not prepare cash-up: '+e.message)}
  }
  window.closeFvCashupModal=function(){document.getElementById('fvCashupModal').style.display='none'};
- document.getElementById('fvOpeningFloat').addEventListener('input',variance);document.getElementById('fvCashExpense').addEventListener('input',variance);document.getElementById('fvActualCash').addEventListener('input',variance);
+ document.getElementById('fvOpeningFloat').addEventListener('input',variance);document.getElementById('fvActualCash').addEventListener('input',variance);
  document.getElementById('fvSubmitCashup').onclick=async function(){
    try{
     const me=u();if(!me||!totals)return;let actualRaw=document.getElementById('fvActualCash').value;if(actualRaw===''){alert('Enter the actual cash counted.');return}
     let ex=await existing();if(ex.length){alert('This day is already closed.');return}
-    let f=Number(document.getElementById('fvOpeningFloat').value||0),e=Number(document.getElementById('fvCashExpense').value||0),expenseType=document.getElementById('fvCashExpenseType').value,expenseNotes=document.getElementById('fvCashupNotes').value.trim();if(e>0&&!expenseType){alert('Select the cash expense type.');return}if(e>0&&expenseType==='Other Expenses'&&!expenseNotes){alert('Describe the Other Expense in Notes.');return}let a=Number(actualRaw),expected=totals.cash+f-e,notes=(e>0?'Cash expense: '+expenseType+' — '+money(e)+(expenseNotes?' | '+expenseNotes:''):(expenseNotes||null));
-    let payload={store_code:store(),cashup_date:day(),user_id:me.id,salesperson_name:me.role==='manager'?('Manager — '+(store()==='SIVANA'?'Sivana':'Ndayini')):(me.name||me.display_name||me.email||'Salesperson'),opening_float:f,cash_sales:totals.cash,card_sales:totals.card,mr_d_sales:totals.mrd,uber_eats_sales:totals.uber,other_sales:totals.other,total_sales:totals.total,expected_cash:expected,actual_cash:a,sale_count:totals.count,notes:notes,status:'CLOSED'};
-    await api('pos_daily_cashups',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify(payload)});if(e>0)await api('pos_store_expenses',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({store_code:store(),expense_date:day(),category:expenseType,supplier:null,description:expenseNotes||('Cash paid from till — '+expenseType),payment_method:'Cash',amount:e,reference:'Cash-Up '+day()})});closeFvCashupModal();alert('Day closed successfully. Expected cash '+money(expected)+' | Actual cash '+money(a)+' | Difference '+money(a-expected));
+    let f=Number(document.getElementById('fvOpeningFloat').value||0),a=Number(actualRaw),expected=totals.cash+f;
+    let payload={store_code:store(),cashup_date:day(),user_id:me.id,salesperson_name:me.role==='manager'?('Manager — '+(store()==='SIVANA'?'Sivana':'Ndayeni')):(me.name||me.display_name||me.email||'Salesperson'),opening_float:f,cash_sales:totals.cash,card_sales:totals.card,mr_d_sales:totals.mrd,uber_eats_sales:totals.uber,other_sales:totals.other,total_sales:totals.total,expected_cash:expected,actual_cash:a,sale_count:totals.count,notes:document.getElementById('fvCashupNotes').value||null,status:'CLOSED'};
+    await api('pos_daily_cashups',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify(payload)});closeFvCashupModal();alert('Day closed successfully. Expected cash '+money(expected)+' | Actual cash '+money(a)+' | Difference '+money(a-expected));
    }catch(e){console.error(e);alert('Cash-up could not be saved: '+e.message)}
  };
  function addButton(){let me=u();if(!me||!['salesperson','manager'].includes(me.role)||document.getElementById('fvCashupBtn'))return;let target=document.querySelector('header .actions')||document.querySelector('header')||document.querySelector('.topbar')||document.body;let b=document.createElement('button');b.id='fvCashupBtn';b.type='button';b.textContent=me.role==='manager'?'STORE CASH-UP / CLOSE DAY':'CLOSE DAY / CASH-UP';b.onclick=openFvCashup;target.appendChild(b)}
@@ -7279,13 +7278,11 @@ window.openHistoricalCashupV59=open;window.loadHistoricalCashupV59=load;
  if(window.__fvCashupRoleVisibilityV60)return;window.__fvCashupRoleVisibilityV60=true;
 
  function activeRole(){
-   // A manager session takes priority over stale salesperson browser state.
-   const cu=window.currentUser;
-   if(String(cu?.role||'').toLowerCase()==='manager') return 'manager';
    const su=window.salesSessionUser;
    if(su && String(su.role||'').toLowerCase()==='salesperson') return 'salesperson';
    const iu=window.inventorySessionUser;
    if(iu && ['inventory_control','inventory controller','inventory_controller'].includes(String(iu.role||'').toLowerCase())) return 'inventory_control';
+   const cu=window.currentUser;
    return String(cu?.role||'').toLowerCase();
  }
  function activeUser(){
@@ -7350,7 +7347,6 @@ window.openHistoricalCashupV59=open;window.loadHistoricalCashupV59=load;
  'use strict';
  if(window.__fvSalesActionsStableV61)return; window.__fvSalesActionsStableV61=true;
  function role(){
-   if(String(window.currentUser?.role||'').toLowerCase()==='manager')return 'manager';
    if(window.salesSessionUser&&String(window.salesSessionUser.role||'').toLowerCase()==='salesperson')return 'salesperson';
    if(window.inventorySessionUser)return String(window.inventorySessionUser.role||'').toLowerCase();
    return String(window.currentUser?.role||'').toLowerCase();
@@ -7377,146 +7373,4 @@ window.openHistoricalCashupV59=open;window.loadHistoricalCashupV59=load;
 })();
 </script>
 <!-- BUILD: V61_SALESPERSON_ACTION_BUTTON_STABILITY_20260910 -->\n</body>
-<script>
-/* V68.1 — HISTORICAL CASH-UP MANAGER BUTTON AFTER LIVE LOGIN */
-(function(){
- 'use strict';
- if(window.__fvHistoricalCashupMountV681)return;window.__fvHistoricalCashupMountV681=true;
- function isManager(){return String(window.currentUser?.role||'').toLowerCase()==='manager'}
- function ensure(){
-   const existing=document.getElementById('fvHistoricalCashupBtnV59');
-   if(!isManager()){
-     if(existing)existing.style.setProperty('display','none','important');
-     return;
-   }
-   const header=document.querySelector('header'); if(!header)return;
-   let button=existing;
-   if(!button){
-     button=document.createElement('button');
-     button.id='fvHistoricalCashupBtnV59';button.type='button';button.textContent='HISTORICAL CASH-UP';
-     button.onclick=function(){if(typeof window.openHistoricalCashupV59==='function')window.openHistoricalCashupV59();else alert('Historical Cash-Up is still loading. Please try again.');};
-     const before=document.getElementById('fvManagerCashupHeaderV58')||Array.from(header.querySelectorAll('button')).find(b=>/LOGOUT/i.test(b.textContent||''));
-     header.insertBefore(button,before||null);
-   }
-   button.style.setProperty('display','inline-block','important');
- }
- [50,300,800,1500,3000,6000].forEach(ms=>setTimeout(ensure,ms));
- document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')ensure()});
- document.addEventListener('click',function(){setTimeout(ensure,25)},true);
- window.fvHistoricalCashupMountV681=ensure;
-})();
-</script>
-<!-- BUILD: V68.1_HISTORICAL_CASHUP_MANAGER_LOGIN_FIX_20260912 -->
-<script>
-/* V68.2 — STABLE REPORT PDF OUTPUT
-   Prints only the selected report in a clean pop-up document. This replaces the
-   older whole-page browser print route that can produce a blank PDF. */
-(function(){
- 'use strict';
- function esc(value){
-   return String(value??'').replace(/[&<>"']/g,function(ch){
-     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
-   });
- }
- function printReport(){
-   if(String(window.currentUser?.role||'').toLowerCase()!=='manager'){
-     alert('Manager access required to export reports.');
-     return;
-   }
-   var content=document.getElementById('reportContent');
-   if(!content || !content.textContent.trim()){
-     alert('Open a report first, then choose SAVE REPORT AS PDF.');
-     return;
-   }
-   var heading=(content.querySelector('h1,h2,h3,h4')||{}).textContent||'Feasterville Report';
-   var popup=window.open('','_blank','width=1100,height=800');
-   if(!popup){
-     alert('Please allow pop-ups for this POS, then try again.');
-     return;
-   }
-   popup.document.open();
-   popup.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(heading)+'</title><style>'+
-     '@page{size:A4 landscape;margin:8mm}'+
-     'html,body{margin:0;padding:0;background:#fff;color:#111;font-family:Arial,sans-serif;font-size:9pt}'+
-     'h1,h2,h3,h4{margin:5px 0 8px;page-break-after:avoid}p{margin:4px 0 8px}'+
-     'table,.inv-table{width:100%;border-collapse:collapse;table-layout:auto}'+
-     'th,td,.inv-table th,.inv-table td{border:1px solid #999;padding:4px;text-align:left;vertical-align:top}'+
-     'th,.inv-table th{background:#eee!important;color:#111!important}'+
-     'thead{display:table-header-group}tr{page-break-inside:avoid}'+
-     '.inv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}.inv-card{border:1px solid #bbb;padding:6px}'+
-     'button,input,select{display:none!important}'+
-     '</style></head><body>'+content.innerHTML+'</body></html>');
-   popup.document.close();
-   popup.focus();
-   setTimeout(function(){popup.print();},500);
- }
- window.printCurrentReport=printReport;
- try{printCurrentReport=printReport;}catch(_){ }
-})();
-</script>
-<!-- BUILD: V68.2_STABLE_REPORT_PDF_OUTPUT_20260912 -->
-<script>
-/* V68.3 — VISIBLE REPORT PREVIEW BEFORE PDF
-   Some browsers print an automatically opened pop-up before it has rendered.
-   This opens a completed report preview; the user then chooses Save / Print PDF
-   from inside that preview, ensuring the report is visible before printing. */
-(function(){
- 'use strict';
- function esc(value){
-   return String(value??'').replace(/[&<>"']/g,function(ch){
-     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
-   });
- }
- function preview(title,body){
-   if(!body || !String(body).replace(/<[^>]*>/g,'').trim()){
-     alert('There is no report to save. Open the report first.');
-     return;
-   }
-   var popup=window.open('','_blank','width=1150,height=850');
-   if(!popup){
-     alert('Please allow pop-ups for this POS, then try again.');
-     return;
-   }
-   popup.document.open();
-   popup.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>'+
-     '@page{size:A4 landscape;margin:8mm}'+
-     'html,body{margin:0;padding:0;background:#f3f5f0;color:#111;font-family:Arial,sans-serif;font-size:10pt}'+
-     '.toolbar{position:sticky;top:0;background:#111;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;z-index:2}'+
-     '.toolbar button{background:#8cc63f;color:#111;border:0;border-radius:5px;padding:10px 16px;font-weight:bold;cursor:pointer}'+
-     '.sheet{box-sizing:border-box;width:min(1120px,calc(100% - 28px));margin:14px auto;background:#fff;padding:18px;box-shadow:0 1px 6px #999}'+
-     'h1,h2,h3,h4{margin:5px 0 8px;page-break-after:avoid}p{margin:4px 0 8px}'+
-     'table,.inv-table{width:100%;border-collapse:collapse;table-layout:auto}'+
-     'th,td,.inv-table th,.inv-table td{border:1px solid #999;padding:4px;text-align:left;vertical-align:top}'+
-     'th,.inv-table th{background:#eee!important;color:#111!important}thead{display:table-header-group}tr{page-break-inside:avoid}'+
-     '.inv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}.inv-card{border:1px solid #bbb;padding:6px}'+
-     '.sheet button,.sheet input,.sheet select{display:none!important}'+
-     '@media print{html,body{background:#fff}.toolbar{display:none!important}.sheet{width:100%;margin:0;padding:0;box-shadow:none}body{font-size:9pt}}'+
-     '</style></head><body><div class="toolbar"><b>Report preview — check the report, then save it as PDF</b><button type="button" onclick="window.print()">SAVE / PRINT PDF</button></div><main class="sheet">'+body+'</main></body></html>');
-   popup.document.close();
-   popup.focus();
- }
- function currentReport(){
-   if(String(window.currentUser?.role||'').toLowerCase()!=='manager'){
-     alert('Manager access required to export reports.');
-     return;
-   }
-   var content=document.getElementById('reportContent');
-   var heading=(content&&content.querySelector('h1,h2,h3,h4')||{}).textContent||'Feasterville Report';
-   preview(heading,content&&content.innerHTML);
- }
- function salesReport(){
-   if(String(window.currentUser?.role||'').toLowerCase()!=='manager'){
-     alert('Manager access required to export reports.');
-     return;
-   }
-   var content=document.getElementById('fvSelectedSalesPrintV45')||document.getElementById('reportContent');
-   preview('Feasterville Daily Sales Report',content&&content.innerHTML);
- }
- window.printCurrentReport=currentReport;
- window.printSelectedSalesV45=salesReport;
- try{printCurrentReport=currentReport;printSelectedSalesV45=salesReport;}catch(_){ }
-})();
-</script>
-<!-- BUILD: V68.3_VISIBLE_REPORT_PREVIEW_PDF_20260912 -->
-</body>
 </html>
