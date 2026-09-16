@@ -1,7 +1,19 @@
 <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Feasterville - Production Inputs</title>
 <style>
 *{box-sizing:border-box}body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8;color:#17212b}.top{position:sticky;top:0;z-index:20;background:#111827;padding:10px;box-shadow:0 2px 8px #0003}.nav{max-width:1180px;margin:auto;display:flex;gap:8px;flex-wrap:wrap}.nav button,.nav a{border:0;border-radius:8px;padding:11px 14px;font-weight:700;cursor:pointer;text-decoration:none;background:#fff;color:#111827}.nav .primary{background:#16a34a;color:white}.wrap{max-width:1180px;margin:18px auto;padding:0 14px}.card{background:#fff;border:1px solid #d9dee5;border-radius:12px;padding:18px;margin-bottom:18px;box-shadow:0 1px 3px #0001}h1,h2{margin-top:0}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}label{font-weight:700;font-size:13px}input,select{width:100%;padding:10px;border:1px solid #b9c2cc;border-radius:7px;margin-top:5px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}button.save{background:#16a34a;color:#fff;border:0;border-radius:8px;padding:11px 18px;font-weight:800;cursor:pointer}button.secondary{background:#334155;color:#fff;border:0;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer}.msg{margin-top:10px;font-weight:700}.ok{color:#15803d}.bad{color:#b91c1c}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}.toolbar>*{max-width:320px}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px;border-bottom:1px solid #e5e7eb;text-align:left}th{background:#f8fafc;position:sticky;top:60px}.tablewrap{overflow:auto;max-height:520px}.pill{padding:3px 7px;border-radius:12px;background:#dcfce7;color:#166534;font-weight:700}.inactive{background:#fee2e2;color:#991b1b}@media(max-width:760px){.grid{grid-template-columns:1fr}.nav button,.nav a{flex:1 1 auto;text-align:center}th{top:105px}}
-</style></head><body>
+</style>
+<style>
+#existingInputsCard{overflow:visible!important}
+#existingInputsCard .table-wrap{max-height:520px!important;overflow:auto!important}
+#existingInputsCard table{width:100%!important;table-layout:auto!important}
+#existingInputsCard th{position:sticky;top:0;background:#f8fafc;z-index:2}
+#existingInputsCard td,#existingInputsCard th{padding:10px 8px!important;vertical-align:middle!important}
+#existingInputsCard td:nth-child(1){min-width:90px}
+#existingInputsCard td:nth-child(2){min-width:220px}
+#existingInputsCard td:last-child{min-width:190px;white-space:nowrap}
+.receive-action{background:#16a34a!important;color:#fff!important;border:0!important;border-radius:7px!important;padding:9px 14px!important;font-weight:700!important;margin-left:6px!important;cursor:pointer!important}
+</style>
+</head><body>
 <div class="top"><div class="nav">
 <a href="index.html">POS HOME</a><button class="primary" onclick="go('add')">ADD PRODUCTION INPUT</button><button onclick="go('list')">EXISTING INPUTS</button><button onclick="go('receipt')">RECEIVE STOCK</button><button onclick="refreshAdmin()">REFRESH</button><button onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>
 </div></div>
@@ -48,7 +60,7 @@
 <div class="actions"><button class="primary" onclick="saveReceipt()">SAVE STOCK RECEIPT</button><button onclick="clearReceipt()">CLEAR</button></div>
 <div id="receipt_status" class="msg"></div>
 </div>
-<div class="card" id="list"><h2>Existing Production Inputs</h2><div class="toolbar"><select id="listStore" onchange="loadInputs()"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select><input id="search" placeholder="Search code, name or category" oninput="render()"></div><div class="tablewrap"><div id="listMsg" class="msg"></div><table><thead><tr><th>Code</th><th>Name</th><th>Category</th><th>Unit</th><th>Reorder</th><th>Status</th><th>Action</th></tr></thead><tbody id="tbody"></tbody></table></div></div>
+<div class="card" id="list"><span id="existingInputsAnchor"></span><h2>Existing Production Inputs</h2><p><strong>Find the item, then click the green RECEIVE button.</strong> Use the search box to type the input code or name.</p><div class="toolbar"><select id="listStore" onchange="loadInputs()"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select><input id="search" placeholder="Search code, name or category" oninput="render()"></div><div class="tablewrap"><div id="listMsg" class="msg"></div><table><thead><tr><th>Code</th><th>Name</th><th>Category</th><th>Unit</th><th>Reorder</th><th>Status</th><th>Action</th></tr></thead><tbody id="tbody"></tbody></table></div></div>
 </div>
 <script>
 const ROOT='https://sflyjcgbxbcwspfuzone.supabase.co';
@@ -259,7 +271,7 @@ function render(){
   const searchEl=document.getElementById('search');
   const q=String(searchEl?searchEl.value:'').trim().toLowerCase();
   const a=rows.filter(x=>!q||[x.code,x.name,x.category].some(v=>String(v||'').toLowerCase().includes(q)));
-  document.getElementById('tbody').innerHTML=a.map(x=>`<tr><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${esc(x.category||'')}</td><td>${esc(x.unit)}</td><td>${esc(x.reorder_level)}</td><td><span class="pill ${x.active?'':'inactive'}">${x.active?'ACTIVE':'INACTIVE'}</span></td><td><button class="secondary" onclick='edit(${JSON.stringify(x).replace(/'/g,"&#39;")})'>EDIT</button> <button class="save" onclick='receive(${JSON.stringify(x).replace(/'/g,"&#39;")})'>RECEIVE</button></td></tr>`).join('')||'<tr><td colspan="7">No inputs found.</td></tr>';
+  document.getElementById('tbody').innerHTML=a.map(x=>`<tr><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${esc(x.category||'')}</td><td>${esc(x.unit)}</td><td>${esc(x.reorder_level)}</td><td><span class="pill ${x.active?'':'inactive'}">${x.active?'ACTIVE':'INACTIVE'}</span></td><td><button class="secondary" onclick='edit(${JSON.stringify(x).replace(/'/g,"&#39;")})'>EDIT</button> <button class="receive-action" onclick='receive(${JSON.stringify(x).replace(/'/g,"&#39;")})'>RECEIVE</button></td></tr>`).join('')||'<tr><td colspan="7">No inputs found.</td></tr>';
 }
 function receive(x){
   if(!x)return;
