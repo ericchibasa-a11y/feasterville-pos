@@ -6,7 +6,17 @@
 <a href="index.html">POS HOME</a><button class="primary" onclick="go('add')">ADD PRODUCTION INPUT</button><button onclick="go('list')">EXISTING INPUTS</button><button onclick="refreshAdmin()">REFRESH</button><button onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>
 </div></div>
 <div class="wrap">
-<div class="card"><h1>Production Input Administration</h1><div id="who">Checking Manager session…</div></div>
+<div class="card"><h1>Production Input Administration</h1>
+<div id="who">Checking Manager session…</div>
+<div id="adminLogin" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid #ddd">
+  <h3 style="margin:0 0 10px">Manager Login</h3>
+  <div class="grid">
+    <div><label>Manager Email<input id="adminEmail" type="email" autocomplete="username" placeholder="Manager email"></label></div>
+    <div><label>Password<input id="adminPassword" type="password" autocomplete="current-password" placeholder="Password"></label></div>
+  </div>
+  <div class="actions"><button class="save" type="button" onclick="adminSignIn()">MANAGER SIGN IN</button></div>
+  <div id="loginMsg" class="msg"></div>
+</div></div>
 <div class="card" id="add"><h2>Add / Edit Production Input</h2>
 <div class="grid">
 <div><label>Store<select id="store"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select></label></div>
@@ -42,47 +52,52 @@ function tok(){
 let verifiedUser=null;
 function user(){return verifiedUser}
 function headers(prefer){let h={apikey:KEY,Authorization:'Bearer '+tok(),'Content-Type':'application/json'};if(prefer)h.Prefer=prefer;return h}
-function go(id){document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'})}
-function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-async function api(path,opt={}){let r=await fetch(BASE+'/'+path,{...opt,headers:{...headers(),...(opt.headers||{})}});let t=await r.text();if(!r.ok)throw Error(t||('HTTP '+r.status));return t?JSON.parse(t):[]}
+async function api(path,opt={}){let r=await fetch(URL+'/rest/v1/'+path,{...opt,headers:{...headers(opt.prefer),...(opt.headers||{})}});let txt=await r.text();if(!r.ok)throw Error(txt||('HTTP '+r.status));return txt?JSON.parse(txt):null}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function guard(){
-  let u=user(),w=document.getElementById('who');
+  let u=user(), w=document.getElementById('who'), box=document.getElementById('adminLogin');
   if(!tok()||!u||u.role!=='manager'){
     w.innerHTML='<span class="bad">Manager sign-in required for Production Input Administration.</span>';
-    document.getElementById('adminLogin').style.display='block';
-    return false
+    if(box)box.style.display='block';
+    return false;
   }
-  document.getElementById('adminLogin').style.display='none';
+  if(box)box.style.display='none';
   w.innerHTML='<span class="ok">Manager session active: '+esc(u.name||u.display_name||'Manager')+'</span>';
-  return true
+  return true;
 }
 async function verifyManager(){
   let token=tok();
   if(!token){verifiedUser=null;guard();return false}
   try{
-    let r=await fetch('https://sflyjcgbxbcwspfuzone.supabase.co/auth/v1/user',{headers:{apikey:KEY,Authorization:'Bearer '+token}});
+    let r=await fetch(URL+'/auth/v1/user',{headers:{apikey:KEY,Authorization:'Bearer '+token}});
     if(!r.ok)throw Error('Session expired');
     let au=await r.json();
     let p=await api('pos_profiles?user_id=eq.'+encodeURIComponent(au.id)+'&select=user_id,display_name,role,store_code,active&limit=1');
     let prof=Array.isArray(p)&&p.length?p[0]:null;
-    if(!prof||String(prof.role||'').toLowerCase()!=='manager'||prof.active===false)throw Error('This account is not an active Manager.');
+    if(!prof||String(prof.role||'').toLowerCase()!=='manager'||prof.active===false)throw Error('This account is not an active Manager');
     verifiedUser={id:au.id,name:prof.display_name||au.email,display_name:prof.display_name||au.email,role:'manager',store_code:prof.store_code||null};
-    guard(); return true;
+    guard();
+    return true;
   }catch(e){
     verifiedUser=null;
     sessionStorage.removeItem('feastervilleCloudAccessToken');
-    document.getElementById('who').innerHTML='<span class="bad">'+esc(e.message)+'. Please sign in below.</span>';
-    document.getElementById('adminLogin').style.display='block';
+    let w=document.getElementById('who'), box=document.getElementById('adminLogin');
+    w.innerHTML='<span class="bad">'+esc(e.message)+'. Please sign in below.</span>';
+    if(box)box.style.display='block';
     return false;
   }
 }
 async function adminSignIn(){
-  let email=document.getElementById('adminEmail').value.trim(), password=document.getElementById('adminPassword').value;
-  let m=document.getElementById('loginMsg'); m.textContent='Signing in...'; m.className='msg';
+  let email=document.getElementById('adminEmail').value.trim();
+  let password=document.getElementById('adminPassword').value;
+  let m=document.getElementById('loginMsg');
+  m.textContent='Signing in...'; m.className='msg';
   if(!email||!password){m.textContent='Enter Manager email and password.';m.className='msg bad';return}
   try{
-    let r=await fetch('https://sflyjcgbxbcwspfuzone.supabase.co/auth/v1/token?grant_type=password',{
-      method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({email,password})
+    let r=await fetch(URL+'/auth/v1/token?grant_type=password',{
+      method:'POST',
+      headers:{apikey:KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({email,password})
     });
     let d=await r.json();
     if(!r.ok||!d.access_token)throw Error(d.error_description||d.msg||d.message||'Sign in failed');
@@ -95,13 +110,8 @@ async function adminSignIn(){
   }catch(e){m.textContent='Could not sign in: '+e.message;m.className='msg bad'}
 }
 async function refreshAdmin(){if(await verifyManager())await loadInputs()}
-function val(id){return document.getElementById(id).value.trim()}
-async function saveInput(){let m=document.getElementById('msg');m.textContent='';if(!guard())return;let store=val('store'),code=val('code').toUpperCase(),name=val('name');if(!code||!name){m.className='msg bad';m.textContent='Input Code and Input Name are required.';return}let body={store_code:store,code,name,category:val('category')||null,unit:val('unit')||'EA',reorder_level:Number(val('reorder')||0),safety_stock:Number(val('safety')||0),target_stock:Number(val('target')||0),purchase_cycle_days:Number(val('cycle')||7),purchase_group:val('group')||'WEEKLY',preferred_supplier:val('supplier')||null,preferred_unit_cost:val('cost')===''?null:Number(val('cost')),active:val('active')==='true',updated_at:new Date().toISOString()};try{let exists=await api('pos_store_production_inputs?store_code=eq.'+encodeURIComponent(store)+'&code=eq.'+encodeURIComponent(code)+'&select=id&limit=1');if(exists.length){await api('pos_store_production_inputs?store_code=eq.'+encodeURIComponent(store)+'&code=eq.'+encodeURIComponent(code),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify(body)});m.textContent='Production Input updated successfully.'}else{await api('pos_store_production_inputs',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify(body)});m.textContent='Production Input added successfully.'}m.className='msg ok';document.getElementById('listStore').value=store;await loadInputs()}catch(e){m.className='msg bad';m.textContent='Could not save: '+e.message}}
-function clearForm(){['code','name','category','supplier','cost'].forEach(x=>document.getElementById(x).value='');['reorder','safety','target'].forEach(x=>document.getElementById(x).value='0');document.getElementById('cycle').value='7';document.getElementById('unit').value='EA';document.getElementById('group').value='WEEKLY';document.getElementById('active').value='true';document.getElementById('msg').textContent=''}
 async function loadInputs(){if(!guard())return;let s=val('listStore');try{rows=await api('pos_store_production_inputs?store_code=eq.'+encodeURIComponent(s)+'&select=*&order=code.asc');render()}catch(e){document.getElementById('tbody').innerHTML='<tr><td colspan="7" class="bad">'+esc(e.message)+'</td></tr>'}}
 function render(){let q=val('search').toLowerCase(),a=rows.filter(x=>!q||[x.code,x.name,x.category].some(v=>String(v||'').toLowerCase().includes(q)));document.getElementById('tbody').innerHTML=a.map(x=>`<tr><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${esc(x.category||'')}</td><td>${esc(x.unit)}</td><td>${esc(x.reorder_level)}</td><td><span class="pill ${x.active?'':'inactive'}">${x.active?'ACTIVE':'INACTIVE'}</span></td><td><button class="secondary" onclick='edit(${JSON.stringify(x).replace(/'/g,"&#39;")})'>EDIT</button></td></tr>`).join('')||'<tr><td colspan="7">No inputs found.</td></tr>'}
 function edit(x){document.getElementById('store').value=x.store_code;document.getElementById('code').value=x.code;document.getElementById('name').value=x.name;document.getElementById('category').value=x.category||'';document.getElementById('unit').value=x.unit||'EA';document.getElementById('reorder').value=x.reorder_level||0;document.getElementById('safety').value=x.safety_stock||0;document.getElementById('target').value=x.target_stock||0;document.getElementById('cycle').value=x.purchase_cycle_days||7;document.getElementById('group').value=x.purchase_group||'WEEKLY';document.getElementById('supplier').value=x.preferred_supplier||'';document.getElementById('cost').value=x.preferred_unit_cost??'';document.getElementById('active').value=String(x.active!==false);go('add')}
-document.getElementById('store').value=localStorage.getItem('feastervilleStoreCode')||'NDAYENI';
-document.getElementById('listStore').value=document.getElementById('store').value;
-refreshAdmin();
+document.getElementById('store').value=localStorage.getItem('feastervilleStoreCode')||'NDAYENI';document.getElementById('listStore').value=document.getElementById('store').value;refreshAdmin();
 </script></body></html>
