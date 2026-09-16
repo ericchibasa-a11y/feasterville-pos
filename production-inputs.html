@@ -39,6 +39,16 @@
 #existingInputsCard tbody td:last-child{min-width:210px!important;white-space:nowrap!important}
 #existingInputsCard .receive-action{display:inline-block!important;visibility:visible!important;padding:10px 16px!important}
 </style>
+
+<style>
+#list{height:auto!important;max-height:none!important;overflow:visible!important;padding-bottom:24px!important}
+#list .tablewrap{height:auto!important;max-height:none!important;overflow:visible!important;padding-bottom:16px!important}
+#list table{width:100%!important;table-layout:auto!important}
+#list thead th{position:static!important;top:auto!important}
+#list tbody tr{height:58px!important}
+#list tbody td{padding:12px 8px!important;vertical-align:middle!important;overflow:visible!important}
+#list tbody td:last-child{min-width:210px!important;white-space:nowrap!important}
+</style>
 </head><body>
 <div class="top"><div class="nav">
 <a href="index.html">POS HOME</a><button class="primary" onclick="go('add')">ADD PRODUCTION INPUT</button><button onclick="go('list')">EXISTING INPUTS</button><button onclick="go('receipt')">RECEIVE STOCK</button><button onclick="refreshAdmin()">REFRESH</button><button onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>
