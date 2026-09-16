@@ -3,7 +3,7 @@
 *{box-sizing:border-box}body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8;color:#17212b}.top{position:sticky;top:0;z-index:20;background:#111827;padding:10px;box-shadow:0 2px 8px #0003}.nav{max-width:1180px;margin:auto;display:flex;gap:8px;flex-wrap:wrap}.nav button,.nav a{border:0;border-radius:8px;padding:11px 14px;font-weight:700;cursor:pointer;text-decoration:none;background:#fff;color:#111827}.nav .primary{background:#16a34a;color:white}.wrap{max-width:1180px;margin:18px auto;padding:0 14px}.card{background:#fff;border:1px solid #d9dee5;border-radius:12px;padding:18px;margin-bottom:18px;box-shadow:0 1px 3px #0001}h1,h2{margin-top:0}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}label{font-weight:700;font-size:13px}input,select{width:100%;padding:10px;border:1px solid #b9c2cc;border-radius:7px;margin-top:5px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}button.save{background:#16a34a;color:#fff;border:0;border-radius:8px;padding:11px 18px;font-weight:800;cursor:pointer}button.secondary{background:#334155;color:#fff;border:0;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer}.msg{margin-top:10px;font-weight:700}.ok{color:#15803d}.bad{color:#b91c1c}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}.toolbar>*{max-width:320px}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px;border-bottom:1px solid #e5e7eb;text-align:left}th{background:#f8fafc;position:sticky;top:60px}.tablewrap{overflow:auto;max-height:520px}.pill{padding:3px 7px;border-radius:12px;background:#dcfce7;color:#166534;font-weight:700}.inactive{background:#fee2e2;color:#991b1b}@media(max-width:760px){.grid{grid-template-columns:1fr}.nav button,.nav a{flex:1 1 auto;text-align:center}th{top:105px}}
 </style></head><body>
 <div class="top"><div class="nav">
-<a href="index.html">POS HOME</a><button class="primary" onclick="go('add')">ADD PRODUCTION INPUT</button><button onclick="go('list')">EXISTING INPUTS</button><button onclick="loadInputs()">REFRESH</button><button onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>
+<a href="index.html">POS HOME</a><button class="primary" onclick="go('add')">ADD PRODUCTION INPUT</button><button onclick="go('list')">EXISTING INPUTS</button><button onclick="refreshAdmin()">REFRESH</button><button onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>
 </div></div>
 <div class="wrap">
 <div class="card"><h1>Production Input Administration</h1><div id="who">Checking Manager session…</div></div>
@@ -29,17 +29,40 @@
 const BASE='https://sflyjcgbxbcwspfuzone.supabase.co/rest/v1';
 const KEY='sb_publishable_iASq-tni6KYrFK0R2S35zA_mpwt4MqM';let rows=[];
 function tok(){return sessionStorage.getItem('feastervilleCloudAccessToken')||localStorage.getItem('feastervilleCloudAccessToken')||''}
-function user(){try{return JSON.parse(sessionStorage.getItem('feastervilleUser')||'null')}catch(_){return null}}
+let verifiedUser=null;
+function user(){return verifiedUser}
+async function verifyManager(){
+  let w=document.getElementById('who');
+  if(!tok()){verifiedUser=null;w.innerHTML='<span class="bad">No active cloud session. Open POS HOME and log in as Manager first.</span>';return false}
+  try{
+    let r=await fetch('https://sflyjcgbxbcwspfuzone.supabase.co/auth/v1/user',{headers:{apikey:KEY,Authorization:'Bearer '+tok()}});
+    if(!r.ok)throw Error('Session could not be verified');
+    let au=await r.json();
+    let p=await api('pos_profiles?user_id=eq.'+encodeURIComponent(au.id)+'&select=user_id,display_name,role,store_code,active&limit=1');
+    let prof=Array.isArray(p)&&p.length?p[0]:null;
+    if(!prof||String(prof.role||'').toLowerCase()!=='manager'||prof.active===false){
+      verifiedUser=null;w.innerHTML='<span class="bad">Manager access required. Open POS HOME and log in as Manager.</span>';return false
+    }
+    verifiedUser={id:au.id,name:prof.display_name||au.email,display_name:prof.display_name||au.email,role:'manager',store_code:prof.store_code||null};
+    w.innerHTML='<span class="ok">Manager session active: '+esc(verifiedUser.name||'Manager')+'</span>';
+    return true
+  }catch(e){
+    verifiedUser=null;w.innerHTML='<span class="bad">Could not verify Manager session: '+esc(e.message)+'</span>';return false
+  }
+}
 function headers(prefer){let h={apikey:KEY,Authorization:'Bearer '+tok(),'Content-Type':'application/json'};if(prefer)h.Prefer=prefer;return h}
 function go(id){document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'})}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 async function api(path,opt={}){let r=await fetch(BASE+'/'+path,{...opt,headers:{...headers(),...(opt.headers||{})}});let t=await r.text();if(!r.ok)throw Error(t||('HTTP '+r.status));return t?JSON.parse(t):[]}
-function guard(){let u=user();let w=document.getElementById('who');if(!tok()){w.innerHTML='<span class="bad">No active cloud session. Open POS HOME and log in as Manager first.</span>';return false}if(!u||u.role!=='manager'){w.innerHTML='<span class="bad">Manager access required. Open POS HOME and log in as Manager.</span>';return false}w.innerHTML='<span class="ok">Manager session active: '+esc(u.name||u.display_name||u.username||'Manager')+'</span>';return true}
+function guard(){let u=user();let w=document.getElementById('who');if(!tok()){w.innerHTML='<span class="bad">No active cloud session. Open POS HOME and log in as Manager first.</span>';return false}if(!u||u.role!=='manager'){w.innerHTML='<span class="bad">Manager session is being verified. Please use REFRESH if this message remains.</span>';return false}w.innerHTML='<span class="ok">Manager session active: '+esc(u.name||u.display_name||'Manager')+'</span>';return true}
 function val(id){return document.getElementById(id).value.trim()}
 async function saveInput(){let m=document.getElementById('msg');m.textContent='';if(!guard())return;let store=val('store'),code=val('code').toUpperCase(),name=val('name');if(!code||!name){m.className='msg bad';m.textContent='Input Code and Input Name are required.';return}let body={store_code:store,code,name,category:val('category')||null,unit:val('unit')||'EA',reorder_level:Number(val('reorder')||0),safety_stock:Number(val('safety')||0),target_stock:Number(val('target')||0),purchase_cycle_days:Number(val('cycle')||7),purchase_group:val('group')||'WEEKLY',preferred_supplier:val('supplier')||null,preferred_unit_cost:val('cost')===''?null:Number(val('cost')),active:val('active')==='true',updated_at:new Date().toISOString()};try{let exists=await api('pos_store_production_inputs?store_code=eq.'+encodeURIComponent(store)+'&code=eq.'+encodeURIComponent(code)+'&select=id&limit=1');if(exists.length){await api('pos_store_production_inputs?store_code=eq.'+encodeURIComponent(store)+'&code=eq.'+encodeURIComponent(code),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify(body)});m.textContent='Production Input updated successfully.'}else{await api('pos_store_production_inputs',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify(body)});m.textContent='Production Input added successfully.'}m.className='msg ok';document.getElementById('listStore').value=store;await loadInputs()}catch(e){m.className='msg bad';m.textContent='Could not save: '+e.message}}
 function clearForm(){['code','name','category','supplier','cost'].forEach(x=>document.getElementById(x).value='');['reorder','safety','target'].forEach(x=>document.getElementById(x).value='0');document.getElementById('cycle').value='7';document.getElementById('unit').value='EA';document.getElementById('group').value='WEEKLY';document.getElementById('active').value='true';document.getElementById('msg').textContent=''}
 async function loadInputs(){if(!guard())return;let s=val('listStore');try{rows=await api('pos_store_production_inputs?store_code=eq.'+encodeURIComponent(s)+'&select=*&order=code.asc');render()}catch(e){document.getElementById('tbody').innerHTML='<tr><td colspan="7" class="bad">'+esc(e.message)+'</td></tr>'}}
 function render(){let q=val('search').toLowerCase(),a=rows.filter(x=>!q||[x.code,x.name,x.category].some(v=>String(v||'').toLowerCase().includes(q)));document.getElementById('tbody').innerHTML=a.map(x=>`<tr><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${esc(x.category||'')}</td><td>${esc(x.unit)}</td><td>${esc(x.reorder_level)}</td><td><span class="pill ${x.active?'':'inactive'}">${x.active?'ACTIVE':'INACTIVE'}</span></td><td><button class="secondary" onclick='edit(${JSON.stringify(x).replace(/'/g,"&#39;")})'>EDIT</button></td></tr>`).join('')||'<tr><td colspan="7">No inputs found.</td></tr>'}
 function edit(x){document.getElementById('store').value=x.store_code;document.getElementById('code').value=x.code;document.getElementById('name').value=x.name;document.getElementById('category').value=x.category||'';document.getElementById('unit').value=x.unit||'EA';document.getElementById('reorder').value=x.reorder_level||0;document.getElementById('safety').value=x.safety_stock||0;document.getElementById('target').value=x.target_stock||0;document.getElementById('cycle').value=x.purchase_cycle_days||7;document.getElementById('group').value=x.purchase_group||'WEEKLY';document.getElementById('supplier').value=x.preferred_supplier||'';document.getElementById('cost').value=x.preferred_unit_cost??'';document.getElementById('active').value=String(x.active!==false);go('add')}
-document.getElementById('store').value=localStorage.getItem('feastervilleStoreCode')||'NDAYENI';document.getElementById('listStore').value=document.getElementById('store').value;guard();loadInputs();
+async function refreshAdmin(){if(await verifyManager())await loadInputs()}
+document.getElementById('store').value=localStorage.getItem('feastervilleStoreCode')||'NDAYENI';
+document.getElementById('listStore').value=document.getElementById('store').value;
+refreshAdmin();
 </script></body></html>
