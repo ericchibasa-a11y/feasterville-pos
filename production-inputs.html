@@ -185,6 +185,41 @@ function receiptStatus(text,ok){
  el.textContent=text||''; el.className='msg '+(ok?'ok':'bad');
 }
 
+
+async function populateReceiptInputs(){
+  if(!guard()) return;
+  const storeEl=document.getElementById('r_store');
+  const sel=document.getElementById('r_input');
+  if(!storeEl||!sel) return;
+  const store=storeEl.value||'NDAYENI';
+  sel.disabled=true;
+  sel.innerHTML='<option value="">Loading Production Inputs...</option>';
+  receiptStatus('Loading Production Inputs...',true);
+  try{
+    const data=await request('/rest/v1/pos_store_production_inputs?store_code=eq.'+
+      encodeURIComponent(store)+
+      '&select=id,store_code,code,name,category,unit,reorder_level,safety_stock,target_stock,purchase_cycle_days,purchase_group,preferred_supplier,preferred_unit_cost,active&order=category.asc,code.asc');
+    const list=(Array.isArray(data)?data:[]).filter(x=>x.active!==false);
+    sel.innerHTML='<option value="">Select Production Input</option>';
+    list.forEach(x=>{
+      const opt=document.createElement('option');
+      opt.value=x.code;
+      opt.textContent=x.code+' — '+x.name;
+      opt.dataset.name=x.name||'';
+      opt.dataset.unit=x.unit||'EA';
+      opt.dataset.cost=x.preferred_unit_cost??'';
+      opt.dataset.supplier=x.preferred_supplier||'';
+      sel.appendChild(opt);
+    });
+    sel.disabled=false;
+    receiptStatus(list.length+' Production Input(s) ready for '+(store==='SIVANA'?'Sivana':'Ndayeni')+'.',true);
+  }catch(e){
+    sel.disabled=false;
+    sel.innerHTML='<option value="">Could not load Production Inputs</option>';
+    receiptStatus('Could not load Production Inputs: '+(e?.message||e),false);
+  }
+}
+
 function applyReceiptDefaults(){const s=document.getElementById('r_input'),o=s?.options[s.selectedIndex];if(!o||!o.value)return;const a=document.getElementById('r_supplier'),c=document.getElementById('r_cost');if(a&&!a.value)a.value=o.dataset.supplier||'';if(c&&!c.value)c.value=o.dataset.cost||'';}
 async function saveReceipt(){
  if(!verifiedUser||String(verifiedUser.role||'').toLowerCase()!=='manager'){receiptStatus('Manager sign-in is required before saving stock receipts.',false);return;}
