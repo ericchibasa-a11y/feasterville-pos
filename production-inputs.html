@@ -1,57 +1,9 @@
 <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Feasterville - Production Inputs</title>
 <style>
 *{box-sizing:border-box}body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8;color:#17212b}.top{position:sticky;top:0;z-index:20;background:#111827;padding:10px;box-shadow:0 2px 8px #0003}.nav{max-width:1180px;margin:auto;display:flex;gap:8px;flex-wrap:wrap}.nav button,.nav a{border:0;border-radius:8px;padding:11px 14px;font-weight:700;cursor:pointer;text-decoration:none;background:#fff;color:#111827}.nav .primary{background:#16a34a;color:white}.wrap{max-width:1180px;margin:18px auto;padding:0 14px}.card{background:#fff;border:1px solid #d9dee5;border-radius:12px;padding:18px;margin-bottom:18px;box-shadow:0 1px 3px #0001}h1,h2{margin-top:0}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}label{font-weight:700;font-size:13px}input,select{width:100%;padding:10px;border:1px solid #b9c2cc;border-radius:7px;margin-top:5px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}button.save{background:#16a34a;color:#fff;border:0;border-radius:8px;padding:11px 18px;font-weight:800;cursor:pointer}button.secondary{background:#334155;color:#fff;border:0;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer}.msg{margin-top:10px;font-weight:700}.ok{color:#15803d}.bad{color:#b91c1c}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}.toolbar>*{max-width:320px}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px;border-bottom:1px solid #e5e7eb;text-align:left}th{background:#f8fafc;position:sticky;top:60px}.tablewrap{overflow:auto;max-height:520px}.pill{padding:3px 7px;border-radius:12px;background:#dcfce7;color:#166534;font-weight:700}.inactive{background:#fee2e2;color:#991b1b}@media(max-width:760px){.grid{grid-template-columns:1fr}.nav button,.nav a{flex:1 1 auto;text-align:center}th{top:105px}}
-</style>
-<style>
-#existingInputsCard{overflow:visible!important}
-#existingInputsCard .table-wrap{max-height:520px!important;overflow:auto!important}
-#existingInputsCard table{width:100%!important;table-layout:auto!important}
-#existingInputsCard th{position:sticky;top:0;background:#f8fafc;z-index:2}
-#existingInputsCard td,#existingInputsCard th{padding:10px 8px!important;vertical-align:middle!important}
-#existingInputsCard td:nth-child(1){min-width:90px}
-#existingInputsCard td:nth-child(2){min-width:220px}
-#existingInputsCard td:last-child{min-width:190px;white-space:nowrap}
-.receive-action{background:#16a34a!important;color:#fff!important;border:0!important;border-radius:7px!important;padding:9px 14px!important;font-weight:700!important;margin-left:6px!important;cursor:pointer!important}
-</style>
-
-<style>
-#existingInputsCard .table-wrap{max-height:none!important;overflow:visible!important}
-#existingInputsCard tbody tr{display:grid!important;grid-template-columns:110px minmax(220px,2fr) minmax(140px,1fr) 80px 90px 100px 210px;align-items:center;gap:8px;margin:8px 0;padding:10px;background:#fff;border:1px solid #dbe3ee;border-radius:9px}
-#existingInputsCard tbody td{display:block!important;min-width:0!important;padding:4px!important;border:0!important;overflow:visible!important;white-space:normal!important}
-#existingInputsCard tbody td:last-child{display:flex!important;gap:8px;min-width:200px!important}
-#existingInputsCard thead{display:none!important}
-#existingInputsCard .receive-action{font-size:14px!important;padding:10px 16px!important}
-@media(max-width:900px){
- #existingInputsCard tbody tr{grid-template-columns:1fr!important}
- #existingInputsCard tbody td:before{font-weight:700;margin-right:8px}
-}
-</style>
-
-<style>
-#existingInputsCard{height:auto!important;max-height:none!important;overflow:visible!important;padding-bottom:24px!important}
-#existingInputsCard .table-wrap{height:auto!important;max-height:none!important;overflow:visible!important;padding-bottom:16px!important}
-#existingInputsCard table{display:table!important;width:100%!important;table-layout:auto!important}
-#existingInputsCard thead{display:table-header-group!important}
-#existingInputsCard tbody{display:table-row-group!important}
-#existingInputsCard tbody tr{display:table-row!important;height:58px!important;background:#fff!important;border:0!important}
-#existingInputsCard tbody td{display:table-cell!important;padding:12px 8px!important;vertical-align:middle!important;overflow:visible!important;white-space:normal!important;border-bottom:1px solid #e5e7eb!important}
-#existingInputsCard tbody td:nth-child(2){min-width:220px!important}
-#existingInputsCard tbody td:last-child{min-width:210px!important;white-space:nowrap!important}
-#existingInputsCard .receive-action{display:inline-block!important;visibility:visible!important;padding:10px 16px!important}
-</style>
-
-<style>
-#list{height:auto!important;max-height:none!important;overflow:visible!important;padding-bottom:24px!important}
-#list .tablewrap{height:auto!important;max-height:none!important;overflow:visible!important;padding-bottom:16px!important}
-#list table{width:100%!important;table-layout:auto!important}
-#list thead th{position:static!important;top:auto!important}
-#list tbody tr{height:58px!important}
-#list tbody td{padding:12px 8px!important;vertical-align:middle!important;overflow:visible!important}
-#list tbody td:last-child{min-width:210px!important;white-space:nowrap!important}
-</style>
-</head><body>
+</style></head><body>
 <div class="top"><div class="nav">
-<a href="index.html">POS HOME</a><button class="primary" onclick="go('add')">ADD PRODUCTION INPUT</button><button onclick="go('list')">EXISTING INPUTS</button><button onclick="go('receipt')">RECEIVE STOCK</button><button onclick="document.getElementById('receiptHistory')?.scrollIntoView({behavior:'smooth'})">RECEIPT HISTORY</button><button onclick="refreshAdmin()">REFRESH</button><button onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>
+<a href="index.html">POS HOME</a><button class="primary" onclick="go('add')">ADD PRODUCTION INPUT</button><button onclick="go('list')">EXISTING INPUTS</button><button onclick="go('receipt')">RECEIVE STOCK</button><button onclick="refreshAdmin()">REFRESH</button><button onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>
 </div></div>
 <div class="wrap">
 <div class="card"><h1>Production Input Administration</h1>
@@ -82,7 +34,7 @@
 <div><label>Status<select id="active"><option value="true">Active</option><option value="false">Inactive</option></select></label></div>
 </div><div class="actions"><button class="save" onclick="saveInput()">SAVE INPUT</button><button class="secondary" onclick="clearForm()">CLEAR FORM</button></div><div id="msg" class="msg"></div></div>
 <div class="card" id="receipt">
-<span id="receiveStock"></span><h2>Receive Production Input Stock</h2>
+<h2>Receive Production Input Stock</h2>
 <p class="muted">Capture opening stock or supplier receipts. Each receipt is saved to the live stock receipt register for audit and reconciliation.</p>
 <div class="grid">
 <label>Store<select id="r_store"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select></label>
@@ -93,20 +45,18 @@
 <label>Quantity Received<input id="r_qty" type="number" min="0" step="0.001"></label>
 <label>Unit Cost (R)<input id="r_cost" type="number" min="0" step="0.01"></label>
 </div>
-<div class="actions"><button class="primary" onclick="saveReceipt()">SAVE STOCK RECEIPT</button><button onclick="clearReceipt()">CLEAR</button></div>
+<div class="actions"><button class="primary" onclick="saveReceipt()">SAVE STOCK RECEIPT</button><button onclick="clearReceipt()">CLEAR</button><button class="secondary" type="button" onclick="loadReceiptHistory()">REFRESH RECEIPT HISTORY</button></div>
 <div id="receipt_status" class="msg"></div>
+<h3 style="margin-top:22px">Receipt History</h3>
+<div id="receipt_history_status" class="msg"></div>
+<div class="tablewrap">
+<table>
+<thead><tr><th>Date</th><th>Supplier</th><th>Reference</th><th>Input</th><th>Qty</th><th>Unit</th><th>Unit Cost</th><th>Total Cost</th><th>Received By</th></tr></thead>
+<tbody id="receiptHistoryBody"><tr><td colspan="9">Loading receipt history...</td></tr></tbody>
+</table>
 </div>
-<div class="card" id="receiptHistory">
-<h2>Stock Receipt History</h2>
-<p>Audit production input receipts by store, date, supplier, reference and product.</p>
-<div class="toolbar"><select id="h_store"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select>
-<input id="h_from" type="date" title="From date"><input id="h_to" type="date" title="To date">
-<input id="h_search" placeholder="Search supplier, reference, code or product">
-<button id="h_refresh" type="button" onclick="loadReceiptHistory()">REFRESH HISTORY</button></div>
-<div id="h_status" class="msg"></div>
-<div style="overflow-x:auto"><table><thead><tr><th>Date</th><th>Supplier</th><th>Reference</th><th>Code</th><th>Product</th><th>Qty</th><th>Unit</th><th>Unit Cost</th><th>Total Cost</th><th>Received By</th></tr></thead>
-<tbody id="h_body"><tr><td colspan="10">Loading receipt history...</td></tr></tbody><tfoot><tr><th colspan="5" style="text-align:right">TOTAL</th><th id="h_qty_total">0</th><th></th><th></th><th id="h_cost_total">R0.00</th><th></th></tr></tfoot></table></div></div>
-<div class="card" id="list"><span id="existingInputsAnchor"></span><h2>Existing Production Inputs</h2><p><strong>Search the item by code or name, then click the large green RECEIVE button.</strong> Matching products are shown as full rows below.</p><div class="toolbar"><select id="listStore" onchange="loadInputs()"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select><input id="search" placeholder="Search code, name or category" oninput="render()"></div><div class="tablewrap"><div id="listMsg" class="msg"></div><table><thead><tr><th>Code</th><th>Name</th><th>Category</th><th>Unit</th><th>Reorder</th><th>Status</th><th>Action</th></tr></thead><tbody id="tbody"></tbody></table></div></div>
+</div>
+<div class="card" id="list"><h2>Existing Production Inputs</h2><div class="toolbar"><select id="listStore" onchange="loadInputs()"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select><input id="search" placeholder="Search code, name or category" oninput="render()"></div><div class="tablewrap"><div id="listMsg" class="msg"></div><table><thead><tr><th>Code</th><th>Name</th><th>Category</th><th>Unit</th><th>Reorder</th><th>Status</th><th>Action</th></tr></thead><tbody id="tbody"></tbody></table></div></div>
 </div>
 <script>
 const ROOT='https://sflyjcgbxbcwspfuzone.supabase.co';
@@ -189,15 +139,7 @@ async function api(path,opt={}){
   let p=path.startsWith('/')?path:'/rest/v1/'+path;
   return request(p,opt);
 }
-async function refreshAdmin(){
-  if(await verifyManager()){
-    await loadInputs();
-    if(document.getElementById('h_store')){
-      document.getElementById('h_store').value=document.getElementById('listStore')?.value||document.getElementById('store')?.value||'NDAYENI';
-      await loadReceiptHistory();
-    }
-  }
-}
+async function refreshAdmin(){if(await verifyManager()){await loadInputs();await loadReceiptHistory();}}
 function val(id){return (document.getElementById(id)?.value||'').trim()}
 function go(where){
   const el=document.getElementById(where==='add'?'add':'list');
@@ -246,49 +188,51 @@ async function saveInput(){
   }catch(e){m.textContent='Could not save Production Input: '+e.message;m.className='msg bad'}
 }
 
-function receiptStatus(text,ok){
- const el=document.getElementById('receiptMsg'); if(!el)return;
- el.textContent=text||''; el.className='msg '+(ok?'ok':'bad');
-}
-
-
+function receiptStatus(msg,ok=true){const e=document.getElementById('receipt_status');if(!e)return;e.textContent=msg||'';e.style.color=ok?'#166534':'#b91c1c';}
+function setReceiptDate(){const e=document.getElementById('r_date');if(e&&!e.value)e.value=new Date().toISOString().slice(0,10);}
+function clearReceipt(){['r_supplier','r_reference','r_qty','r_cost'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});setReceiptDate();receiptStatus('');}
 async function populateReceiptInputs(){
-  if(!guard()) return;
-  const storeEl=document.getElementById('r_store');
-  const sel=document.getElementById('r_input');
-  if(!storeEl||!sel) return;
-  const store=storeEl.value||'NDAYENI';
-  sel.disabled=true;
-  sel.innerHTML='<option value="">Loading Production Inputs...</option>';
-  receiptStatus('Loading Production Inputs...',true);
-  try{
-    const data=await request('/rest/v1/pos_store_production_inputs?store_code=eq.'+
-      encodeURIComponent(store)+
-      '&select=id,store_code,code,name,category,unit,reorder_level,safety_stock,target_stock,purchase_cycle_days,purchase_group,preferred_supplier,preferred_unit_cost,active&order=category.asc,code.asc');
-    const list=(Array.isArray(data)?data:[]).filter(x=>x.active!==false);
-    sel.innerHTML='<option value="">Select Production Input</option>';
-    list.forEach(x=>{
-      const opt=document.createElement('option');
-      opt.value=x.code;
-      opt.textContent=x.code+' — '+x.name;
-      opt.dataset.name=x.name||'';
-      opt.dataset.unit=x.unit||'EA';
-      opt.dataset.cost=x.preferred_unit_cost??'';
-      opt.dataset.supplier=x.preferred_supplier||'';
-      sel.appendChild(opt);
-    });
-    sel.disabled=false;
-    receiptStatus(list.length+' Production Input(s) ready for '+(store==='SIVANA'?'Sivana':'Ndayeni')+'.',true);
-  }catch(e){
-    sel.disabled=false;
-    sel.innerHTML='<option value="">Could not load Production Inputs</option>';
-    receiptStatus('Could not load Production Inputs: '+(e?.message||e),false);
-  }
+ const store=document.getElementById('r_store')?.value||'NDAYENI';
+ const sel=document.getElementById('r_input'); if(!sel)return;
+ const current=sel.value;
+ try{
+   sel.innerHTML='<option value="">Loading Production Inputs...</option>';
+   const data=await api('/rest/v1/pos_store_production_inputs?store_code=eq.'+encodeURIComponent(store)+'&active=eq.true&select=code,name,unit,preferred_unit_cost,preferred_supplier&order=name.asc');
+   const items=Array.isArray(data)?data:[];
+   sel.innerHTML='<option value="">Select Production Input</option>'+items.map(x=>'<option value="'+esc(x.code)+'" data-name="'+esc(x.name)+'" data-unit="'+esc(x.unit||'EA')+'" data-cost="'+esc(x.preferred_unit_cost??'')+'" data-supplier="'+esc(x.preferred_supplier||'')+'">'+esc(x.code)+' — '+esc(x.name)+'</option>').join('');
+   if(items.some(x=>x.code===current))sel.value=current;
+   if(!items.length) receiptStatus('No active Production Inputs found for '+store+'.',false);
+   else receiptStatus(items.length+' Production Inputs ready for '+(store==='SIVANA'?'Sivana':'Ndayeni')+'.');
+ }catch(e){
+   sel.innerHTML='<option value="">Could not load Production Inputs</option>';
+   receiptStatus('Could not load Production Inputs: '+e.message,false);
+ }
 }
-
 function applyReceiptDefaults(){const s=document.getElementById('r_input'),o=s?.options[s.selectedIndex];if(!o||!o.value)return;const a=document.getElementById('r_supplier'),c=document.getElementById('r_cost');if(a&&!a.value)a.value=o.dataset.supplier||'';if(c&&!c.value)c.value=o.dataset.cost||'';}
+async function loadReceiptHistory(){
+ const body=document.getElementById('receiptHistoryBody');
+ const status=document.getElementById('receipt_history_status');
+ if(!body)return;
+ if(!verifiedUser||verifiedUser.role!=='manager'){body.innerHTML='<tr><td colspan="9">Manager sign-in required.</td></tr>';if(status){status.textContent='';status.className='msg';}return;}
+ const store=document.getElementById('r_store')?.value||'NDAYENI';
+ body.innerHTML='<tr><td colspan="9">Loading receipt history...</td></tr>';
+ if(status){status.textContent='Loading receipts for '+(store==='SIVANA'?'Sivana':'Ndayeni')+'...';status.className='msg';}
+ try{
+   const data=await request('/rest/v1/pos_stock_receipts?store_code=eq.'+encodeURIComponent(store)+'&select=receipt_date,supplier,reference,input_code,input_name,unit,qty,unit_cost,received_by&order=receipt_date.desc&limit=200');
+   const items=Array.isArray(data)?data:[];
+   body.innerHTML=items.map(x=>{
+     const qty=Number(x.qty||0),cost=Number(x.unit_cost||0),total=qty*cost;
+     const input=[x.input_code,x.input_name].filter(Boolean).join(' — ');
+     return '<tr><td>'+esc(x.receipt_date||'')+'</td><td>'+esc(x.supplier||'')+'</td><td>'+esc(x.reference||'')+'</td><td>'+esc(input)+'</td><td>'+esc(Number.isFinite(qty)?qty:'')+'</td><td>'+esc(x.unit||'')+'</td><td>R '+(Number.isFinite(cost)?cost.toFixed(2):'0.00')+'</td><td>R '+(Number.isFinite(total)?total.toFixed(2):'0.00')+'</td><td>'+esc(x.received_by||'')+'</td></tr>';
+   }).join('')||'<tr><td colspan="9">No stock receipts found for this store.</td></tr>';
+   if(status){status.textContent=items.length+' receipt(s) loaded for '+(store==='SIVANA'?'Sivana':'Ndayeni')+'.';status.className='msg ok';}
+ }catch(e){
+   body.innerHTML='<tr><td colspan="9">'+esc(e.message)+'</td></tr>';
+   if(status){status.textContent='Could not load Receipt History: '+e.message;status.className='msg bad';}
+ }
+}
 async function saveReceipt(){
- if(!verifiedUser||String(verifiedUser.role||'').toLowerCase()!=='manager'){receiptStatus('Manager sign-in is required before saving stock receipts.',false);return;}
+ if(!window.currentUser||String(window.currentUser.role||'').toLowerCase()!=='manager'){receiptStatus('Manager sign-in is required before saving stock receipts.',false);return;}
  const store=document.getElementById('r_store').value,sel=document.getElementById('r_input'),o=sel.options[sel.selectedIndex];
  const input_code=sel.value,input_name=o?.dataset.name||'',unit=o?.dataset.unit||'EA',receipt_date=document.getElementById('r_date').value;
  const supplier=String(document.getElementById('r_supplier').value||'').trim(),reference=String(document.getElementById('r_reference').value||'').trim();
@@ -296,8 +240,8 @@ async function saveReceipt(){
  if(!input_code){receiptStatus('Select a Production Input.',false);return;} if(!receipt_date){receiptStatus('Enter the receipt date.',false);return;}
  if(!Number.isFinite(qty)||qty<=0){receiptStatus('Quantity received must be greater than zero.',false);return;}
  if(!Number.isFinite(unit_cost)||unit_cost<0){receiptStatus('Unit cost cannot be negative.',false);return;}
- const payload={receipt_date,supplier:supplier||null,reference:reference||null,input_code,input_name,unit,qty,unit_cost,received_by:verifiedUser.name||verifiedUser.display_name||'Manager',created_by:verifiedUser.id,store_code:store};
- try{receiptStatus('Saving stock receipt...');await request('/rest/v1/pos_stock_receipts',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(payload)});receiptStatus('Stock receipt saved successfully.');}
+ const payload={receipt_date,supplier:supplier||null,reference:reference||null,input_code,input_name,unit,qty,unit_cost,received_by:window.currentUser.name||window.currentUser.username||'Manager',created_by:window.currentUser.id,store_code:store};
+ try{receiptStatus('Saving stock receipt...');await request('/rest/v1/pos_stock_receipts',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(payload)});receiptStatus('Stock receipt saved successfully.');await loadReceiptHistory();}
  catch(e){receiptStatus('Could not save stock receipt: '+e.message,false);}
 }
 
@@ -325,76 +269,9 @@ function render(){
   const searchEl=document.getElementById('search');
   const q=String(searchEl?searchEl.value:'').trim().toLowerCase();
   const a=rows.filter(x=>!q||[x.code,x.name,x.category].some(v=>String(v||'').toLowerCase().includes(q)));
-  document.getElementById('tbody').innerHTML=a.map(x=>`<tr><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${esc(x.category||'')}</td><td>${esc(x.unit)}</td><td>${esc(x.reorder_level)}</td><td><span class="pill ${x.active?'':'inactive'}">${x.active?'ACTIVE':'INACTIVE'}</span></td><td><button class="secondary" onclick='edit(${JSON.stringify(x).replace(/'/g,"&#39;")})'>EDIT</button> <button class="receive-action" onclick='receive(${JSON.stringify(x).replace(/'/g,"&#39;")})'>RECEIVE</button></td></tr>`).join('')||'<tr><td colspan="7">No inputs found.</td></tr>';
-}
-function receive(x){
-  if(!x)return;
-  const rStore=document.getElementById('r_store');
-  const rInput=document.getElementById('r_input');
-  if(rStore)rStore.value=x.store_code||'NDAYENI';
-  if(rInput){
-    rInput.innerHTML='';
-    const o=document.createElement('option');
-    o.value=x.code;o.textContent=x.code+' — '+x.name;o.selected=true;
-    o.dataset.name=x.name||'';o.dataset.unit=x.unit||'EA';
-    o.dataset.cost=x.preferred_unit_cost??'';o.dataset.supplier=x.preferred_supplier||'';
-    rInput.appendChild(o);
-  }
-  const s=document.getElementById('r_supplier'),c=document.getElementById('r_cost');
-  if(s)s.value=x.preferred_supplier||'';
-  if(c)c.value=x.preferred_unit_cost??'';
-  setReceiptDate();
-  receiptStatus('Selected '+x.code+' — '+x.name+'. Enter reference and quantity received.',true);
-  document.getElementById('receiveStock')?.scrollIntoView({behavior:'smooth',block:'start'});
+  document.getElementById('tbody').innerHTML=a.map(x=>`<tr><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${esc(x.category||'')}</td><td>${esc(x.unit)}</td><td>${esc(x.reorder_level)}</td><td><span class="pill ${x.active?'':'inactive'}">${x.active?'ACTIVE':'INACTIVE'}</span></td><td><button class="secondary" onclick='edit(${JSON.stringify(x).replace(/'/g,"&#39;")})'>EDIT</button></td></tr>`).join('')||'<tr><td colspan="7">No inputs found.</td></tr>';
 }
 function edit(x){document.getElementById('store').value=x.store_code;document.getElementById('code').value=x.code;document.getElementById('name').value=x.name;document.getElementById('category').value=x.category||'';document.getElementById('unit').value=x.unit||'EA';document.getElementById('reorder').value=x.reorder_level||0;document.getElementById('safety').value=x.safety_stock||0;document.getElementById('target').value=x.target_stock||0;document.getElementById('cycle').value=x.purchase_cycle_days||7;document.getElementById('group').value=x.purchase_group||'WEEKLY';document.getElementById('supplier').value=x.preferred_supplier||'';document.getElementById('cost').value=x.preferred_unit_cost??'';document.getElementById('active').value=String(x.active!==false);go('add')}
 document.getElementById('store').value=localStorage.getItem('feastervilleStoreCode')||'NDAYENI';document.getElementById('listStore').value=document.getElementById('store').value;refreshAdmin();
-
-let receiptHistoryRows=[];
-function moneyH(v){return 'R'+Number(v||0).toFixed(2)}
-async function loadReceiptHistory(){
- const store=document.getElementById('h_store')?.value||'NDAYENI',from=document.getElementById('h_from')?.value||'',to=document.getElementById('h_to')?.value||'',st=document.getElementById('h_status');
- if(!verifiedUser||verifiedUser.role!=='manager'){
-   if(st)st.textContent='Waiting for Manager session...';
-   return;
- }
- if(st)st.textContent='Loading receipt history...';
- try{
-  let p='/rest/v1/pos_stock_receipts?store_code=eq.'+encodeURIComponent(store)+'&select=id,receipt_date,supplier,reference,input_code,input_name,unit,qty,unit_cost,received_by,created_at,store_code&order=receipt_date.desc,created_at.desc';
-  if(from)p+='&receipt_date=gte.'+encodeURIComponent(from);if(to)p+='&receipt_date=lte.'+encodeURIComponent(to);
-  receiptHistoryRows=await api(p);renderReceiptHistory();
-  if(st)st.textContent=receiptHistoryRows.length+' receipt(s) loaded for '+(store==='SIVANA'?'Sivana':'Ndayeni')+'.';
- }catch(e){if(st)st.textContent='Could not load receipt history: '+(e.message||e)}
-}
-function renderReceiptHistory(){
- const q=(document.getElementById('h_search')?.value||'').trim().toLowerCase(), body=document.getElementById('h_body');if(!body)return;
- const rr=(receiptHistoryRows||[]).filter(r=>!q||[r.supplier,r.reference,r.input_code,r.input_name].some(v=>String(v||'').toLowerCase().includes(q)));
- let tq=0,tc=0;
- body.innerHTML=rr.map(r=>{const qty=Number(r.qty||0),cost=Number(r.unit_cost||0),tot=qty*cost;tq+=qty;tc+=tot;
- return `<tr><td>${esc(r.receipt_date||'')}</td><td>${esc(r.supplier||'')}</td><td>${esc(r.reference||'')}</td><td>${esc(r.input_code||'')}</td><td>${esc(r.input_name||'')}</td><td>${qty}</td><td>${esc(r.unit||'')}</td><td>${moneyH(cost)}</td><td>${moneyH(tot)}</td><td>${esc(r.received_by||'')}</td></tr>`}).join('')||'<tr><td colspan="10">No receipts found.</td></tr>';
- document.getElementById('h_qty_total').textContent=tq.toFixed(3).replace(/\\.?0+$/,'');document.getElementById('h_cost_total').textContent=moneyH(tc);
-}
-
-document.addEventListener('DOMContentLoaded',()=>{setReceiptDate();
-document.getElementById('h_store').value=document.getElementById('store').value;
-document.getElementById('h_store').addEventListener('change',loadReceiptHistory);
-document.getElementById('h_from').addEventListener('change',loadReceiptHistory);
-document.getElementById('h_to').addEventListener('change',loadReceiptHistory);
-document.getElementById('h_search').addEventListener('input',renderReceiptHistory);
-document.getElementById('h_refresh').addEventListener('click',loadReceiptHistory);
-let historyTries=0;
-const historyTimer=setInterval(()=>{
-  historyTries++;
-  if(verifiedUser&&verifiedUser.role==='manager'){
-    clearInterval(historyTimer);
-    const activeStore=document.getElementById('listStore')?.value||document.getElementById('store')?.value||'NDAYENI';
-    document.getElementById('h_store').value=activeStore;
-    loadReceiptHistory();
-  }else if(historyTries>=20){
-    clearInterval(historyTimer);
-    const st=document.getElementById('h_status');
-    if(st)st.textContent='Manager session not ready. Click REFRESH HISTORY after signing in.';
-  }
-},500);
-});document.getElementById('r_input')?.addEventListener('change',applyReceiptDefaults);
+document.addEventListener('DOMContentLoaded',()=>{setReceiptDate();setTimeout(async()=>{await populateReceiptInputs();await loadReceiptHistory();},800);document.getElementById('r_store')?.addEventListener('change',async()=>{await populateReceiptInputs();await loadReceiptHistory();});document.getElementById('r_input')?.addEventListener('change',applyReceiptDefaults);});
 </script></body></html>
