@@ -7555,4 +7555,86 @@ window.openHistoricalCashupV59=open;window.loadHistoricalCashupV59=load;
 })();
 </script>
 <!-- BUILD: V75_CASHUP_RESTORE_PLUS_PRODUCTION_ADMIN_20260918 -->
+
+<style id="fvCashupSingleButtonV76Style">
+/* V76: older salesperson cash-up mounts must never be visible. */
+#fvSalespersonCashupV56,#fvSalespersonCashupV58,#fvCashupBtn{display:none!important}
+#fvSalespersonCashupV76{width:100%;margin-top:8px;font-weight:800}
+</style>
+<script>
+/* V76 — FINAL AUTHORITATIVE SINGLE CASH-UP BUTTON */
+(function(){
+ 'use strict';
+ if(window.__fvSingleCashupV76)return; window.__fvSingleCashupV76=true;
+ let cleaning=false;
+ function role(){
+   if(String(window.currentUser?.role||'').toLowerCase()==='manager')return 'manager';
+   if(window.salesSessionUser&&String(window.salesSessionUser.role||'').toLowerCase()==='salesperson')return 'salesperson';
+   if(window.inventorySessionUser)return String(window.inventorySessionUser.role||'').toLowerCase();
+   return String(window.currentUser?.role||'').toLowerCase();
+ }
+ function ensureManager(){
+   const r=role();
+   let mb=document.getElementById('fvManagerCashupHeaderV58');
+   if(r==='manager'){
+     const h=document.querySelector('header');
+     if(h&&!mb){
+       mb=document.createElement('button');
+       mb.id='fvManagerCashupHeaderV58';mb.type='button';mb.textContent='STORE CASH-UP / CLOSE DAY';
+       mb.onclick=function(){if(typeof window.openFvCashup==='function')window.openFvCashup();else alert('Cash-up is still loading. Please try again.');};
+       const logout=Array.from(h.querySelectorAll('button')).find(b=>/LOGOUT/i.test(b.textContent||''));
+       h.insertBefore(mb,logout||null);
+     }
+     if(mb)mb.style.setProperty('display','inline-block','important');
+   }else if(mb)mb.style.setProperty('display','none','important');
+   const hist=document.getElementById('fvHistoricalCashupBtnV59');
+   if(hist)hist.style.setProperty('display',r==='manager'?'inline-block':'none','important');
+ }
+ function ensureSalesperson(){
+   const r=role();
+   const complete=Array.from(document.querySelectorAll('button')).find(b=>(b.textContent||'').trim()==='COMPLETE SALE');
+   let keep=document.getElementById('fvSalespersonCashupV76');
+   if(r==='salesperson'&&complete){
+     if(!keep){
+       keep=document.createElement('button');
+       keep.id='fvSalespersonCashupV76';keep.type='button';keep.className='secondary';
+       keep.textContent='CLOSE DAY / CASH-UP';
+       keep.onclick=function(){if(typeof window.openFvCashup==='function')window.openFvCashup();else alert('Cash-up is still loading. Please try again.');};
+       complete.insertAdjacentElement('afterend',keep);
+     }
+     keep.style.setProperty('display','block','important');
+   }else if(keep){
+     keep.style.setProperty('display','none','important');
+   }
+
+   // Hide/remove every competing salesperson cash-up button, including V60.
+   ['fvSalespersonCashupV56','fvSalespersonCashupV58','fvSalespersonCashupV60','fvCashupBtn'].forEach(function(id){
+     const el=document.getElementById(id);
+     if(el&&el!==keep){
+       el.style.setProperty('display','none','important');
+       if(id!=='fvCashupBtn') el.remove();
+     }
+   });
+   Array.from(document.querySelectorAll('button')).forEach(function(b){
+     if(b===keep)return;
+     if((b.textContent||'').trim()==='CLOSE DAY / CASH-UP'){
+       b.style.setProperty('display','none','important');
+       b.remove();
+     }
+   });
+ }
+ function clean(){
+   if(cleaning)return; cleaning=true;
+   try{ensureManager();ensureSalesperson();document.documentElement.setAttribute('data-feasterville-build','V76');}
+   finally{cleaning=false;}
+ }
+ [20,100,300,700,1200,2000,3000,5000,8000].forEach(ms=>setTimeout(clean,ms));
+ document.addEventListener('click',function(){setTimeout(clean,0);},true);
+ document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')setTimeout(clean,0);});
+ const obs=new MutationObserver(function(){setTimeout(clean,0);});
+ if(document.documentElement)obs.observe(document.documentElement,{childList:true,subtree:true});
+ window.fvCashupSingleButtonV76=clean;
+})();
+</script>
+<!-- BUILD: V76_FINAL_SINGLE_CASHUP_20260918 -->
 </html>
