@@ -6693,5 +6693,58 @@ window.refreshLiveItemSalesV68=itemSales;setInterval(()=>{if(document.visibility
 </script>
 <!-- BUILD: V72_PRODUCTION_INPUT_ADMIN_ACCESS_20260918 -->
 
+
+<script>
+/* V74 — CASH-UP BUTTON DEDUPE
+   Keeps exactly one salesperson CLOSE DAY / CASH-UP button.
+   Does not change cash-up calculations, save logic, or manager controls. */
+(function(){
+ 'use strict';
+ if(window.__fvSingleCashupV74)return;window.__fvSingleCashupV74=true;
+
+ function salespersonActive(){
+   const su=window.salesSessionUser;
+   if(su && String(su.role||'').toLowerCase()==='salesperson') return true;
+   const cu=window.currentUser;
+   return !!(cu && String(cu.role||'').toLowerCase()==='salesperson');
+ }
+
+ function isSalesCashupButton(b){
+   if(!b || b.tagName!=='BUTTON') return false;
+   const txt=String(b.textContent||'').trim().replace(/\s+/g,' ').toUpperCase();
+   if(b.id==='fvCashupBtn') return true;
+   return txt==='CLOSE DAY / CASH-UP' ||
+          txt==='STORE CASH-UP / CLOSE DAY' ||
+          txt==='CASH-UP / CLOSE DAY';
+ }
+
+ function clean(){
+   if(!salespersonActive()) return;
+   const buttons=Array.from(document.querySelectorAll('button')).filter(isSalesCashupButton);
+   if(!buttons.length) return;
+
+   let keep=document.getElementById('fvCashupBtn');
+   if(!keep || !buttons.includes(keep)) keep=buttons[0];
+
+   buttons.forEach(function(b){ if(b!==keep) b.remove(); });
+   keep.id='fvCashupBtn';
+   keep.textContent='CLOSE DAY / CASH-UP';
+   if(typeof window.openFvCashup==='function') keep.onclick=window.openFvCashup;
+ }
+
+ function start(){
+   clean();
+   const obs=new MutationObserver(function(){clean();});
+   obs.observe(document.documentElement,{childList:true,subtree:true});
+   setTimeout(clean,300);
+   setTimeout(clean,1200);
+   setTimeout(clean,3000);
+ }
+
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+})();
+</script>
+<!-- BUILD: V74_SINGLE_SALESPERSON_CASHUP_BUTTON_20260918 -->
+
 </body>
 </html>
