@@ -1,0 +1,295 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Feasterville - Production Inputs</title>
+<style>
+*{box-sizing:border-box}body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8;color:#17212b}.top{position:sticky;top:0;z-index:20;background:#111827;padding:10px;box-shadow:0 2px 8px #0003}.nav{max-width:1180px;margin:auto;display:flex;gap:8px;flex-wrap:wrap}.nav button,.nav a{border:0;border-radius:8px;padding:11px 14px;font-weight:700;cursor:pointer;text-decoration:none;background:#fff;color:#111827}.nav .primary{background:#16a34a;color:white}.wrap{max-width:1180px;margin:18px auto;padding:0 14px}.card{background:#fff;border:1px solid #d9dee5;border-radius:12px;padding:18px;margin-bottom:18px;box-shadow:0 1px 3px #0001}h1,h2{margin-top:0}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}label{font-weight:700;font-size:13px}input,select{width:100%;padding:10px;border:1px solid #b9c2cc;border-radius:7px;margin-top:5px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}button.save{background:#16a34a;color:#fff;border:0;border-radius:8px;padding:11px 18px;font-weight:800;cursor:pointer}button.secondary{background:#334155;color:#fff;border:0;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer}.msg{margin-top:10px;font-weight:700}.ok{color:#15803d}.bad{color:#b91c1c}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}.toolbar>*{max-width:320px}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px;border-bottom:1px solid #e5e7eb;text-align:left}th{background:#f8fafc;position:sticky;top:60px}.tablewrap{overflow:auto;max-height:520px}.pill{padding:3px 7px;border-radius:12px;background:#dcfce7;color:#166534;font-weight:700}.inactive{background:#fee2e2;color:#991b1b}@media(max-width:760px){.grid{grid-template-columns:1fr}.nav button,.nav a{flex:1 1 auto;text-align:center}th{top:105px}}
+</style></head><body>
+<div class="top"><div class="nav">
+<a href="index.html">POS HOME</a><button class="primary" id="navAddInput" onclick="go('add')">ADD PRODUCTION INPUT</button><button id="navExisting" onclick="go('list')">EXISTING INPUTS</button><button id="navReceive" onclick="go('receipt')">RECEIVE STOCK</button><button onclick="refreshAdmin()">REFRESH</button><button onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>
+</div></div>
+<div class="wrap">
+<div class="card"><h1>Production Input Administration</h1>
+<div id="who">Checking authorised POS session…</div>
+<div id="adminLogin" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid #ddd">
+  <h3 style="margin:0 0 10px">Manager / Inventory Controller Login</h3>
+  <div class="grid">
+    <div><label>Email<input id="adminEmail" type="email" autocomplete="username" placeholder="POS user email"></label></div>
+    <div><label>Password<input id="adminPassword" type="password" autocomplete="current-password" placeholder="Password"></label></div>
+  </div>
+  <div class="actions"><button class="save" type="button" onclick="adminSignIn()">SIGN IN</button></div>
+  <div id="loginMsg" class="msg"></div>
+</div></div>
+<div class="card" id="add"><h2>Add / Edit Production Input</h2>
+<div class="grid">
+<div><label>Store<select id="store"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select></label></div>
+<div><label>Input Code<input id="code" placeholder="e.g. ICI-052"></label></div>
+<div><label>Input Name<input id="name" placeholder="Input name"></label></div>
+<div><label>Category<input id="category" placeholder="e.g. Ice Cream"></label></div>
+<div><label>Unit<select id="unit"><option>EA</option><option>KG</option><option>G</option><option>L</option><option>ML</option><option>PACK</option><option>BOX</option></select></label></div>
+<div><label>Reorder Level<input id="reorder" type="number" step="0.01" value="0"></label></div>
+<div><label>Safety Stock<input id="safety" type="number" step="0.01" value="0"></label></div>
+<div><label>Target Stock<input id="target" type="number" step="0.01" value="0"></label></div>
+<div><label>Purchase Cycle (days)<input id="cycle" type="number" value="7"></label></div>
+<div><label>Purchase Group<select id="group"><option>WEEKLY</option><option>DAILY</option><option>MONTHLY</option><option>OTHER</option></select></label></div>
+<div><label>Preferred Supplier<input id="supplier"></label></div>
+<div><label>Preferred Unit Cost (R)<input id="cost" type="number" step="0.01"></label></div>
+<div><label>Status<select id="active"><option value="true">Active</option><option value="false">Inactive</option></select></label></div>
+</div><div class="actions"><button class="save" onclick="saveInput()">SAVE INPUT</button><button class="secondary" onclick="clearForm()">CLEAR FORM</button></div><div id="msg" class="msg"></div></div>
+<div class="card" id="receipt">
+<h2>Receive Production Input Stock</h2>
+<p class="muted">Capture opening stock or supplier receipts. Each receipt is saved to the live stock receipt register for audit and reconciliation.</p>
+<div class="grid">
+<label>Store<select id="r_store"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select></label>
+<label>Production Input<select id="r_input"></select></label>
+<label>Receipt Date<input id="r_date" type="date"></label>
+<label>Supplier<input id="r_supplier" placeholder="e.g. Big Save"></label>
+<label>Reference<input id="r_reference" placeholder="Invoice / Opening Stock"></label>
+<label>Quantity Received<input id="r_qty" type="number" min="0" step="0.001"></label>
+<label>Unit Cost (R)<input id="r_cost" type="number" min="0" step="0.01"></label>
+</div>
+<div class="actions"><button class="primary" onclick="saveReceipt()">SAVE STOCK RECEIPT</button><button onclick="clearReceipt()">CLEAR</button></div>
+<div id="receipt_status" class="msg"></div>
+</div>
+<div class="card" id="list"><h2>Existing Production Inputs</h2><div class="toolbar"><select id="listStore" onchange="loadInputs()"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select><input id="search" placeholder="Search code, name or category" oninput="render()"></div><div class="tablewrap"><div id="listMsg" class="msg"></div><table><thead><tr><th>Code</th><th>Name</th><th>Category</th><th>Unit</th><th>Reorder</th><th>Status</th><th>Action</th></tr></thead><tbody id="tbody"></tbody></table></div></div>
+</div>
+<script>
+const ROOT='https://sflyjcgbxbcwspfuzone.supabase.co';
+const BASE=ROOT+'/rest/v1';
+const KEY='sb_publishable_iASq-tni6KYrFK0R2S35zA_mpwt4MqM';let rows=[];
+function tok(){return sessionStorage.getItem('feastervilleCloudAccessToken')||localStorage.getItem('feastervilleCloudAccessToken')||''}
+let verifiedUser=null;
+function user(){return verifiedUser}
+async function request(path,options){
+  options=options||{};
+  const headers=Object.assign({'apikey':'sb_publishable_iASq-tni6KYrFK0R2S35zA_mpwt4MqM','Content-Type':'application/json'},options.headers||{});
+  const token=tok();
+  if(token)headers.Authorization='Bearer '+token;
+  const response=await fetch('https://sflyjcgbxbcwspfuzone.supabase.co'+path,Object.assign({},options,{headers}));
+  const raw=await response.text();
+  let body=null;
+  if(raw){try{body=JSON.parse(raw)}catch(_){body=raw}}
+  if(!response.ok){
+    const detail=(body&&typeof body==='object'&&(body.msg||body.message||body.error_description||body.error))||raw||('HTTP '+response.status);
+    throw new Error(detail);
+  }
+  return body;
+}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function role(){return String(verifiedUser?.role||'').toLowerCase()}
+function isManager(){return role()==='manager'}
+function isInventoryController(){return role()==='inventory_control'}
+function allowed(){return isManager()||isInventoryController()}
+function lockStoreSelect(id,storeCode){const e=document.getElementById(id);if(!e)return;e.value=storeCode||'NDAYENI';e.disabled=true;}
+function applyRoleUI(){
+  const r=role();
+  const add=document.getElementById('add'), addBtn=document.getElementById('navAddInput');
+  const storeCode=verifiedUser?.store_code||localStorage.getItem('feastervilleStoreCode')||'NDAYENI';
+  if(r==='inventory_control'){
+    if(add)add.style.display='none';
+    if(addBtn)addBtn.style.display='none';
+    lockStoreSelect('r_store',storeCode);lockStoreSelect('listStore',storeCode);
+    const rs=document.getElementById('store');if(rs){rs.value=storeCode;rs.disabled=true;}
+    localStorage.setItem('feastervilleStoreCode',storeCode);
+  }else if(r==='manager'){
+    if(add)add.style.display='block';
+    if(addBtn)addBtn.style.display='';
+    ['r_store','listStore','store'].forEach(id=>{const e=document.getElementById(id);if(e)e.disabled=false;});
+  }
+}
+function guard(){
+  const w=document.getElementById('who'), box=document.getElementById('adminLogin');
+  if(!allowed()){
+    w.innerHTML='<span class="bad">Manager or Inventory Controller sign-in required.</span>';
+    if(box)box.style.display='block';
+    return false;
+  }
+  if(box)box.style.display='none';
+  applyRoleUI();
+  const label=isManager()?'Manager':'Inventory Controller';
+  w.innerHTML='<span class="ok">'+label+' session active: '+esc(verifiedUser.name||label)+'</span>';
+  return true;
+}
+async function getAuthorizedProfile(authUser){
+  const data=await request('/rest/v1/pos_profiles?user_id=eq.'+encodeURIComponent(authUser.id)+'&select=user_id,display_name,role,store_code,active');
+  const p=Array.isArray(data)&&data.length?data[0]:null;
+  const r=String(p?.role||'').toLowerCase();
+  if(!p||!['manager','inventory_control'].includes(r)||p.active===false)throw new Error('Manager or Inventory Controller access required.');
+  return p;
+}
+async function activateAdmin(authData){
+  if(!authData||!authData.access_token||!authData.user)throw new Error('No login session was returned.');
+  sessionStorage.setItem('feastervilleCloudAccessToken',authData.access_token);
+  if(authData.refresh_token)sessionStorage.setItem('feastervilleCloudRefreshToken',authData.refresh_token);
+  const p=await getAuthorizedProfile(authData.user);
+  verifiedUser={id:authData.user.id,name:p.display_name||authData.user.email,display_name:p.display_name||authData.user.email,role:String(p.role||'').toLowerCase(),store_code:p.store_code||null};
+  window.currentUser=verifiedUser;
+  guard();
+}
+async function verifyAuthorized(){
+  const token=tok();
+  if(!token){verifiedUser=null;guard();return false}
+  try{
+    const au=await request('/auth/v1/user');
+    const p=await getAuthorizedProfile(au);
+    verifiedUser={id:au.id,name:p.display_name||au.email,display_name:p.display_name||au.email,role:String(p.role||'').toLowerCase(),store_code:p.store_code||null};
+    window.currentUser=verifiedUser;
+    guard();return true;
+  }catch(_){
+    verifiedUser=null;window.currentUser=null;guard();return false;
+  }
+}
+async function adminSignIn(){
+  const m=document.getElementById('loginMsg');
+  try{
+    m.textContent='Signing in...';m.className='msg';
+    const email=document.getElementById('adminEmail').value.trim();
+    const password=document.getElementById('adminPassword').value;
+    if(!email||!password)throw new Error('Enter email and password.');
+    const data=await request('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:email,password:password})});
+    await activateAdmin(data);
+    m.textContent=(isManager()?'Manager':'Inventory Controller')+' signed in successfully.';m.className='msg ok';
+    document.getElementById('adminPassword').value='';
+    await loadInputs();await populateReceiptInputs();
+  }catch(err){
+    console.error(err);
+    m.textContent=err.message;m.className='msg bad';
+  }
+}
+async function api(path,opt={}){
+  let p=path.startsWith('/')?path:'/rest/v1/'+path;
+  return request(p,opt);
+}
+async function refreshAdmin(){if(await verifyAuthorized()){await loadInputs();await populateReceiptInputs();}}
+function val(id){return (document.getElementById(id)?.value||'').trim()}
+function go(where){
+  const id=where==='add'?'add':where==='receipt'?'receipt':'list';
+  if(id==='add'&&!isManager())return;
+  const el=document.getElementById(id);
+  if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function clearForm(){
+  ['code','name','category','supplier','cost'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});
+  document.getElementById('unit').value='EA';
+  document.getElementById('reorder').value='0';
+  document.getElementById('safety').value='0';
+  document.getElementById('target').value='0';
+  document.getElementById('cycle').value='7';
+  document.getElementById('group').value='WEEKLY';
+  document.getElementById('active').value='true';
+  const m=document.getElementById('msg');if(m){m.textContent='';m.className='msg'}
+}
+async function saveInput(){
+  if(!guard()||!isManager()){const m=document.getElementById('msg');if(m){m.textContent='Manager access required to add or edit Production Inputs.';m.className='msg bad';}return;}
+  const m=document.getElementById('msg');
+  const store=document.getElementById('store').value;
+  const code=String(document.getElementById('code').value||'').trim().toUpperCase();
+  const name=String(document.getElementById('name').value||'').trim();
+  if(!code||!name){m.textContent='Input Code and Input Name are required.';m.className='msg bad';return}
+  const payload={
+    store_code:store,code,name,category:String(document.getElementById('category').value||'').trim()||null,
+    unit:document.getElementById('unit').value||'EA',
+    reorder_level:Number(document.getElementById('reorder').value||0),
+    safety_stock:Number(document.getElementById('safety').value||0),
+    target_stock:Number(document.getElementById('target').value||0),
+    purchase_cycle_days:Number(document.getElementById('cycle').value||7),
+    purchase_group:document.getElementById('group').value||'WEEKLY',
+    preferred_supplier:String(document.getElementById('supplier').value||'').trim()||null,
+    preferred_unit_cost:String(document.getElementById('cost').value||'').trim()===''?null:Number(document.getElementById('cost').value),
+    active:document.getElementById('active').value==='true'
+  };
+  try{
+    m.textContent='Saving Production Input...';m.className='msg';
+    await request('/rest/v1/pos_store_production_inputs?on_conflict=store_code,code',{
+      method:'POST',
+      headers:{Prefer:'resolution=merge-duplicates,return=representation'},
+      body:JSON.stringify(payload)
+    });
+    m.textContent='Production Input saved successfully.';m.className='msg ok';
+    document.getElementById('listStore').value=store;
+    await loadInputs();
+  }catch(e){m.textContent='Could not save Production Input: '+e.message;m.className='msg bad'}
+}
+
+function receiptStatus(msg,ok=true){const e=document.getElementById('receipt_status');if(!e)return;e.textContent=msg||'';e.style.color=ok?'#166534':'#b91c1c';}
+function setReceiptDate(){const e=document.getElementById('r_date');if(e&&!e.value)e.value=new Date().toISOString().slice(0,10);}
+function clearReceipt(){['r_supplier','r_reference','r_qty','r_cost'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});setReceiptDate();receiptStatus('');}
+async function populateReceiptInputs(){
+ let store=document.getElementById('r_store')?.value||'NDAYENI';
+ if(isInventoryController()){store=verifiedUser?.store_code||'NDAYENI';const rs=document.getElementById('r_store');if(rs){rs.value=store;rs.disabled=true;}}
+ const sel=document.getElementById('r_input'); if(!sel)return;
+ const current=sel.value;
+ try{
+   sel.innerHTML='<option value="">Loading Production Inputs...</option>';
+   const data=await api('/rest/v1/pos_store_production_inputs?store_code=eq.'+encodeURIComponent(store)+'&active=eq.true&select=code,name,unit,preferred_unit_cost,preferred_supplier&order=name.asc');
+   const items=Array.isArray(data)?data:[];
+   sel.innerHTML='<option value="">Select Production Input</option>'+items.map(x=>'<option value="'+esc(x.code)+'" data-name="'+esc(x.name)+'" data-unit="'+esc(x.unit||'EA')+'" data-cost="'+esc(x.preferred_unit_cost??'')+'" data-supplier="'+esc(x.preferred_supplier||'')+'">'+esc(x.code)+' — '+esc(x.name)+'</option>').join('');
+   if(items.some(x=>x.code===current))sel.value=current;
+   if(!items.length) receiptStatus('No active Production Inputs found for '+store+'.',false);
+   else receiptStatus(items.length+' Production Inputs ready for '+(store==='SIVANA'?'Sivana':'Ndayeni')+'.');
+ }catch(e){
+   sel.innerHTML='<option value="">Could not load Production Inputs</option>';
+   receiptStatus('Could not load Production Inputs: '+e.message,false);
+ }
+}
+function applyReceiptDefaults(){const s=document.getElementById('r_input'),o=s?.options[s.selectedIndex];if(!o||!o.value)return;const a=document.getElementById('r_supplier'),c=document.getElementById('r_cost');if(a&&!a.value)a.value=o.dataset.supplier||'';if(c&&!c.value)c.value=o.dataset.cost||'';}
+async function saveReceipt(){
+ if(!guard())return;
+ const actor=user();
+ if(!actor||!['manager','inventory_control'].includes(role())){receiptStatus('Manager or Inventory Controller sign-in is required before saving stock receipts.',false);return;}
+ let store=document.getElementById('r_store').value;
+ if(isInventoryController()){
+   store=actor.store_code||'NDAYENI';
+   document.getElementById('r_store').value=store;
+ }
+ const sel=document.getElementById('r_input'),o=sel.options[sel.selectedIndex];
+ const input_code=sel.value,input_name=o?.dataset.name||'',unit=o?.dataset.unit||'EA',receipt_date=document.getElementById('r_date').value;
+ const supplier=String(document.getElementById('r_supplier').value||'').trim(),reference=String(document.getElementById('r_reference').value||'').trim();
+ const qty=Number(document.getElementById('r_qty').value),unit_cost=Number(document.getElementById('r_cost').value||0);
+ if(!input_code){receiptStatus('Select a Production Input.',false);return;} if(!receipt_date){receiptStatus('Enter the receipt date.',false);return;}
+ if(!Number.isFinite(qty)||qty<=0){receiptStatus('Quantity received must be greater than zero.',false);return;}
+ if(!Number.isFinite(unit_cost)||unit_cost<0){receiptStatus('Unit cost cannot be negative.',false);return;}
+ const payload={receipt_date,supplier:supplier||null,reference:reference||null,input_code,input_name,unit,qty,unit_cost,received_by:actor.name||actor.display_name||'Inventory Controller',created_by:actor.id,store_code:store};
+ try{
+   receiptStatus('Saving stock receipt...');
+   await request('/rest/v1/pos_stock_receipts',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(payload)});
+   receiptStatus('Stock receipt saved successfully. Stock ledger and related live reports will use this receipt.');
+   clearReceipt();await populateReceiptInputs();
+ }catch(e){receiptStatus('Could not save stock receipt: '+e.message,false);}
+}
+
+async function loadInputs(){
+  if(!guard())return;
+  let store=document.getElementById('listStore').value||'NDAYENI';
+  if(isInventoryController()){store=verifiedUser.store_code||'NDAYENI';document.getElementById('listStore').value=store;}
+  const body=document.getElementById('tbody');
+  const msg=document.getElementById('listMsg');
+  if(body)body.innerHTML='<tr><td colspan="7">Loading live Production Inputs...</td></tr>';
+  if(msg){msg.textContent='Loading from shared database...';msg.className='msg'}
+  try{
+    const data=await request('/rest/v1/pos_store_production_inputs?store_code=eq.'+
+      encodeURIComponent(store)+
+      '&select=id,store_code,code,name,category,unit,reorder_level,safety_stock,target_stock,purchase_cycle_days,purchase_group,preferred_supplier,preferred_unit_cost,active&order=category.asc,code.asc');
+    rows=Array.isArray(data)?data:[];
+    render();
+    if(msg){msg.textContent=rows.length+' Production Input(s) loaded for '+(store==='SIVANA'?'Sivana':'Ndayeni')+'.';msg.className='msg ok'}
+  }catch(e){
+    rows=[];
+    if(body)body.innerHTML='<tr><td colspan="7">'+esc(e.message)+'</td></tr>';
+    if(msg){msg.textContent='Could not load Production Inputs: '+e.message;msg.className='msg bad'}
+  }
+}
+function render(){
+  const searchEl=document.getElementById('search');
+  const q=String(searchEl?searchEl.value:'').trim().toLowerCase();
+  const a=rows.filter(x=>!q||[x.code,x.name,x.category].some(v=>String(v||'').toLowerCase().includes(q)));
+  const manager=isManager();
+  document.getElementById('tbody').innerHTML=a.map(x=>`<tr><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${esc(x.category||'')}</td><td>${esc(x.unit)}</td><td>${esc(x.reorder_level)}</td><td><span class="pill ${x.active?'':'inactive'}">${x.active?'ACTIVE':'INACTIVE'}</span></td><td>${manager?`<button class="secondary" onclick='edit(${JSON.stringify(x).replace(/'/g,"&#39;")})'>EDIT</button>`:'VIEW ONLY'}</td></tr>`).join('')||'<tr><td colspan="7">No inputs found.</td></tr>';
+}
+function edit(x){
+  if(!isManager())return;
+  document.getElementById('store').value=x.store_code;document.getElementById('code').value=x.code;document.getElementById('name').value=x.name;document.getElementById('category').value=x.category||'';document.getElementById('unit').value=x.unit||'EA';document.getElementById('reorder').value=x.reorder_level||0;document.getElementById('safety').value=x.safety_stock||0;document.getElementById('target').value=x.target_stock||0;document.getElementById('cycle').value=x.purchase_cycle_days||7;document.getElementById('group').value=x.purchase_group||'WEEKLY';document.getElementById('supplier').value=x.preferred_supplier||'';document.getElementById('cost').value=x.preferred_unit_cost??'';document.getElementById('active').value=String(x.active!==false);go('add')
+}
+document.getElementById('store').value=localStorage.getItem('feastervilleStoreCode')||'NDAYENI';document.getElementById('listStore').value=document.getElementById('store').value;refreshAdmin();
+document.addEventListener('DOMContentLoaded',()=>{setReceiptDate();setTimeout(()=>populateReceiptInputs(),800);document.getElementById('r_store')?.addEventListener('change',async()=>{await populateReceiptInputs();});document.getElementById('r_input')?.addEventListener('change',applyReceiptDefaults);});
+
+</script>
+<!-- BUILD: PRODUCTION_INPUT_ADMIN_MANAGER_PLUS_INVENTORY_CONTROLLER_V72_20260918 -->
+</body></html>
