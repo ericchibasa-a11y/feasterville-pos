@@ -4114,17 +4114,17 @@ document.addEventListener('DOMContentLoaded',function(){
  function payBucket(p){p=String(p||'').toLowerCase().replace(/[^a-z0-9]/g,'');if(p==='cash')return'cash';if(p==='card')return'card';if(p==='mrd')return'mrd';if(p==='ubereats')return'uber';return'other'}
  async function calc(){
    const me=u();if(!me)throw Error('Please sign in.');
-   let rows=[];
-   if(me.role==='manager'){
-     rows=await api('pos_sales?store_code=eq.'+encodeURIComponent(store())+'&sale_date=eq.'+day()+'&select=id,total,payment,cashier');
-   }else{
-     const q='pos_sales?store_code=eq.'+encodeURIComponent(store())+'&sale_date=eq.'+day()+'&cashier=eq.'+encodeURIComponent(me.name||me.display_name||me.email||'')+'&select=id,total,payment,cashier';
-     rows=await api(q);
-     // Some historic cashier values may differ from display name. For salesperson, use current user's email/name variants if exact name has no rows.
-     if(!rows.length && me.email){rows=await api('pos_sales?store_code=eq.'+encodeURIComponent(store())+'&sale_date=eq.'+day()+'&select=id,total,payment,cashier');rows=rows.filter(x=>[me.name,me.display_name,me.email].filter(Boolean).map(String).map(v=>v.toLowerCase()).includes(String(x.cashier||'').toLowerCase()));}
-   }
-   let x={cash:0,card:0,mrd:0,uber:0,other:0,total:0,count:rows.length};
-   rows.forEach(r=>{let v=Number(r.total||0),b=payBucket(r.payment);x[b]+=v;x.total+=v});return x;
+   const result=await api('rpc/pos_cashup_totals',{method:'POST',body:JSON.stringify({p_store_code:store(),p_sale_date:day()})});
+   const r=Array.isArray(result)?(result[0]||{}):(result||{});
+   return {
+     cash:Number(r.cash_sales||0),
+     card:Number(r.card_sales||0),
+     mrd:Number(r.mr_d_sales||0),
+     uber:Number(r.uber_eats_sales||0),
+     other:Number(r.other_sales||0),
+     total:Number(r.total_sales||0),
+     count:Number(r.sale_count||0)
+   };
  }
  async function existing(){const me=u();if(!me||!me.id)return[];return api('pos_daily_cashups?store_code=eq.'+encodeURIComponent(store())+'&cashup_date=eq.'+day()+'&user_id=eq.'+encodeURIComponent(me.id)+'&select=*')}
  function variance(){if(!totals)return;let f=Number(document.getElementById('fvOpeningFloat').value||0),e=Number(document.getElementById('fvCashExpense').value||0),a=Number(document.getElementById('fvActualCash').value||0),expected=totals.cash+f-e,v=a-expected;document.getElementById('fvCashupVariance').textContent='Expected cash: '+money(expected)+' (after cash expense '+money(e)+') | Difference: '+money(v)}
@@ -4161,6 +4161,7 @@ document.addEventListener('DOMContentLoaded',function(){
 })();
 </script>
 <!-- BUILD: SALESPERSON_MANAGER_DAILY_CASHUP_V55_20260909 -->
+<!-- BUILD: V77_CASHUP_CREATED_BY_SALES_PULL_FIX_20260918 -->
 
 
 <script>
