@@ -193,7 +193,7 @@ body.print-report #reportContent { position:absolute; left:0; top:0; width:100%;
 <div class="row"><span>Discount</span><input id="discount" type="number" min="0" value="0" style="width:100px"></div>
 <div class="row grand"><span>TOTAL</span><span id="total">R0.00</span></div>
 <div class="pay">
-<label>Payment<br><select id="payment"><option>Cash</option><option>Card</option><option>EFT</option><option>Other</option></select></label>
+<label>Payment<br><select id="payment"><option>Cash</option><option>Card</option><option>Mr D</option><option>Uber Eats</option></select></label>
 <label>Amount Received<br><input id="received" type="number" min="0" value="0" oninput="render()"></label>
 </div>
 <div class="row"><span>Change</span><b id="change">R0.00</b></div>
@@ -835,7 +835,11 @@ const activeProducts=()=>{
 let cart=[];
 let sales=JSON.parse(localStorage.getItem('feastervilleSales')||'[]');
 let orderCounter=Number(localStorage.getItem('feastervilleOrderNo')||0)+1;
-document.getElementById('date').value=new Date().toISOString().slice(0,10);
+{
+ const p=new Intl.DateTimeFormat('en-ZA',{timeZone:'Africa/Johannesburg',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+ const m=Object.fromEntries(p.map(x=>[x.type,x.value]));
+ document.getElementById('date').value=m.year+'-'+m.month+'-'+m.day;
+}
 document.getElementById('orderNo').textContent='Order #'+String(orderCounter).padStart(4,'0');
 
 const money=n=>'R'+Number(n||0).toFixed(2);
@@ -921,7 +925,17 @@ function printReceipt(){
     '.receipt-item-values{display:flex!important;justify-content:space-between!important;gap:8px!important}'+
     'hr{border:0;border-top:1px dashed #000;margin:5px 0}'+
     'button{display:none!important}'+
-    '</style></head><body><div class="receipt-wrap">'+receiptHtml+'</div></body></html>';
+    '</style></head><body><div class="receipt-wrap">'+receiptHtml+'</div></body>
+<style id="fvSalespersonCashupDedupeV76">
+/* V76 — suppress legacy duplicate salesperson cash-up mounts. */
+#fvSalespersonCashupV56,
+#fvSalespersonCashupV58,
+#fvCashupBtn{
+  display:none !important;
+}
+</style>
+<!-- BUILD: V76_SALESPERSON_PAYMENT_DATE_CASHUP_CLEANUP_20260920 -->
+</html>';
 
   w.document.open();
   w.document.write(doc);
@@ -1259,8 +1273,8 @@ function showReport(type,btn){
    const total=ss.reduce((a,s)=>a+s.total,0);
    const cash=ss.filter(s=>s.payment==='Cash').reduce((a,s)=>a+s.total,0);
    const card=ss.filter(s=>s.payment==='Card').reduce((a,s)=>a+s.total,0);
-   const eft=ss.filter(s=>s.payment==='EFT').reduce((a,s)=>a+s.total,0);
-   const other=ss.filter(s=>s.payment==='Other').reduce((a,s)=>a+s.total,0);
+   const mrd=ss.filter(s=>String(s.payment||'').toLowerCase().replace(/[^a-z0-9]/g,'')==='mrd').reduce((a,s)=>a+s.total,0);
+   const uber=ss.filter(s=>String(s.payment||'').toLowerCase().replace(/[^a-z0-9]/g,'')==='ubereats').reduce((a,s)=>a+s.total,0);
    const itemMap={};
    ss.forEach(s=>s.items.forEach(i=>{itemMap[i.code]??={name:i.name,qty:0,value:0};itemMap[i.code].qty+=i.qty;itemMap[i.code].value+=i.qty*i.price;}));
    const items=Object.entries(itemMap).sort((a,b)=>b[1].value-a[1].value);
@@ -1271,7 +1285,7 @@ function showReport(type,btn){
    <div class="inv-card">Average Order<br><b>${money(ss.length?total/ss.length:0)}</b></div></div>
    <table class="inv-table"><tr><th>Payment</th><th>Sales</th></tr>
    <tr><td>Cash</td><td>${money(cash)}</td></tr><tr><td>Card</td><td>${money(card)}</td></tr>
-   <tr><td>EFT</td><td>${money(eft)}</td></tr><tr><td>Other</td><td>${money(other)}</td></tr></table>
+   <tr><td>Mr D</td><td>${money(mrd)}</td></tr><tr><td>Uber Eats</td><td>${money(uber)}</td></tr></table>
    <h3>Product Sales</h3><table class="inv-table"><tr><th>Code</th><th>Product</th><th>Qty</th><th>Sales Value</th></tr>
    ${items.map(([c,v])=>`<tr><td>${c}</td><td>${v.name}</td><td>${v.qty}</td><td>${money(v.value)}</td></tr>`).join('')}</table>`;
  } else {
@@ -4277,15 +4291,16 @@ document.addEventListener('DOMContentLoaded',function(){
 
   function build(rows){
     const total=rows.reduce((a,s)=>a+Number(s.total||0),0);
-    const pay={cash:0,card:0,eft:0,other:0};
+    const pay={cash:0,card:0,mrd:0,uber:0,other:0};
     const items={};
     let units=0;
 
     rows.forEach(s=>{
-      const p=String(s.payment||'').toLowerCase();
+      const p=String(s.payment||'').toLowerCase().replace(/[^a-z0-9]/g,'');
       if(p==='cash') pay.cash+=Number(s.total||0);
       else if(p==='card') pay.card+=Number(s.total||0);
-      else if(p==='eft') pay.eft+=Number(s.total||0);
+      else if(p==='mrd') pay.mrd+=Number(s.total||0);
+      else if(p==='ubereats') pay.uber+=Number(s.total||0);
       else pay.other+=Number(s.total||0);
 
       (s.pos_sale_items||[]).forEach(i=>{
@@ -4309,8 +4324,8 @@ document.addEventListener('DOMContentLoaded',function(){
       '<table class="inv-table"><thead><tr><th>Payment</th><th>Sales</th></tr></thead><tbody>'+
         '<tr><td>Cash</td><td>'+money(pay.cash)+'</td></tr>'+
         '<tr><td>Card</td><td>'+money(pay.card)+'</td></tr>'+
-        '<tr><td>EFT</td><td>'+money(pay.eft)+'</td></tr>'+
-        '<tr><td>Other</td><td>'+money(pay.other)+'</td></tr>'+
+        '<tr><td>Mr D</td><td>'+money(pay.mrd)+'</td></tr>'+
+        '<tr><td>Uber Eats</td><td>'+money(pay.uber)+'</td></tr>'+
       '</tbody></table>'+
       '<h3>Product Sales</h3>'+
       '<table class="inv-table"><thead><tr><th>Code</th><th>Product</th><th>Qty</th><th>Sales Value</th></tr></thead><tbody>'+
