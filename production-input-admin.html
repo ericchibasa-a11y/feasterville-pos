@@ -202,7 +202,8 @@ async function populateReceiptInputs(){
 }
 function applyReceiptDefaults(){const s=document.getElementById('r_input'),o=s?.options[s.selectedIndex];if(!o||!o.value)return;const a=document.getElementById('r_supplier'),c=document.getElementById('r_cost');if(a&&!a.value)a.value=o.dataset.supplier||'';if(c&&!c.value)c.value=o.dataset.cost||'';}
 async function saveReceipt(){
- if(!window.currentUser||String(window.currentUser.role||'').toLowerCase()!=='manager'){receiptStatus('Manager sign-in is required before saving stock receipts.',false);return;}
+ if(!guard()){receiptStatus('Manager sign-in is required before saving stock receipts.',false);return;}
+ const manager=user();
  const store=document.getElementById('r_store').value,sel=document.getElementById('r_input'),o=sel.options[sel.selectedIndex];
  const input_code=sel.value,input_name=o?.dataset.name||'',unit=o?.dataset.unit||'EA',receipt_date=document.getElementById('r_date').value;
  const supplier=String(document.getElementById('r_supplier').value||'').trim(),reference=String(document.getElementById('r_reference').value||'').trim();
@@ -210,7 +211,7 @@ async function saveReceipt(){
  if(!input_code){receiptStatus('Select a Production Input.',false);return;} if(!receipt_date){receiptStatus('Enter the receipt date.',false);return;}
  if(!Number.isFinite(qty)||qty<=0){receiptStatus('Quantity received must be greater than zero.',false);return;}
  if(!Number.isFinite(unit_cost)||unit_cost<0){receiptStatus('Unit cost cannot be negative.',false);return;}
- const payload={receipt_date,supplier:supplier||null,reference:reference||null,input_code,input_name,unit,qty,unit_cost,received_by:window.currentUser.name||window.currentUser.username||'Manager',created_by:window.currentUser.id,store_code:store};
+ const payload={receipt_date,supplier:supplier||null,reference:reference||null,input_code,input_name,unit,qty,unit_cost,received_by:manager.name||manager.display_name||'Manager',created_by:manager.id,store_code:store};
  try{receiptStatus('Saving stock receipt...');await request('/rest/v1/pos_stock_receipts',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(payload)});receiptStatus('Stock receipt saved successfully.');}
  catch(e){receiptStatus('Could not save stock receipt: '+e.message,false);}
 }
