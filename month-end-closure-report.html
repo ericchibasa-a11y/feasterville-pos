@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Feasterville Month-End Closure Report</title>
+<style>
+:root{--green:#16824b;--dark:#10271b;--light:#f4f8f5;--line:#d8e3dc;--warn:#9a6700;--bad:#b42318;--good:#176b2c}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#eef4f0;color:#1e2b23}.wrap{max-width:1500px;margin:0 auto;padding:18px}.top{background:linear-gradient(135deg,#0f5d36,#15834a);color:white;padding:20px;border-radius:16px;box-shadow:0 6px 18px #0002}.top h1{margin:0 0 6px;font-size:28px}.top p{margin:0;opacity:.92}.nav,.filters,.actions,.cards{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.nav{margin-top:14px}.btn,button{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer}.primary{background:#188a4f;color:white}.secondary{background:white;color:#17432b;border:1px solid #b9cfbf}.danger{background:#fff1f0;color:var(--bad);border:1px solid #f3b9b4}.panel{background:white;border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:14px;box-shadow:0 3px 10px #0000000d}.filters label{font-size:13px;font-weight:700}select,input{margin-top:5px;padding:9px 10px;border:1px solid #b7c9bd;border-radius:8px;background:white;min-width:150px}.status{margin-top:10px;padding:10px 12px;border-radius:9px;background:#f5f7f6;border:1px solid #dbe4de}.status.good{background:#edf8f0;color:var(--good);border-color:#b9dec3}.status.warn{background:#fff8e8;color:#7a5100;border-color:#f0d69a}.status.bad{background:#fff1f0;color:var(--bad);border-color:#f0bbb6}.cards{align-items:stretch}.card{flex:1;min-width:180px;background:#f8fbf9;border:1px solid var(--line);border-radius:12px;padding:13px}.card .label{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#5c6d62}.card .value{font-size:24px;font-weight:800;margin-top:6px}.card .sub{font-size:12px;color:#6b7d71;margin-top:5px}.section-title{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px}.section-title h2{margin:0;font-size:20px}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 9px;border-bottom:1px solid #e2e9e4;text-align:left;white-space:nowrap}th{background:#edf5ef;position:sticky;top:0;z-index:1}td.num,th.num{text-align:right}.total-row td{font-weight:800;background:#f6faf7}.muted{color:#6b7d71}.small{font-size:12px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.pl td:first-child{white-space:normal}.pl .major td{font-weight:800;background:#f3f8f4}.pl .profit td{font-weight:900;font-size:15px;background:#eaf6ee}.right{text-align:right}.tag{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:800}.tag.good{background:#e5f5ea;color:#176b2c}.tag.warn{background:#fff3d6;color:#835800}.tag.bad{background:#ffe8e6;color:#a4281f}.note{padding:10px 12px;background:#f8fbf9;border-left:4px solid #71a884;margin-top:10px}.foot{font-size:11px;color:#6d7a71;margin-top:14px}.hidden{display:none!important}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}.top h1{font-size:22px}.card{min-width:150px}}
+@media print{body{background:white}.wrap{max-width:none;padding:0}.top{box-shadow:none;border-radius:0}.nav,.filters,.actions,.no-print{display:none!important}.panel{box-shadow:none;break-inside:avoid}.table-wrap{overflow:visible}th{position:static}table{font-size:9px}th,td{padding:5px}.page-break{page-break-before:always}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>FEASTERVILLE FOOD — MONTH-END CLOSURE REPORT</h1>
+    <p>Inventory reconciliation, Cost of Sales, Profit &amp; Loss, cash-up control and closing stock for Ndayeni and Sivana.</p>
+    <div class="nav no-print">
+      <button class="secondary" onclick="location.href='index.html'">POS HOME</button>
+      <button class="secondary" onclick="location.href='production-input-admin.html'">PRODUCTION INPUT ADMIN</button>
+      <button class="secondary" onclick="location.href='production-input-consumption-report.html'">CONSUMPTION REPORT</button>
+    </div>
+  </div>
+
+  <div class="panel no-print">
+    <div class="filters">
+      <label>Store<br><select id="store"><option value="ALL">All Stores</option><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select></label>
+      <label>Month<br><input id="month" type="month"></label>
+      <button class="primary" id="loadBtn">VIEW MONTH-END REPORT</button>
+      <button class="secondary" id="printBtn">PRINT / SAVE PDF</button>
+      <button class="secondary" id="csvBtn">EXPORT INVENTORY CSV</button>
+    </div>
+    <div id="status" class="status">Sign in through the POS, then load a month.</div>
+  </div>
+
+  <div id="report" class="hidden">
+    <div class="panel">
+      <div class="section-title"><h2 id="reportTitle">Month-End Summary</h2><div id="closureTag"></div></div>
+      <div class="cards">
+        <div class="card"><div class="label">POS Sales</div><div class="value" id="salesCard">R0.00</div><div class="sub" id="saleCountCard">0 completed sales</div></div>
+        <div class="card"><div class="label">Cost of Sales</div><div class="value" id="cogsCard">R0.00</div><div class="sub">Opening inventory + purchases − closing inventory</div></div>
+        <div class="card"><div class="label">Gross Profit</div><div class="value" id="grossCard">R0.00</div><div class="sub" id="grossMarginCard">0.0% margin</div></div>
+        <div class="card"><div class="label">Operating Expenses</div><div class="value" id="opexCard">R0.00</div><div class="sub">Expenses captured in POS</div></div>
+        <div class="card"><div class="label">Net Profit / (Loss)</div><div class="value" id="netCard">R0.00</div><div class="sub">After other income and operating expenses</div></div>
+        <div class="card"><div class="label">Closing Inventory</div><div class="value" id="closingInvCard">R0.00</div><div class="sub">Month-end physical count where available</div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title"><h2>Month-End Control Checks</h2></div>
+      <div class="cards">
+        <div class="card"><div class="label">Production Inputs Counted</div><div class="value" id="countedCard">0 / 0</div><div class="sub" id="countedSub">Month-end physical counts</div></div>
+        <div class="card"><div class="label">Purchase Cost Completeness</div><div class="value" id="costCard">0 missing</div><div class="sub">Receipts with quantity but no purchase cost</div></div>
+        <div class="card"><div class="label">Sales Days</div><div class="value" id="salesDaysCard">0</div><div class="sub">Days with completed POS sales</div></div>
+        <div class="card"><div class="label">Cash-Up Days Closed</div><div class="value" id="cashupDaysCard">0</div><div class="sub" id="cashupVarianceSub">Cash variance R0.00</div></div>
+      </div>
+      <div id="controlNote" class="note small"></div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title"><h2>Profit &amp; Loss</h2></div>
+      <div class="grid2">
+        <div class="table-wrap"><table class="pl"><tbody id="plBody"></tbody></table></div>
+        <div class="table-wrap"><table><thead><tr><th>Sales Channel</th><th class="num">Amount</th></tr></thead><tbody id="paymentBody"></tbody></table></div>
+      </div>
+    </div>
+
+    <div class="panel page-break">
+      <div class="section-title"><h2>Production Input Inventory Reconciliation</h2><div class="small muted">Values use purchase-cost data captured on stock receipts.</div></div>
+      <div class="table-wrap"><table id="inventoryTable">
+        <thead><tr>
+          <th>Store</th><th>Code</th><th>Production Input</th><th>Unit</th>
+          <th class="num">Opening Qty</th><th class="num">Opening Value</th>
+          <th class="num">Received Qty</th><th class="num">Purchases Cost</th>
+          <th class="num">Used via Sales</th><th class="num">Consumption Cost</th>
+          <th class="num">Expected Close Qty</th><th class="num">Physical Close Qty</th>
+          <th class="num">Variance Qty</th><th class="num">Closing Value</th><th>Count Status</th>
+        </tr></thead><tbody id="inventoryBody"></tbody>
+      </table></div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title"><h2>Operating Expenses</h2></div>
+      <div class="table-wrap"><table><thead><tr><th>Category</th><th class="num">Amount</th><th class="num">% of Expenses</th></tr></thead><tbody id="expenseBody"></tbody></table></div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title"><h2>Month-End Inventory Formula</h2></div>
+      <div class="note"><b>Opening Inventory + Purchases − Closing Inventory = Cost of Sales.</b><br>
+        Production inputs not consumed remain in closing inventory and carry forward to the next month. A month-end physical count is recommended before treating the month as closed.</div>
+      <div class="foot" id="generatedAt"></div>
+    </div>
+  </div>
+</div>
+<script>
+(()=>{
+'use strict';
+const BASE='https://sflyjcgbxbcwspfuzone.supabase.co/rest/v1';
+const KEY='sb_publishable_iASq-tni6KYrFK0R2S35zA_mpwt4MqM';
+const $=id=>document.getElementById(id);
+const n=v=>Number(v||0);
+const money=v=>'R'+n(v).toLocaleString('en-ZA',{minimumFractionDigits:2,maximumFractionDigits:2});
+const qty=v=>n(v).toLocaleString('en-ZA',{minimumFractionDigits:0,maximumFractionDigits:3});
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function token(){
+  const direct=sessionStorage.getItem('feastervilleCloudAccessToken')||localStorage.getItem('feastervilleCloudAccessToken')||localStorage.getItem('feastervilleAccessToken')||sessionStorage.getItem('feastervilleAccessToken');
+  if(direct)return direct;
+  const raw=localStorage.getItem('sb-sflyjcgbxbcwspfuzone-auth-token')||'';
+  try{const j=JSON.parse(raw);return j?.access_token||j?.currentSession?.access_token||''}catch(_){const m=raw.match(/"access_token"\s*:\s*"([^"]+)/);return m?m[1]:''}
+}
+async function api(path){
+  const t=token();if(!t)throw Error('No active POS login found. Please sign in through the POS first.');
+  const r=await fetch(BASE+'/'+path,{headers:{apikey:KEY,Authorization:'Bearer '+t}});const text=await r.text();if(!r.ok)throw Error(text||('HTTP '+r.status));return text?JSON.parse(text):[];
+}
+function setStatus(msg,type=''){const e=$('status');e.textContent=msg;e.className='status'+(type?' '+type:'')}
+function monthBounds(m){const [y,mm]=m.split('-').map(Number);const start=`${y}-${String(mm).padStart(2,'0')}-01`;const last=new Date(y,mm,0).getDate();const end=`${y}-${String(mm).padStart(2,'0')}-${String(last).padStart(2,'0')}`;return{start,end,label:new Date(y,mm-1,1).toLocaleDateString('en-ZA',{month:'long',year:'numeric'})}}
+function normalizePayment(p){p=String(p||'').toLowerCase().replace(/[_-]/g,' ').trim();if(p.includes('cash'))return'Cash';if(p.includes('card'))return'Card';if(p.includes('mr')&&p.includes('d'))return'Mr D';if(p.includes('uber'))return'Uber Eats';return'Other'}
+function intendedCount(row){return !!row && (row.counted_by || n(row.physical_count)!==0 || (row.notes&&/count|physical|stocktake/i.test(row.notes)))}
+function closeOf(row){if(!row)return 0;return intendedCount(row)?n(row.physical_count):(n(row.opening_qty)+n(row.received_qty)-n(row.used_qty))}
+function weightedAvg(receipts,code,cutoff,store){let q=0,c=0;for(const r of receipts){if(r.store_code!==store||r.input_code!==code||r.receipt_date>cutoff)continue;const rq=n(r.qty),uc=n(r.unit_cost);if(rq>0&&uc>0){q+=rq;c+=rq*uc}}return q>0?c/q:0}
+function uniqueCount(a){return new Set(a).size}
+function addBy(obj,key,val){obj[key]=(obj[key]||0)+n(val)}
+let lastInventory=[];
+async function load(){
+  const st=$('store').value,m=$('month').value;if(!m)return alert('Select a month.');const {start,end,label}=monthBounds(m);const sf=st==='ALL'?'':'&store_code=eq.'+encodeURIComponent(st);const stores=st==='ALL'?['NDAYENI','SIVANA']:[st];
+  setStatus('Loading live month-end data...');$('report').classList.add('hidden');
+  try{
+    const [inputs,counts,receipts,sales,other,expenses,cashups]=await Promise.all([
+      api('pos_store_production_inputs?select=store_code,code,name,unit,category,active,preferred_unit_cost&store_code=in.('+stores.join(',')+')&order=store_code.asc,name.asc'),
+      api('pos_store_input_counts?select=store_code,input_code,count_date,opening_qty,received_qty,used_qty,physical_count,variance_qty,notes,counted_by&store_code=in.('+stores.join(',')+')&count_date=lte.'+end+'&order=count_date.asc'),
+      api('pos_stock_receipts?select=store_code,input_code,input_name,unit,qty,unit_cost,receipt_date&store_code=in.('+stores.join(',')+')&receipt_date=lte.'+end+'&order=receipt_date.asc'),
+      api('pos_sales?select=store_code,total,payment,sale_date&store_code=in.('+stores.join(',')+')&sale_date=gte.'+start+'&sale_date=lte.'+end),
+      api('pos_other_income?select=store_code,amount,category,transaction_date&store_code=in.('+stores.join(',')+')&transaction_date=gte.'+start+'&transaction_date=lte.'+end),
+      api('pos_store_expenses?select=store_code,amount,category,expense_date&store_code=in.('+stores.join(',')+')&expense_date=gte.'+start+'&expense_date=lte.'+end),
+      api('pos_daily_cashups?select=store_code,cashup_date,expected_cash,actual_cash,variance,status&store_code=in.('+stores.join(',')+')&cashup_date=gte.'+start+'&cashup_date=lte.'+end)
+    ]);
+
+    const byInput={};for(const x of inputs){byInput[x.store_code+'|'+x.code]=x}
+    for(const r of receipts){const k=r.store_code+'|'+r.input_code;if(!byInput[k])byInput[k]={store_code:r.store_code,code:r.input_code,name:r.input_name||r.input_code,unit:r.unit||'',active:false,preferred_unit_cost:0}}
+    for(const c of counts){const k=c.store_code+'|'+c.input_code;if(!byInput[k])byInput[k]={store_code:c.store_code,code:c.input_code,name:c.input_code,unit:'',active:false,preferred_unit_cost:0}}
+
+    const rows=[];
+    for(const item of Object.values(byInput)){
+      const cs=counts.filter(x=>x.store_code===item.store_code&&x.input_code===item.code).sort((a,b)=>a.count_date.localeCompare(b.count_date));
+      const monthCs=cs.filter(x=>x.count_date>=start&&x.count_date<=end);
+      const startRow=cs.find(x=>x.count_date===start);
+      const prior=[...cs].filter(x=>x.count_date<start).pop();
+      const openingQty=startRow?n(startRow.opening_qty):closeOf(prior);
+      const monthReceipts=receipts.filter(r=>r.store_code===item.store_code&&r.input_code===item.code&&r.receipt_date>=start&&r.receipt_date<=end);
+      const receivedQty=monthReceipts.reduce((a,r)=>a+n(r.qty),0);
+      const purchaseCost=monthReceipts.reduce((a,r)=>a+n(r.qty)*n(r.unit_cost),0);
+      const usedQty=monthCs.reduce((a,c)=>a+n(c.used_qty),0);
+      const priorAdjustments=monthCs.filter(x=>x.count_date<end&&intendedCount(x)).reduce((a,c)=>a+(n(c.physical_count)-(n(c.opening_qty)+n(c.received_qty)-n(c.used_qty))),0);
+      const expectedClose=openingQty+receivedQty-usedQty+priorAdjustments;
+      const endCount=monthCs.find(x=>x.count_date===end&&intendedCount(x));
+      const physicalClose=endCount?n(endCount.physical_count):null;
+      const variance=endCount?physicalClose-expectedClose:null;
+      const closeQty=endCount?physicalClose:expectedClose;
+      const dayBefore=new Date(start+'T00:00:00');dayBefore.setDate(dayBefore.getDate()-1);const prevDate=dayBefore.toISOString().slice(0,10);
+      const openAvg=weightedAvg(receipts,item.code,prevDate,item.store_code)||n(item.preferred_unit_cost);
+      const endAvg=weightedAvg(receipts,item.code,end,item.store_code)||openAvg||n(item.preferred_unit_cost);
+      const openingValue=openingQty*openAvg;
+      const consumptionCost=usedQty*endAvg;
+      const closingValue=closeQty*endAvg;
+      const missingCostReceipts=monthReceipts.filter(r=>n(r.qty)>0&&!(n(r.unit_cost)>0)).length;
+      const missingCostBasis=endAvg<=0 && (Math.abs(openingQty)+Math.abs(receivedQty)+Math.abs(usedQty)+Math.abs(closeQty)>0);
+      rows.push({...item,openingQty,openingValue,receivedQty,purchaseCost,usedQty,consumptionCost,expectedClose,physicalClose,variance,closeQty,closingValue,endCount,missingCostReceipts,missingCostBasis,endAvg,priorAdjustments});
+    }
+    lastInventory=rows;
+
+    const invOpening=rows.reduce((a,r)=>a+r.openingValue,0),purchases=rows.reduce((a,r)=>a+r.purchaseCost,0),closingInv=rows.reduce((a,r)=>a+r.closingValue,0);
+    const cogs=Math.max(0,invOpening+purchases-closingInv);
+    const consumptionCost=rows.reduce((a,r)=>a+r.consumptionCost,0);
+    const salesTotal=sales.reduce((a,r)=>a+n(r.total),0),otherTotal=other.reduce((a,r)=>a+n(r.amount),0),opex=expenses.reduce((a,r)=>a+n(r.amount),0);
+    const gross=salesTotal-cogs,net=gross+otherTotal-opex,grossMargin=salesTotal?gross/salesTotal*100:0;
+    const pmt={Cash:0,Card:0,'Mr D':0,'Uber Eats':0,Other:0};sales.forEach(s=>addBy(pmt,normalizePayment(s.payment),s.total));
+    const expBy={};expenses.forEach(e=>addBy(expBy,e.category||'Other Expenses',e.amount));
+    const activeRows=rows.filter(r=>r.active!==false);const counted=activeRows.filter(r=>r.endCount).length;const missingReceiptCosts=rows.reduce((a,r)=>a+r.missingCostReceipts,0);const missingCostBasis=rows.filter(r=>r.missingCostBasis).length;const missingCosts=missingReceiptCosts+missingCostBasis;
+    const salesDays=uniqueCount(sales.map(s=>s.sale_date));const closedCashups=cashups.filter(c=>String(c.status||'').toUpperCase()==='CLOSED');const cashupDays=uniqueCount(closedCashups.map(c=>c.cashup_date));
+    const cashVariance=closedCashups.reduce((a,c)=>a+(c.variance!=null?n(c.variance):(n(c.actual_cash)-n(c.expected_cash))),0);
+    const today=new Date().toLocaleDateString('en-CA',{timeZone:'Africa/Johannesburg'});const periodComplete=today>=end;
+    let ready=periodComplete&&counted===activeRows.length&&missingCosts===0;
+
+    $('reportTitle').textContent=(st==='ALL'?'All Stores':(st==='NDAYENI'?'Ndayeni':'Sivana'))+' — '+label+' Month-End Closure';
+    $('salesCard').textContent=money(salesTotal);$('saleCountCard').textContent=sales.length+' completed sale(s)';$('cogsCard').textContent=money(cogs);$('grossCard').textContent=money(gross);$('grossMarginCard').textContent=grossMargin.toFixed(1)+'% gross margin';$('opexCard').textContent=money(opex);$('netCard').textContent=money(net);$('netCard').style.color=net<0?'#b42318':'#176b2c';$('closingInvCard').textContent=money(closingInv);
+    $('countedCard').textContent=counted+' / '+activeRows.length;$('countedSub').textContent='Physical counts dated '+end;$('costCard').textContent=missingCosts+' missing';$('salesDaysCard').textContent=salesDays;$('cashupDaysCard').textContent=cashupDays;$('cashupVarianceSub').textContent='Cash variance '+money(cashVariance);
+    $('closureTag').innerHTML=!periodComplete?'<span class="tag warn">MONTH IN PROGRESS</span>':ready?'<span class="tag good">READY TO CLOSE</span>':'<span class="tag bad">REVIEW REQUIRED</span>';
+    const issues=[];if(!periodComplete)issues.push('The selected month has not ended yet.');if(counted<activeRows.length)issues.push((activeRows.length-counted)+' active production input(s) do not have a physical count dated '+end+'.');if(missingReceiptCosts)issues.push(missingReceiptCosts+' stock receipt(s) have quantity received but no purchase cost.');if(missingCostBasis)issues.push(missingCostBasis+' inventory item(s) have stock movement but no usable cost basis.');if(cashupDays<salesDays)issues.push((salesDays-cashupDays)+' sales day(s) do not have a closed cash-up.');if(!issues.length)issues.push('All key month-end checks passed.');$('controlNote').innerHTML='<b>Closure check:</b> '+issues.map(esc).join(' ');
+
+    $('plBody').innerHTML=[
+      ['POS Sales',salesTotal,'major'],['Less: Cost of Sales',-cogs,''],['GROSS PROFIT',gross,'major'],['Other Income',otherTotal,''],['Less: Operating Expenses',-opex,''],['NET PROFIT / (LOSS)',net,'profit'],['','', ''],['Opening Inventory',invOpening,''],['Production Input Purchases',purchases,''],['Closing Inventory',closingInv,''],['Recipe Consumption Cost (control)',consumptionCost,'']
+    ].map(([l,v,cls])=>l?`<tr class="${cls}"><td>${esc(l)}</td><td class="num">${money(v)}</td></tr>`:'<tr><td colspan="2">&nbsp;</td></tr>').join('');
+    $('paymentBody').innerHTML=Object.entries(pmt).map(([k,v])=>`<tr><td>${esc(k)}</td><td class="num">${money(v)}</td></tr>`).join('')+`<tr class="total-row"><td>Total POS Sales</td><td class="num">${money(salesTotal)}</td></tr>`;
+    $('expenseBody').innerHTML=Object.keys(expBy).sort((a,b)=>expBy[b]-expBy[a]).map(k=>`<tr><td>${esc(k)}</td><td class="num">${money(expBy[k])}</td><td class="num">${opex?((expBy[k]/opex)*100).toFixed(1):'0.0'}%</td></tr>`).join('')+`<tr class="total-row"><td>Total Operating Expenses</td><td class="num">${money(opex)}</td><td class="num">100.0%</td></tr>`;
+    $('inventoryBody').innerHTML=rows.sort((a,b)=>(a.store_code+a.name).localeCompare(b.store_code+b.name)).map(r=>{
+      const stat=r.endCount?'<span class="tag good">COUNTED</span>':'<span class="tag warn">NO MONTH-END COUNT</span>';
+      return `<tr><td>${esc(r.store_code)}</td><td>${esc(r.code)}</td><td>${esc(r.name)}</td><td>${esc(r.unit||'')}</td><td class="num">${qty(r.openingQty)}</td><td class="num">${money(r.openingValue)}</td><td class="num">${qty(r.receivedQty)}</td><td class="num">${money(r.purchaseCost)}</td><td class="num">${qty(r.usedQty)}</td><td class="num">${money(r.consumptionCost)}</td><td class="num">${qty(r.expectedClose)}</td><td class="num">${r.physicalClose==null?'—':qty(r.physicalClose)}</td><td class="num">${r.variance==null?'—':qty(r.variance)}</td><td class="num">${money(r.closingValue)}</td><td>${stat}</td></tr>`
+    }).join('')+`<tr class="total-row"><td colspan="5">TOTAL</td><td class="num">${money(invOpening)}</td><td></td><td class="num">${money(purchases)}</td><td></td><td class="num">${money(consumptionCost)}</td><td colspan="3"></td><td class="num">${money(closingInv)}</td><td></td></tr>`;
+    $('generatedAt').textContent='Generated '+new Date().toLocaleString('en-ZA')+'. Production-input Cost of Sales is calculated as Opening Inventory + Purchases − Closing Inventory. Prior physical-count adjustments during the month are carried into expected closing quantities. Where a month-end physical count is missing, expected closing quantity is used provisionally.';
+    $('report').classList.remove('hidden');setStatus('Report loaded successfully for '+label+'.',ready?'good':issues.length?'warn':'');
+  }catch(e){console.error(e);setStatus('Could not load month-end report: '+e.message,'bad')}
+}
+function exportCSV(){if(!lastInventory.length)return alert('Load the report first.');const h=['Store','Code','Production Input','Unit','Opening Qty','Opening Value','Received Qty','Purchases Cost','Used via Sales','Consumption Cost','Expected Close Qty','Physical Close Qty','Variance Qty','Closing Value','Month-End Count'];const lines=[h,...lastInventory.map(r=>[r.store_code,r.code,r.name,r.unit,r.openingQty,r.openingValue,r.receivedQty,r.purchaseCost,r.usedQty,r.consumptionCost,r.expectedClose,r.physicalClose??'',r.variance??'',r.closingValue,r.endCount?'COUNTED':'NO MONTH-END COUNT'])].map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(','));const b=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='Feasterville_Month_End_Inventory_'+$('month').value+'_'+$('store').value+'.csv';a.click();URL.revokeObjectURL(a.href)}
+function init(){const now=new Date(),m=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');$('month').value=m;$('loadBtn').onclick=load;$('printBtn').onclick=()=>{if($('report').classList.contains('hidden'))return alert('Load the report first.');window.print()};$('csvBtn').onclick=exportCSV;if(token())setStatus('Ready. Select the store and month, then load the report.','good');else setStatus('No active POS login found. Please sign in through the POS first.','warn')}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+</body>
+</html>
