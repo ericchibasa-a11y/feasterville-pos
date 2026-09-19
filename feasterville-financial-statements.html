@@ -1,0 +1,149 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Feasterville Financial Statements</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f4f6f8;color:#17212b}
+.top{background:#111827;color:#fff;padding:18px}.wrap{max-width:1180px;margin:18px auto;padding:0 14px}
+.nav,.filters,.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:end}.btn,button{border:0;border-radius:8px;padding:10px 14px;font-weight:800;cursor:pointer;text-decoration:none}
+.primary{background:#16a34a;color:#fff}.secondary{background:#334155;color:#fff}.card{background:#fff;border:1px solid #d9dee5;border-radius:12px;padding:18px;margin-bottom:18px}
+.notice{border-left:5px solid #d97706;background:#fff7ed;padding:12px;margin-bottom:14px}.good{border-left-color:#16a34a;background:#f0fdf4}
+h1,h2,h3{margin-top:0}.muted{color:#64748b}.msg{font-weight:700;margin-top:10px}.bad{color:#b91c1c}.ok{color:#15803d}
+label{font-size:12px;font-weight:800}input,select{padding:9px;border:1px solid #cbd5e1;border-radius:7px;margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px;border-bottom:1px solid #e5e7eb;text-align:left}th{background:#f8fafc}.num{text-align:right}
+.major td{font-weight:800;background:#f3f8f4}.profit td{font-weight:900;background:#eaf6ee}.subtotal td{font-weight:800}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.tag{display:inline-block;padding:4px 8px;border-radius:999px;font-weight:800;font-size:11px;background:#fef3c7;color:#92400e}
+.login{display:none;border-top:1px solid #ddd;margin-top:14px;padding-top:14px}
+@media(max-width:800px){.grid{grid-template-columns:1fr}}
+@media print{.top,.filters,.actions,.login,.no-print{display:none!important}body{background:#fff}.wrap{max-width:none;margin:0;padding:0}.card{border:0;padding:8px;break-inside:avoid}.pagebreak{page-break-before:always}}
+</style></head>
+<body>
+<div class="top"><div class="wrap" style="margin:0 auto">
+<h1 style="margin:0 0 8px">Feasterville — Draft Financial Statements</h1>
+<div class="nav">
+<a class="btn secondary" href="index.html">POS HOME</a>
+<a class="btn secondary" href="feasterville-audit-reporting.html">AUDIT REPORTING</a>
+<a class="btn secondary" href="month-end-closure-report.html">MONTH-END REPORT</a>
+<button class="secondary" onclick="window.print()">PRINT / SAVE PDF</button>
+</div></div></div>
+
+<div class="wrap">
+<div class="card">
+<h2>Manager Access</h2>
+<div id="who">Checking manager session…</div>
+<div id="login" class="login">
+<div class="grid"><label>Email<br><input id="email" type="email"></label><label>Password<br><input id="password" type="password"></label></div>
+<div class="actions"><button class="primary" onclick="signIn()">MANAGER SIGN IN</button></div><div id="loginmsg" class="msg"></div>
+</div>
+</div>
+
+<div class="card filters">
+<label>From Month<br><input id="fromMonth" type="month" value="2026-03"></label>
+<label>To Month<br><input id="toMonth" type="month" value="2027-02"></label>
+<label>Store<br><select id="store"><option value="ALL">All Stores</option><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select></label>
+<button class="primary" onclick="loadAll()">VIEW DRAFT STATEMENTS</button>
+</div>
+<div id="status" class="msg"></div>
+
+<div class="notice">
+<b>Draft / provisional financial statements.</b> The Statement of Profit or Loss is based on posted POS revenue, posted operating expenses, and the production-input Cost of Sales schedule. It remains provisional while supplier costs and month-end physical stock counts are incomplete. The Statement of Financial Position is incomplete until opening balances, bank, capital/equity, loans, fixed assets, creditors and debtors are loaded.
+</div>
+
+<div class="card">
+<h2>Statement of Profit or Loss</h2>
+<p class="muted">For the selected period — amounts in South African Rand.</p>
+<table><tbody id="pl"></tbody></table>
+<div id="plStatus" class="msg"></div>
+</div>
+
+<div class="card">
+<h2>Revenue Note</h2>
+<table><thead><tr><th>Revenue Category</th><th class="num">Amount</th></tr></thead><tbody id="rev"></tbody></table>
+</div>
+
+<div class="card">
+<h2>Cost of Sales Note</h2>
+<table><thead><tr><th>Cost Category</th><th class="num">Amount</th></tr></thead><tbody id="cogs"></tbody></table>
+<p class="muted" id="cogsNote"></p>
+</div>
+
+<div class="card">
+<h2>Operating Expenses Note</h2>
+<table><thead><tr><th>Expense</th><th class="num">Amount</th></tr></thead><tbody id="opex"></tbody></table>
+</div>
+
+<div class="card pagebreak">
+<h2>Statement of Financial Position — Known Balances Only</h2>
+<div class="notice"><b>Not a final balance sheet.</b> This section only shows balances currently present in the Feasterville accounting ledger. It must not be treated as complete until opening balances and the remaining balance-sheet records are loaded.</div>
+<div class="grid">
+<div><h3>Assets</h3><table><tbody id="assets"></tbody></table></div>
+<div><h3>Liabilities & Equity</h3><table><tbody id="le"></tbody></table></div>
+</div>
+</div>
+
+<div class="card">
+<h2>Statement of Cash Flows</h2>
+<div class="notice">Pending. A reliable cash-flow statement requires complete bank/cash opening balances and bank transactions. These records remain outside Feasterville for now.</div>
+</div>
+
+<div class="card">
+<h2>Statement of Changes in Equity</h2>
+<div class="notice">Pending. Opening capital/share capital, drawings/dividends and retained earnings have not yet been loaded.</div>
+</div>
+
+<div class="card">
+<h2>Draft Accounting Notes</h2>
+<p><b>Basis of preparation:</b> Management draft prepared from Feasterville's operational accounting records. The reporting framework remains to be confirmed with the accountant before statutory issue.</p>
+<p><b>Revenue:</b> Revenue is recognised from completed POS sales and is classified between food, ice cream, drinks and other applicable sales categories.</p>
+<p><b>Inventory and Cost of Sales:</b> Inventory purchases are treated as stock movements rather than operating expenses. Cost of Sales is based on production-input recipe consumption using available historical purchase costs, with month-end stock variances incorporated through the Month-End Closure process.</p>
+<p><b>VAT:</b> Feasterville is currently configured as not VAT registered.</p>
+<p><b>Payroll:</b> Payroll, PAYE, UIF and SDL remain outside Feasterville and may be incorporated later.</p>
+<p><b>Financial year-end:</b> 28 February.</p>
+</div>
+</div>
+
+<script>
+const ROOT='https://sflyjcgbxbcwspfuzone.supabase.co',BASE=ROOT+'/rest/v1',KEY='sb_publishable_iASq-tni6KYrFK0R2S35zA_mpwt4MqM';
+function tok(){return sessionStorage.getItem('feastervilleCloudAccessToken')||localStorage.getItem('feastervilleCloudAccessToken')||''}
+function parseJwt(t){try{return JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')))}catch{return {}}}
+async function req(path){const t=tok();if(!t)throw new Error('No active manager login');const r=await fetch(BASE+path,{headers:{apikey:KEY,Authorization:'Bearer '+t}});if(!r.ok)throw new Error(await r.text());return r.json()}
+async function verify(){try{const p=parseJwt(tok());if(!p.sub)throw 0;const x=await req('/pos_profiles?select=role,active,display_name&user_id=eq.'+p.sub);if(!x[0]||x[0].role!=='manager'||x[0].active===false)throw 0;who.textContent='Manager session active: '+(x[0].display_name||'Manager');login.style.display='none';return true}catch{who.textContent='Manager sign in required.';login.style.display='block';return false}}
+async function signIn(){try{const r=await fetch(ROOT+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({email:email.value.trim(),password:password.value})});const d=await r.json();if(!r.ok)throw new Error(d.error_description||d.msg||'Sign in failed');sessionStorage.setItem('feastervilleCloudAccessToken',d.access_token);localStorage.setItem('feastervilleCloudAccessToken',d.access_token);await loadAll()}catch(e){loginmsg.textContent=e.message}}
+const m=n=>'R'+Number(n||0).toLocaleString('en-ZA',{minimumFractionDigits:2,maximumFractionDigits:2});
+function add(a,k,v){a[k]=(a[k]||0)+Number(v||0)}
+async function loadAll(){
+ try{
+  if(!await verify())return;
+  status.textContent='Loading draft financial statements…';status.className='msg';
+  const from=fromMonth.value+'-01',to=toMonth.value+'-01',sf=store.value==='ALL'?'':'&store_code=eq.'+store.value;
+  const rows=await req('/acc_v_financial_profit_loss_monthly?select=*&month_start=gte.'+from+'&month_start=lte.'+to+sf+'&order=month_start.asc,store_code.asc');
+  const exp=await req('/acc_v_operating_expense_monthly?select=*&month_start=gte.'+from+'&month_start=lte.'+to+sf+'&order=account_code.asc');
+  const pos=await req('/acc_v_known_financial_position?select=code,name,account_type,statement_section,display_balance&order=code.asc');
+  const t={food_sales:0,ice_cream_sales:0,drinks_sales:0,delivery_sales:0,other_income:0,revenue:0,cogs_food:0,cogs_packaging:0,cogs_ice_cream:0,cogs_drinks:0,cost_of_sales:0,gross_profit:0,operating_expenses:0,profit_before_tax:0,missing_cost_inputs:0};
+  rows.forEach(r=>Object.keys(t).forEach(k=>t[k]+=Number(r[k]||0)));
+  const tax=0,profitAfter=t.profit_before_tax-tax;
+  pl.innerHTML=[
+    ['Revenue',t.revenue,'major'],['Cost of Sales',-t.cost_of_sales,''],['Gross Profit',t.gross_profit,'major'],
+    ['Other Income',t.other_income,''],['Operating Expenses',-t.operating_expenses,''],['Profit Before Tax',t.profit_before_tax,'profit'],
+    ['Income Tax Expense',-tax,''],['Profit for the Period',profitAfter,'profit']
+  ].map(x=>`<tr class="${x[2]}"><td>${x[0]}</td><td class="num">${m(x[1])}</td></tr>`).join('');
+  plStatus.innerHTML=t.missing_cost_inputs?`<span class="tag">PROVISIONAL</span> ${t.missing_cost_inputs} input cost occurrence(s) in the selected monthly schedules remain without a usable cost basis. Tax expense is not yet calculated.`:`Cost schedule complete for selected months; tax expense is still pending.`;
+  rev.innerHTML=[
+    ['Food Sales',t.food_sales],['Ice Cream Sales',t.ice_cream_sales],['Drinks Sales',t.drinks_sales],['Delivery Sales',t.delivery_sales],['Total Revenue',t.revenue]
+  ].map((x,i)=>`<tr class="${i===4?'subtotal':''}"><td>${x[0]}</td><td class="num">${m(x[1])}</td></tr>`).join('');
+  cogs.innerHTML=[
+    ['Food Ingredients',t.cogs_food],['Packaging',t.cogs_packaging],['Ice Cream',t.cogs_ice_cream],['Drinks',t.cogs_drinks],['Total Cost of Sales',t.cost_of_sales]
+  ].map((x,i)=>`<tr class="${i===4?'subtotal':''}"><td>${x[0]}</td><td class="num">${m(x[1])}</td></tr>`).join('');
+  cogsNote.textContent=t.missing_cost_inputs?`${t.missing_cost_inputs} missing-cost input occurrence(s) make Cost of Sales provisional.`:'Cost schedule complete for selected period.';
+  const eb={};exp.forEach(r=>add(eb,r.account_name,r.amount));const ek=Object.keys(eb).sort((a,b)=>eb[b]-eb[a]);
+  opex.innerHTML=ek.map(k=>`<tr><td>${k}</td><td class="num">${m(eb[k])}</td></tr>`).join('')+`<tr class="subtotal"><td>Total Operating Expenses</td><td class="num">${m(t.operating_expenses)}</td></tr>`;
+  function balanceRows(type){const r=pos.filter(x=>x.account_type===type&&Math.abs(Number(x.display_balance||0))>0.005);return r.map(x=>`<tr><td>${x.code} ${x.name}</td><td class="num">${m(x.display_balance)}</td></tr>`).join('')}
+  const assetRows=pos.filter(x=>x.account_type==='ASSET'&&Math.abs(Number(x.display_balance||0))>0.005);
+  assets.innerHTML=balanceRows('ASSET')+`<tr class="subtotal"><td>Known Assets</td><td class="num">${m(assetRows.reduce((a,x)=>a+Number(x.display_balance||0),0))}</td></tr>`;
+  const liab=pos.filter(x=>x.account_type==='LIABILITY'&&Math.abs(Number(x.display_balance||0))>0.005),eq=pos.filter(x=>x.account_type==='EQUITY'&&Math.abs(Number(x.display_balance||0))>0.005);
+  le.innerHTML=balanceRows('LIABILITY')+balanceRows('EQUITY')+`<tr class="subtotal"><td>Known Liabilities & Equity</td><td class="num">${m([...liab,...eq].reduce((a,x)=>a+Number(x.display_balance||0),0))}</td></tr>`;
+  status.textContent='Draft financial statements loaded.';status.className='msg ok';
+ }catch(e){status.textContent='Could not load statements: '+e.message;status.className='msg bad'}
+}
+loadAll();
+</script>
+</body></html>
