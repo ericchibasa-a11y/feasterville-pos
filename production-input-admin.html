@@ -3,18 +3,18 @@
 *{box-sizing:border-box}body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8;color:#17212b}.top{position:sticky;top:0;z-index:20;background:#111827;padding:10px;box-shadow:0 2px 8px #0003}.nav{max-width:1180px;margin:auto;display:flex;gap:8px;flex-wrap:wrap}.nav button,.nav a{border:0;border-radius:8px;padding:11px 14px;font-weight:700;cursor:pointer;text-decoration:none;background:#fff;color:#111827}.nav .primary{background:#16a34a;color:white}.wrap{max-width:1180px;margin:18px auto;padding:0 14px}.card{background:#fff;border:1px solid #d9dee5;border-radius:12px;padding:18px;margin-bottom:18px;box-shadow:0 1px 3px #0001}h1,h2{margin-top:0}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}label{font-weight:700;font-size:13px}input,select{width:100%;padding:10px;border:1px solid #b9c2cc;border-radius:7px;margin-top:5px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}button.save{background:#16a34a;color:#fff;border:0;border-radius:8px;padding:11px 18px;font-weight:800;cursor:pointer}button.secondary{background:#334155;color:#fff;border:0;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer}.msg{margin-top:10px;font-weight:700}.ok{color:#15803d}.bad{color:#b91c1c}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}.toolbar>*{max-width:320px}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px;border-bottom:1px solid #e5e7eb;text-align:left}th{background:#f8fafc;position:sticky;top:60px}.tablewrap{overflow:auto;max-height:520px}.pill{padding:3px 7px;border-radius:12px;background:#dcfce7;color:#166534;font-weight:700}.inactive{background:#fee2e2;color:#991b1b}@media(max-width:760px){.grid{grid-template-columns:1fr}.nav button,.nav a{flex:1 1 auto;text-align:center}th{top:105px}}
 </style></head><body>
 <div class="top"><div class="nav">
-<a href="index.html">POS HOME</a><button class="primary" id="navAddInput" onclick="go('add')">ADD PRODUCTION INPUT</button><button id="navExisting" onclick="go('list')">EXISTING INPUTS</button><button id="navReceive" onclick="go('receipt')">RECEIVE STOCK</button><button onclick="refreshAdmin()">REFRESH</button><button onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>
+<a href="index.html">POS HOME</a><button class="primary" onclick="go('add')">ADD PRODUCTION INPUT</button><button onclick="go('list')">EXISTING INPUTS</button><button onclick="go('receipt')">RECEIVE STOCK</button><a href="production-input-consumption-report.html">CONSUMPTION REPORT</a><button onclick="refreshAdmin()">REFRESH</button><button onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>
 </div></div>
 <div class="wrap">
 <div class="card"><h1>Production Input Administration</h1>
-<div id="who">Checking authorised POS session…</div>
+<div id="who">Checking Manager session…</div>
 <div id="adminLogin" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid #ddd">
-  <h3 style="margin:0 0 10px">Manager / Inventory Controller Login</h3>
+  <h3 style="margin:0 0 10px">Manager Login</h3>
   <div class="grid">
-    <div><label>Email<input id="adminEmail" type="email" autocomplete="username" placeholder="POS user email"></label></div>
+    <div><label>Manager Email<input id="adminEmail" type="email" autocomplete="username" placeholder="Manager email"></label></div>
     <div><label>Password<input id="adminPassword" type="password" autocomplete="current-password" placeholder="Password"></label></div>
   </div>
-  <div class="actions"><button class="save" type="button" onclick="adminSignIn()">SIGN IN</button></div>
+  <div class="actions"><button class="save" type="button" onclick="adminSignIn()">MANAGER SIGN IN</button></div>
   <div id="loginMsg" class="msg"></div>
 </div></div>
 <div class="card" id="add"><h2>Add / Edit Production Input</h2>
@@ -73,67 +73,41 @@ async function request(path,options){
   return body;
 }
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-function role(){return String(verifiedUser?.role||'').toLowerCase()}
-function isManager(){return role()==='manager'}
-function isInventoryController(){return role()==='inventory_control'}
-function allowed(){return isManager()||isInventoryController()}
-function lockStoreSelect(id,storeCode){const e=document.getElementById(id);if(!e)return;e.value=storeCode||'NDAYENI';e.disabled=true;}
-function applyRoleUI(){
-  const r=role();
-  const add=document.getElementById('add'), addBtn=document.getElementById('navAddInput');
-  const storeCode=verifiedUser?.store_code||localStorage.getItem('feastervilleStoreCode')||'NDAYENI';
-  if(r==='inventory_control'){
-    if(add)add.style.display='none';
-    if(addBtn)addBtn.style.display='none';
-    lockStoreSelect('r_store',storeCode);lockStoreSelect('listStore',storeCode);
-    const rs=document.getElementById('store');if(rs){rs.value=storeCode;rs.disabled=true;}
-    localStorage.setItem('feastervilleStoreCode',storeCode);
-  }else if(r==='manager'){
-    if(add)add.style.display='block';
-    if(addBtn)addBtn.style.display='';
-    ['r_store','listStore','store'].forEach(id=>{const e=document.getElementById(id);if(e)e.disabled=false;});
-  }
-}
 function guard(){
   const w=document.getElementById('who'), box=document.getElementById('adminLogin');
-  if(!allowed()){
-    w.innerHTML='<span class="bad">Manager or Inventory Controller sign-in required.</span>';
+  if(!verifiedUser||verifiedUser.role!=='manager'){
+    w.innerHTML='<span class="bad">Manager sign-in required for Production Input Administration.</span>';
     if(box)box.style.display='block';
     return false;
   }
   if(box)box.style.display='none';
-  applyRoleUI();
-  const label=isManager()?'Manager':'Inventory Controller';
-  w.innerHTML='<span class="ok">'+label+' session active: '+esc(verifiedUser.name||label)+'</span>';
+  w.innerHTML='<span class="ok">Manager session active: '+esc(verifiedUser.name||'Manager')+'</span>';
   return true;
 }
-async function getAuthorizedProfile(authUser){
-  const data=await request('/rest/v1/pos_profiles?user_id=eq.'+encodeURIComponent(authUser.id)+'&select=user_id,display_name,role,store_code,active');
-  const p=Array.isArray(data)&&data.length?data[0]:null;
-  const r=String(p?.role||'').toLowerCase();
-  if(!p||!['manager','inventory_control'].includes(r)||p.active===false)throw new Error('Manager or Inventory Controller access required.');
+async function getManagerProfile(authUser){
+  const rows=await request('/rest/v1/pos_profiles?user_id=eq.'+encodeURIComponent(authUser.id)+'&select=user_id,display_name,role,store_code,active');
+  const p=Array.isArray(rows)&&rows.length?rows[0]:null;
+  if(!p||String(p.role||'').toLowerCase()!=='manager'||p.active===false)throw new Error('Manager access required.');
   return p;
 }
 async function activateAdmin(authData){
   if(!authData||!authData.access_token||!authData.user)throw new Error('No login session was returned.');
   sessionStorage.setItem('feastervilleCloudAccessToken',authData.access_token);
   if(authData.refresh_token)sessionStorage.setItem('feastervilleCloudRefreshToken',authData.refresh_token);
-  const p=await getAuthorizedProfile(authData.user);
-  verifiedUser={id:authData.user.id,name:p.display_name||authData.user.email,display_name:p.display_name||authData.user.email,role:String(p.role||'').toLowerCase(),store_code:p.store_code||null};
-  window.currentUser=verifiedUser;
+  const p=await getManagerProfile(authData.user);
+  verifiedUser={id:authData.user.id,name:p.display_name||authData.user.email,display_name:p.display_name||authData.user.email,role:'manager',store_code:p.store_code||null};
   guard();
 }
-async function verifyAuthorized(){
+async function verifyManager(){
   const token=tok();
   if(!token){verifiedUser=null;guard();return false}
   try{
     const au=await request('/auth/v1/user');
-    const p=await getAuthorizedProfile(au);
-    verifiedUser={id:au.id,name:p.display_name||au.email,display_name:p.display_name||au.email,role:String(p.role||'').toLowerCase(),store_code:p.store_code||null};
-    window.currentUser=verifiedUser;
+    const p=await getManagerProfile(au);
+    verifiedUser={id:au.id,name:p.display_name||au.email,display_name:p.display_name||au.email,role:'manager',store_code:p.store_code||null};
     guard();return true;
   }catch(_){
-    verifiedUser=null;window.currentUser=null;guard();return false;
+    verifiedUser=null;guard();return false;
   }
 }
 async function adminSignIn(){
@@ -145,9 +119,9 @@ async function adminSignIn(){
     if(!email||!password)throw new Error('Enter email and password.');
     const data=await request('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:email,password:password})});
     await activateAdmin(data);
-    m.textContent=(isManager()?'Manager':'Inventory Controller')+' signed in successfully.';m.className='msg ok';
+    m.textContent='Manager signed in successfully.';m.className='msg ok';
     document.getElementById('adminPassword').value='';
-    await loadInputs();await populateReceiptInputs();
+    await loadInputs();
   }catch(err){
     console.error(err);
     m.textContent=err.message;m.className='msg bad';
@@ -157,12 +131,10 @@ async function api(path,opt={}){
   let p=path.startsWith('/')?path:'/rest/v1/'+path;
   return request(p,opt);
 }
-async function refreshAdmin(){if(await verifyAuthorized()){await loadInputs();await populateReceiptInputs();}}
+async function refreshAdmin(){if(await verifyManager())await loadInputs()}
 function val(id){return (document.getElementById(id)?.value||'').trim()}
 function go(where){
-  const id=where==='add'?'add':where==='receipt'?'receipt':'list';
-  if(id==='add'&&!isManager())return;
-  const el=document.getElementById(id);
+  const el=document.getElementById(where==='add'?'add':'list');
   if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function clearForm(){
@@ -177,7 +149,7 @@ function clearForm(){
   const m=document.getElementById('msg');if(m){m.textContent='';m.className='msg'}
 }
 async function saveInput(){
-  if(!guard()||!isManager()){const m=document.getElementById('msg');if(m){m.textContent='Manager access required to add or edit Production Inputs.';m.className='msg bad';}return;}
+  if(!guard())return;
   const m=document.getElementById('msg');
   const store=document.getElementById('store').value;
   const code=String(document.getElementById('code').value||'').trim().toUpperCase();
@@ -212,8 +184,7 @@ function receiptStatus(msg,ok=true){const e=document.getElementById('receipt_sta
 function setReceiptDate(){const e=document.getElementById('r_date');if(e&&!e.value)e.value=new Date().toISOString().slice(0,10);}
 function clearReceipt(){['r_supplier','r_reference','r_qty','r_cost'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});setReceiptDate();receiptStatus('');}
 async function populateReceiptInputs(){
- let store=document.getElementById('r_store')?.value||'NDAYENI';
- if(isInventoryController()){store=verifiedUser?.store_code||'NDAYENI';const rs=document.getElementById('r_store');if(rs){rs.value=store;rs.disabled=true;}}
+ const store=document.getElementById('r_store')?.value||'NDAYENI';
  const sel=document.getElementById('r_input'); if(!sel)return;
  const current=sel.value;
  try{
@@ -231,34 +202,22 @@ async function populateReceiptInputs(){
 }
 function applyReceiptDefaults(){const s=document.getElementById('r_input'),o=s?.options[s.selectedIndex];if(!o||!o.value)return;const a=document.getElementById('r_supplier'),c=document.getElementById('r_cost');if(a&&!a.value)a.value=o.dataset.supplier||'';if(c&&!c.value)c.value=o.dataset.cost||'';}
 async function saveReceipt(){
- if(!guard())return;
- const actor=user();
- if(!actor||!['manager','inventory_control'].includes(role())){receiptStatus('Manager or Inventory Controller sign-in is required before saving stock receipts.',false);return;}
- let store=document.getElementById('r_store').value;
- if(isInventoryController()){
-   store=actor.store_code||'NDAYENI';
-   document.getElementById('r_store').value=store;
- }
- const sel=document.getElementById('r_input'),o=sel.options[sel.selectedIndex];
+ if(!window.currentUser||String(window.currentUser.role||'').toLowerCase()!=='manager'){receiptStatus('Manager sign-in is required before saving stock receipts.',false);return;}
+ const store=document.getElementById('r_store').value,sel=document.getElementById('r_input'),o=sel.options[sel.selectedIndex];
  const input_code=sel.value,input_name=o?.dataset.name||'',unit=o?.dataset.unit||'EA',receipt_date=document.getElementById('r_date').value;
  const supplier=String(document.getElementById('r_supplier').value||'').trim(),reference=String(document.getElementById('r_reference').value||'').trim();
  const qty=Number(document.getElementById('r_qty').value),unit_cost=Number(document.getElementById('r_cost').value||0);
  if(!input_code){receiptStatus('Select a Production Input.',false);return;} if(!receipt_date){receiptStatus('Enter the receipt date.',false);return;}
  if(!Number.isFinite(qty)||qty<=0){receiptStatus('Quantity received must be greater than zero.',false);return;}
  if(!Number.isFinite(unit_cost)||unit_cost<0){receiptStatus('Unit cost cannot be negative.',false);return;}
- const payload={receipt_date,supplier:supplier||null,reference:reference||null,input_code,input_name,unit,qty,unit_cost,received_by:actor.name||actor.display_name||'Inventory Controller',created_by:actor.id,store_code:store};
- try{
-   receiptStatus('Saving stock receipt...');
-   await request('/rest/v1/pos_stock_receipts',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(payload)});
-   receiptStatus('Stock receipt saved successfully. Stock ledger and related live reports will use this receipt.');
-   clearReceipt();await populateReceiptInputs();
- }catch(e){receiptStatus('Could not save stock receipt: '+e.message,false);}
+ const payload={receipt_date,supplier:supplier||null,reference:reference||null,input_code,input_name,unit,qty,unit_cost,received_by:window.currentUser.name||window.currentUser.username||'Manager',created_by:window.currentUser.id,store_code:store};
+ try{receiptStatus('Saving stock receipt...');await request('/rest/v1/pos_stock_receipts',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(payload)});receiptStatus('Stock receipt saved successfully.');}
+ catch(e){receiptStatus('Could not save stock receipt: '+e.message,false);}
 }
 
 async function loadInputs(){
   if(!guard())return;
-  let store=document.getElementById('listStore').value||'NDAYENI';
-  if(isInventoryController()){store=verifiedUser.store_code||'NDAYENI';document.getElementById('listStore').value=store;}
+  const store=document.getElementById('listStore').value||'NDAYENI';
   const body=document.getElementById('tbody');
   const msg=document.getElementById('listMsg');
   if(body)body.innerHTML='<tr><td colspan="7">Loading live Production Inputs...</td></tr>';
@@ -280,16 +239,9 @@ function render(){
   const searchEl=document.getElementById('search');
   const q=String(searchEl?searchEl.value:'').trim().toLowerCase();
   const a=rows.filter(x=>!q||[x.code,x.name,x.category].some(v=>String(v||'').toLowerCase().includes(q)));
-  const manager=isManager();
-  document.getElementById('tbody').innerHTML=a.map(x=>`<tr><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${esc(x.category||'')}</td><td>${esc(x.unit)}</td><td>${esc(x.reorder_level)}</td><td><span class="pill ${x.active?'':'inactive'}">${x.active?'ACTIVE':'INACTIVE'}</span></td><td>${manager?`<button class="secondary" onclick='edit(${JSON.stringify(x).replace(/'/g,"&#39;")})'>EDIT</button>`:'VIEW ONLY'}</td></tr>`).join('')||'<tr><td colspan="7">No inputs found.</td></tr>';
+  document.getElementById('tbody').innerHTML=a.map(x=>`<tr><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${esc(x.category||'')}</td><td>${esc(x.unit)}</td><td>${esc(x.reorder_level)}</td><td><span class="pill ${x.active?'':'inactive'}">${x.active?'ACTIVE':'INACTIVE'}</span></td><td><button class="secondary" onclick='edit(${JSON.stringify(x).replace(/'/g,"&#39;")})'>EDIT</button></td></tr>`).join('')||'<tr><td colspan="7">No inputs found.</td></tr>';
 }
-function edit(x){
-  if(!isManager())return;
-  document.getElementById('store').value=x.store_code;document.getElementById('code').value=x.code;document.getElementById('name').value=x.name;document.getElementById('category').value=x.category||'';document.getElementById('unit').value=x.unit||'EA';document.getElementById('reorder').value=x.reorder_level||0;document.getElementById('safety').value=x.safety_stock||0;document.getElementById('target').value=x.target_stock||0;document.getElementById('cycle').value=x.purchase_cycle_days||7;document.getElementById('group').value=x.purchase_group||'WEEKLY';document.getElementById('supplier').value=x.preferred_supplier||'';document.getElementById('cost').value=x.preferred_unit_cost??'';document.getElementById('active').value=String(x.active!==false);go('add')
-}
+function edit(x){document.getElementById('store').value=x.store_code;document.getElementById('code').value=x.code;document.getElementById('name').value=x.name;document.getElementById('category').value=x.category||'';document.getElementById('unit').value=x.unit||'EA';document.getElementById('reorder').value=x.reorder_level||0;document.getElementById('safety').value=x.safety_stock||0;document.getElementById('target').value=x.target_stock||0;document.getElementById('cycle').value=x.purchase_cycle_days||7;document.getElementById('group').value=x.purchase_group||'WEEKLY';document.getElementById('supplier').value=x.preferred_supplier||'';document.getElementById('cost').value=x.preferred_unit_cost??'';document.getElementById('active').value=String(x.active!==false);go('add')}
 document.getElementById('store').value=localStorage.getItem('feastervilleStoreCode')||'NDAYENI';document.getElementById('listStore').value=document.getElementById('store').value;refreshAdmin();
 document.addEventListener('DOMContentLoaded',()=>{setReceiptDate();setTimeout(()=>populateReceiptInputs(),800);document.getElementById('r_store')?.addEventListener('change',async()=>{await populateReceiptInputs();});document.getElementById('r_input')?.addEventListener('change',applyReceiptDefaults);});
-
-</script>
-<!-- BUILD: PRODUCTION_INPUT_ADMIN_MANAGER_PLUS_INVENTORY_CONTROLLER_V72_20260918 -->
-</body></html>
+</script></body></html>
