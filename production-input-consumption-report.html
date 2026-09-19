@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Feasterville - Production Input Consumption Report</title>
+<style>
+*{box-sizing:border-box}body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8;color:#17212b}.top{position:sticky;top:0;z-index:30;background:#111827;padding:10px;box-shadow:0 2px 8px #0003}.nav{max-width:1300px;margin:auto;display:flex;gap:8px;flex-wrap:wrap}.nav a,.nav button{border:0;border-radius:8px;padding:10px 14px;font-weight:800;cursor:pointer;text-decoration:none;background:#fff;color:#111827}.nav .primary{background:#16a34a;color:#fff}.wrap{max-width:1300px;margin:18px auto;padding:0 14px}.card{background:#fff;border:1px solid #d9dee5;border-radius:12px;padding:18px;margin-bottom:18px;box-shadow:0 1px 3px #0001}h1,h2{margin:0 0 10px}.muted{color:#64748b}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}label{font-weight:700;font-size:13px}input,select{width:100%;padding:10px;border:1px solid #b9c2cc;border-radius:7px;margin-top:5px;background:#fff}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}button.primary,button.secondary{border:0;border-radius:8px;padding:11px 15px;font-weight:800;cursor:pointer}.primary{background:#16a34a;color:#fff}.secondary{background:#334155;color:#fff}.msg{font-weight:700;margin-top:10px}.ok{color:#15803d}.bad{color:#b91c1c}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:14px}.stat{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px}.stat b{display:block;font-size:22px;margin-top:4px}.tablewrap{overflow:auto;max-height:590px;border:1px solid #e5e7eb;border-radius:8px}table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:1100px}th,td{padding:8px;border-bottom:1px solid #e5e7eb;text-align:right;white-space:nowrap}th{background:#f8fafc;position:sticky;top:0;z-index:2}th:nth-child(-n+4),td:nth-child(-n+4){text-align:left}.neg{color:#b91c1c;font-weight:700}.pos{color:#15803d;font-weight:700}.pill{display:inline-block;padding:3px 7px;border-radius:11px;background:#dcfce7;color:#166534;font-weight:800}.inactive{background:#fee2e2;color:#991b1b}.searchrow{display:flex;gap:10px;align-items:end;flex-wrap:wrap}.searchrow label{min-width:220px}.checkbox{display:flex;gap:7px;align-items:center;font-weight:700;margin-bottom:7px}.checkbox input{width:auto;margin:0}.right{text-align:right}.login{display:none;border-top:1px solid #ddd;margin-top:14px;padding-top:14px}
+@media(max-width:900px){.grid,.stats{grid-template-columns:1fr 1fr}}@media(max-width:600px){.grid,.stats{grid-template-columns:1fr}.nav a,.nav button{flex:1 1 auto;text-align:center}}
+@media print{.top,.actions,.filters,.login{display:none!important}body{background:#fff}.wrap{max-width:none;margin:0;padding:0}.card{box-shadow:none;border:0;padding:8px;margin:0 0 12px}.tablewrap{max-height:none;overflow:visible;border:0}table{font-size:9px;min-width:0}th{position:static}.no-print{display:none!important}}
+</style>
+</head>
+<body>
+<div class="top"><div class="nav">
+<a href="index.html">POS HOME</a>
+<a href="production-input-admin.html">PRODUCTION INPUT ADMIN</a>
+<button class="primary" onclick="loadReport()">REFRESH REPORT</button>
+<button onclick="window.print()">SAVE / PRINT PDF</button>
+</div></div>
+<div class="wrap">
+<div class="card">
+<h1>Production Input Consumption Report</h1>
+<p class="muted">Shows production inputs consumed from POS sales and recipes, together with receipts and expected stock balances.</p>
+<div id="who">Checking authorised POS session…</div>
+<div id="login" class="login">
+<h3>Manager / Inventory Controller Login</h3>
+<div class="grid">
+<label>Email<input id="email" type="email" autocomplete="username"></label>
+<label>Password<input id="password" type="password" autocomplete="current-password"></label>
+</div>
+<div class="actions"><button class="primary" onclick="signIn()">SIGN IN</button></div>
+<div id="loginMsg" class="msg"></div>
+</div>
+</div>
+
+<div class="card filters" id="filters" style="display:none">
+<h2>Report Filters</h2>
+<div class="grid">
+<label>Store<select id="store"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option><option value="ALL">All Stores</option></select></label>
+<label>From Date<input id="from" type="date"></label>
+<label>To Date<input id="to" type="date"></label>
+<label>Search Input<input id="search" placeholder="Code or input name" oninput="renderAll()"></label>
+</div>
+<div class="actions">
+<button class="primary" onclick="loadReport()">RUN REPORT</button>
+<button class="secondary" onclick="exportSummaryCsv()">EXPORT SUMMARY CSV</button>
+<button class="secondary" onclick="window.print()">SAVE / PRINT PDF</button>
+<label class="checkbox"><input id="onlyUsed" type="checkbox" checked onchange="renderAll()">Show only inputs with consumption</label>
+</div>
+<div id="status" class="msg"></div>
+</div>
+
+<div class="card" id="summaryCard" style="display:none">
+<h2>Consumption Summary</h2>
+<div class="stats">
+<div class="stat">Inputs Consumed<b id="statInputs">0</b></div>
+<div class="stat">Consumption Lines<b id="statLines">0</b></div>
+<div class="stat">Estimated Consumption Cost<b id="statCost">R0.00</b></div>
+<div class="stat">Report Period<b id="statPeriod" style="font-size:15px">-</b></div>
+</div>
+<div class="tablewrap" style="margin-top:14px"><table>
+<thead><tr><th>Store</th><th>Code</th><th>Production Input</th><th>Unit</th><th>Opening</th><th>Received</th><th>Consumed via Sales</th><th>Latest Expected</th><th>Physical Count</th><th>Variance</th><th>Unit Cost (R)</th><th>Consumption Cost (R)</th><th>Status</th></tr></thead>
+<tbody id="summaryBody"></tbody>
+</table></div>
+</div>
+
+<div class="card" id="dailyCard" style="display:none">
+<h2>Daily Consumption Detail</h2>
+<p class="muted">Each line comes from the live Production Input Count / Ledger records updated by POS recipe consumption.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Date</th><th>Store</th><th>Code</th><th>Production Input</th><th>Unit</th><th>Opening</th><th>Received</th><th>Consumed via Sales</th><th>Expected Balance</th><th>Physical Count</th><th>Variance</th></tr></thead>
+<tbody id="dailyBody"></tbody>
+</table></div>
+</div>
+</div>
+<script>
+const ROOT='https://sflyjcgbxbcwspfuzone.supabase.co';
+const KEY='sb_publishable_iASq-tni6KYrFK0R2S35zA_mpwt4MqM';
+let verifiedUser=null, masters=[], counts=[], summaryRows=[];
+function tok(){return sessionStorage.getItem('feastervilleCloudAccessToken')||localStorage.getItem('feastervilleCloudAccessToken')||''}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function n(v){const x=Number(v);return Number.isFinite(x)?x:0}
+function fmt(v){const x=n(v);return Math.abs(x)<0.0000001?'0':x.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:3})}
+function money(v){return 'R'+n(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
+function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function firstMonthDay(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-01'}
+async function request(path,options={}){const headers=Object.assign({'apikey':KEY,'Content-Type':'application/json'},options.headers||{});const t=tok();if(t)headers.Authorization='Bearer '+t;const r=await fetch(ROOT+path,Object.assign({},options,{headers}));const text=await r.text();let body=null;try{body=text?JSON.parse(text):null}catch(_){body=text}if(!r.ok){const msg=(body&&typeof body==='object'&&(body.message||body.msg||body.error_description||body.error))||text||('HTTP '+r.status);throw new Error(msg)}return body}
+function role(){return String(verifiedUser?.role||'').toLowerCase()}
+function allowed(){return ['manager','inventory_control'].includes(role())}
+async function profile(authUser){const data=await request('/rest/v1/pos_profiles?user_id=eq.'+encodeURIComponent(authUser.id)+'&select=user_id,display_name,role,store_code,active');const p=Array.isArray(data)&&data[0];if(!p||p.active===false||!['manager','inventory_control'].includes(String(p.role||'').toLowerCase()))throw new Error('Manager or Inventory Controller access required.');return p}
+function applyAccess(){const who=document.getElementById('who'),login=document.getElementById('login'),filters=document.getElementById('filters'),store=document.getElementById('store');if(!allowed()){who.innerHTML='<span class="bad">Manager or Inventory Controller sign-in required.</span>';login.style.display='block';filters.style.display='none';return false}login.style.display='none';filters.style.display='block';const label=role()==='manager'?'Manager':'Inventory Controller';who.innerHTML='<span class="ok">'+label+' session active: '+esc(verifiedUser.name||label)+'</span>';if(role()==='inventory_control'){store.value=verifiedUser.store_code||'NDAYENI';store.disabled=true}else store.disabled=false;return true}
+async function verify(){const t=tok();if(!t){verifiedUser=null;applyAccess();return false}try{const au=await request('/auth/v1/user');const p=await profile(au);verifiedUser={id:au.id,name:p.display_name||au.email,role:String(p.role||'').toLowerCase(),store_code:p.store_code||null};window.currentUser=verifiedUser;applyAccess();return true}catch(e){verifiedUser=null;window.currentUser=null;applyAccess();return false}}
+async function signIn(){const m=document.getElementById('loginMsg');try{m.textContent='Signing in...';m.className='msg';const email=document.getElementById('email').value.trim(),password=document.getElementById('password').value;if(!email||!password)throw new Error('Enter email and password.');const data=await request('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email,password})});sessionStorage.setItem('feastervilleCloudAccessToken',data.access_token);if(data.refresh_token)sessionStorage.setItem('feastervilleCloudRefreshToken',data.refresh_token);const p=await profile(data.user);verifiedUser={id:data.user.id,name:p.display_name||data.user.email,role:String(p.role||'').toLowerCase(),store_code:p.store_code||null};applyAccess();m.textContent='Signed in successfully.';m.className='msg ok';await loadReport()}catch(e){m.textContent=e.message;m.className='msg bad'}}
+function masterMap(){const m=new Map();masters.forEach(x=>m.set(x.store_code+'|'+x.code,x));return m}
+function latestExpected(r){return n(r.opening_qty)+n(r.received_qty)-n(r.used_qty)}
+function buildSummary(){const map=masterMap(), groups=new Map();for(const r of counts){const key=r.store_code+'|'+r.input_code;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r)}summaryRows=[];for(const [key,arr] of groups){arr.sort((a,b)=>String(a.count_date).localeCompare(String(b.count_date)));const [store,code]=key.split('|');const m=map.get(key)||{};const first=arr[0],last=arr[arr.length-1];const opening=n(first.opening_qty),received=arr.reduce((s,x)=>s+n(x.received_qty),0),used=arr.reduce((s,x)=>s+n(x.used_qty),0),expected=latestExpected(last),physical=n(last.physical_count),variance=n(last.variance_qty),unitCost=n(m.preferred_unit_cost),cost=used*unitCost;summaryRows.push({store,code,name:m.name||code,unit:m.unit||'',active:m.active!==false,opening,received,used,expected,physical,variance,unitCost,cost})}summaryRows.sort((a,b)=>a.store.localeCompare(b.store)||a.name.localeCompare(b.name))}
+function currentFilter(x){const q=document.getElementById('search').value.trim().toLowerCase(),only=document.getElementById('onlyUsed').checked;if(only&&n(x.used)<=0)return false;if(q&&!String(x.code+' '+x.name).toLowerCase().includes(q))return false;return true}
+function renderSummary(){const list=summaryRows.filter(currentFilter);document.getElementById('summaryBody').innerHTML=list.map(x=>`<tr><td>${esc(x.store==='SIVANA'?'Sivana':'Ndayeni')}</td><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${esc(x.unit)}</td><td>${fmt(x.opening)}</td><td>${fmt(x.received)}</td><td><b>${fmt(x.used)}</b></td><td>${fmt(x.expected)}</td><td>${fmt(x.physical)}</td><td class="${x.variance<0?'neg':x.variance>0?'pos':''}">${fmt(x.variance)}</td><td>${money(x.unitCost)}</td><td>${money(x.cost)}</td><td><span class="pill ${x.active?'':'inactive'}">${x.active?'ACTIVE':'INACTIVE'}</span></td></tr>`).join('')||'<tr><td colspan="13">No consumption found for the selected period.</td></tr>';const consumed=list.filter(x=>x.used>0);document.getElementById('statInputs').textContent=consumed.length;document.getElementById('statCost').textContent=money(consumed.reduce((s,x)=>s+x.cost,0));}
+function renderDaily(){const mm=masterMap(),q=document.getElementById('search').value.trim().toLowerCase(),only=document.getElementById('onlyUsed').checked;const list=counts.filter(r=>{const m=mm.get(r.store_code+'|'+r.input_code)||{};if(only&&n(r.used_qty)<=0)return false;if(q&&!String(r.input_code+' '+(m.name||'')).toLowerCase().includes(q))return false;return true}).sort((a,b)=>String(b.count_date).localeCompare(String(a.count_date))||a.store_code.localeCompare(b.store_code)||a.input_code.localeCompare(b.input_code));document.getElementById('dailyBody').innerHTML=list.map(r=>{const m=mm.get(r.store_code+'|'+r.input_code)||{};return `<tr><td>${esc(r.count_date)}</td><td>${esc(r.store_code==='SIVANA'?'Sivana':'Ndayeni')}</td><td>${esc(r.input_code)}</td><td>${esc(m.name||r.input_code)}</td><td>${esc(m.unit||'')}</td><td>${fmt(r.opening_qty)}</td><td>${fmt(r.received_qty)}</td><td><b>${fmt(r.used_qty)}</b></td><td>${fmt(latestExpected(r))}</td><td>${fmt(r.physical_count)}</td><td class="${n(r.variance_qty)<0?'neg':n(r.variance_qty)>0?'pos':''}">${fmt(r.variance_qty)}</td></tr>`}).join('')||'<tr><td colspan="11">No daily consumption found.</td></tr>';document.getElementById('statLines').textContent=list.filter(x=>n(x.used_qty)>0).length;}
+function renderAll(){if(!counts.length&&!summaryRows.length)return;renderSummary();renderDaily()}
+async function loadReport(){if(!(await verify()))return;const status=document.getElementById('status');try{const storeEl=document.getElementById('store');let store=storeEl.value||'NDAYENI';if(role()==='inventory_control')store=verifiedUser.store_code||'NDAYENI';const from=document.getElementById('from').value,to=document.getElementById('to').value;if(!from||!to)throw new Error('Select From Date and To Date.');if(from>to)throw new Error('From Date cannot be after To Date.');status.textContent='Loading live consumption data...';status.className='msg';let sf=store==='ALL'?'':'&store_code=eq.'+encodeURIComponent(store);const masterUrl='/rest/v1/pos_store_production_inputs?select=store_code,code,name,unit,category,active,preferred_unit_cost'+sf+'&order=store_code.asc,name.asc';const countUrl='/rest/v1/pos_store_input_counts?select=store_code,input_code,count_date,opening_qty,received_qty,used_qty,physical_count,variance_qty,notes&count_date=gte.'+encodeURIComponent(from)+'&count_date=lte.'+encodeURIComponent(to)+sf+'&order=count_date.asc,input_code.asc';const result=await Promise.all([request(masterUrl),request(countUrl)]);masters=Array.isArray(result[0])?result[0]:[];counts=Array.isArray(result[1])?result[1]:[];buildSummary();renderAll();document.getElementById('summaryCard').style.display='block';document.getElementById('dailyCard').style.display='block';document.getElementById('statPeriod').textContent=from+' to '+to;status.textContent='Report loaded successfully from live POS data.';status.className='msg ok'}catch(e){status.textContent='Could not load report: '+e.message;status.className='msg bad'}}
+function csvCell(v){const s=String(v??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
+function exportSummaryCsv(){const list=summaryRows.filter(currentFilter);if(!list.length){alert('No report rows to export.');return}const rows=[['Store','Code','Production Input','Unit','Opening','Received','Consumed via Sales','Latest Expected','Physical Count','Variance','Unit Cost R','Consumption Cost R','Status']];list.forEach(x=>rows.push([x.store,x.code,x.name,x.unit,x.opening,x.received,x.used,x.expected,x.physical,x.variance,x.unitCost,x.cost,x.active?'ACTIVE':'INACTIVE']));const csv=rows.map(r=>r.map(csvCell).join(',')).join('\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='production-input-consumption-'+document.getElementById('from').value+'-to-'+document.getElementById('to').value+'.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url)}
+(function init(){document.getElementById('from').value=firstMonthDay();document.getElementById('to').value=today();document.getElementById('store').value=localStorage.getItem('feastervilleStoreCode')||'NDAYENI';verify().then(ok=>{if(ok)loadReport()})})();
+</script>
+<!-- BUILD: PRODUCTION_INPUT_CONSUMPTION_REPORT_V1_20260919 -->
+</body></html>
