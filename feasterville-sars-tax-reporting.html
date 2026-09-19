@@ -1,0 +1,153 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Feasterville SARS & Tax Reporting</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f4f6f8;color:#17212b}
+.top{background:#111827;color:#fff;padding:18px}.wrap{max-width:1200px;margin:18px auto;padding:0 14px}
+.nav,.actions,.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:end}.btn,button{border:0;border-radius:8px;padding:10px 14px;font-weight:800;cursor:pointer;text-decoration:none}
+.primary{background:#16a34a;color:#fff}.secondary{background:#334155;color:#fff}.warnbtn{background:#b45309;color:#fff}
+.card{background:#fff;border:1px solid #d9dee5;border-radius:12px;padding:18px;margin-bottom:18px;box-shadow:0 1px 3px #0001}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.stat{border:1px solid #e5e7eb;border-radius:10px;padding:13px;background:#fafafa}
+.stat .label{font-size:12px;color:#64748b;font-weight:700}.stat .value{font-size:22px;font-weight:900;margin-top:4px}
+label{font-size:12px;font-weight:800}input,select,textarea{width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:7px;margin-top:4px}
+textarea{min-height:70px}.msg{font-weight:700;margin-top:10px}.ok{color:#15803d}.bad{color:#b91c1c}.warn{color:#b45309}.muted{color:#64748b}
+table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:800px}th,td{padding:8px;border-bottom:1px solid #e5e7eb;text-align:left;white-space:nowrap}
+th{background:#f8fafc}.right{text-align:right}.tablewrap{overflow:auto;border:1px solid #e5e7eb;border-radius:8px}
+.notice{border-left:5px solid #d97706;background:#fff7ed;padding:12px;margin-bottom:14px}.red{border-left-color:#b91c1c;background:#fef2f2}
+.tag{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:800}.pending{background:#fef3c7;color:#92400e}.goodtag{background:#dcfce7;color:#166534}.badtag{background:#fee2e2;color:#991b1b}
+.login{display:none;border-top:1px solid #ddd;margin-top:14px;padding-top:14px}
+@media(max-width:900px){.grid{grid-template-columns:1fr 1fr}}@media(max-width:600px){.grid{grid-template-columns:1fr}}
+@media print{.top,.actions,.filters,.login,.no-print{display:none!important}body{background:#fff}.wrap{max-width:none;margin:0;padding:0}.card{box-shadow:none;border:0;padding:8px}.tablewrap{overflow:visible}}
+</style></head><body>
+<div class="top"><div class="wrap" style="margin:0 auto">
+<h1 style="margin:0 0 8px">Feasterville — SARS & Tax Reporting</h1>
+<div class="nav">
+<a class="btn secondary" href="index.html">POS HOME</a>
+<a class="btn secondary" href="feasterville-audit-reporting.html">AUDIT REPORTING</a>
+<a class="btn secondary" href="feasterville-financial-statements.html">FINANCIAL STATEMENTS</a>
+<a class="btn secondary" href="month-end-closure-report.html">MONTH-END REPORT</a>
+<button class="secondary" onclick="window.print()">PRINT / SAVE PDF</button>
+</div></div></div>
+
+<div class="wrap">
+<div class="card">
+<h2>Manager Access</h2>
+<div id="who">Checking manager session…</div>
+<div id="login" class="login">
+<div class="grid"><label>Email<br><input id="email" type="email"></label><label>Password<br><input id="password" type="password"></label></div>
+<div class="actions"><button class="primary" onclick="signIn()">MANAGER SIGN IN</button></div><div id="loginmsg" class="msg"></div>
+</div></div>
+
+<div class="notice red">
+<b>Draft tax working papers only.</b> This page supports tax preparation and reconciliation. It does not submit returns to SARS. The current tax result is provisional until the tax regime is confirmed, missing supplier costs are completed, year-end stock is counted, tax adjustments are captured and the accounting records are complete.
+</div>
+
+<div class="card">
+<h2>Corporate Income Tax Working Paper — FY2027</h2>
+<div class="grid">
+<div class="stat"><div class="label">Accounting Profit Before Tax</div><div class="value" id="pbt">—</div></div>
+<div class="stat"><div class="label">Estimated Taxable Income</div><div class="value" id="taxable">—</div></div>
+<div class="stat"><div class="label">Estimated Income Tax</div><div class="value" id="tax">—</div></div>
+<div class="stat"><div class="label">Tax Status</div><div class="value" style="font-size:16px" id="taxstatus">—</div></div>
+</div>
+<div id="regime" class="msg"></div>
+</div>
+
+<div class="card">
+<h2>ITR14 Working Paper</h2>
+<div class="tablewrap"><table>
+<tbody id="itr14"></tbody>
+</table></div>
+<p class="muted">The ITR14 working paper is intended to support preparation of the company income-tax return. Final figures must agree to the completed annual financial statements and tax computation.</p>
+</div>
+
+<div class="card">
+<h2>Tax Adjustments</h2>
+<p class="muted">Use this section only for confirmed tax adjustments such as non-deductible expenses, capital allowances, assessed losses or other accountant-approved adjustments.</p>
+<div class="grid">
+<label>Date<input id="adjDate" type="date"></label>
+<label>Type<select id="adjType"><option value="ADD_BACK">Add-back</option><option value="DEDUCTION">Deduction</option><option value="CAPITAL_ALLOWANCE">Capital allowance</option><option value="ASSESSED_LOSS">Assessed loss</option><option value="OTHER_INCREASE">Other increase</option><option value="OTHER_DECREASE">Other decrease</option></select></label>
+<label>Amount (R)<input id="adjAmount" type="number" min="0" step="0.01"></label>
+<label>Reference<input id="adjRef"></label>
+</div>
+<label>Description<input id="adjDesc"></label>
+<label>Notes<textarea id="adjNotes"></textarea></label>
+<div class="actions"><button class="primary" onclick="saveAdjustment()">SAVE TAX ADJUSTMENT</button></div>
+<div id="adjmsg" class="msg"></div>
+<div class="tablewrap" style="margin-top:12px"><table>
+<thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Reference</th><th class="right">Amount</th></tr></thead>
+<tbody id="adjustments"></tbody></table></div>
+</div>
+
+<div class="card">
+<h2>Provisional Tax / IRP6 Schedule</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Period</th><th>Due Date</th><th>Status</th><th class="right">Current Estimated Taxable Income</th><th class="right">Current Estimated Tax</th><th class="right">Amount Paid</th><th>Payment Date</th><th>SARS Reference</th></tr></thead>
+<tbody id="irp6"></tbody></table></div>
+<p class="muted">The current estimate is a working estimate only. Provisional tax calculations should be reviewed at each IRP6 period using the latest full-year taxable-income estimate.</p>
+</div>
+
+<div class="card">
+<h2>Tax Configuration</h2>
+<div id="settings"></div>
+<div class="notice" style="margin-top:12px">
+The system is currently set to the <b>standard company tax regime at 27%</b>, but the regime is marked <b>not confirmed</b>. Feasterville may potentially qualify as a Small Business Corporation if all legal requirements are met. Do not switch to SBC rates until eligibility has been confirmed.
+</div>
+</div>
+
+<div class="card">
+<h2>SARS Filing Readiness</h2>
+<ul>
+<li>Financial year: <b>1 March 2026 to 28 February 2027</b>.</li>
+<li>VAT: <b>Not registered</b>, so VAT201 is not included.</li>
+<li>Payroll/PAYE/UIF/SDL: outside Feasterville for now.</li>
+<li>Corporate income tax / ITR14: working paper available, but final submission requires completed annual figures.</li>
+<li>IRP6 provisional tax: schedule available; filing and payment remain through SARS eFiling.</li>
+<li>Opening balances, bank, fixed assets, loans, creditors, debtors and equity remain incomplete in Feasterville.</li>
+</ul>
+</div>
+</div>
+
+<script>
+const ROOT='https://sflyjcgbxbcwspfuzone.supabase.co',BASE=ROOT+'/rest/v1',KEY='sb_publishable_iASq-tni6KYrFK0R2S35zA_mpwt4MqM';
+function tok(){return sessionStorage.getItem('feastervilleCloudAccessToken')||localStorage.getItem('feastervilleCloudAccessToken')||''}
+function jwt(t){try{return JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')))}catch{return {}}}
+async function req(path,opt={}){const t=tok();if(!t)throw new Error('No active manager login');const r=await fetch(BASE+path,{...opt,headers:{apikey:KEY,Authorization:'Bearer '+t,'Content-Type':'application/json',Prefer:'return=representation',...(opt.headers||{})}});if(!r.ok)throw new Error(await r.text());return r.status===204?null:r.json()}
+async function verify(){try{const p=jwt(tok());if(!p.sub)throw 0;const x=await req('/pos_profiles?select=role,active,display_name&user_id=eq.'+p.sub);if(!x[0]||x[0].role!=='manager'||x[0].active===false)throw 0;who.textContent='Manager session active: '+(x[0].display_name||'Manager');login.style.display='none';return true}catch{who.textContent='Manager sign in required.';login.style.display='block';return false}}
+async function signIn(){try{const r=await fetch(ROOT+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({email:email.value.trim(),password:password.value})});const d=await r.json();if(!r.ok)throw new Error(d.error_description||d.msg||'Sign in failed');sessionStorage.setItem('feastervilleCloudAccessToken',d.access_token);localStorage.setItem('feastervilleCloudAccessToken',d.access_token);await loadAll()}catch(e){loginmsg.textContent=e.message}}
+const money=n=>'R'+Number(n||0).toLocaleString('en-ZA',{minimumFractionDigits:2,maximumFractionDigits:2});
+async function loadAll(){
+ if(!await verify())return;
+ try{
+  const [tc,wp,ps,ad,st]=await Promise.all([
+   req('/acc_v_tax_computation?select=*&fiscal_year_label=eq.FY2027'),
+   req('/acc_v_itr14_working_paper?select=*&fiscal_year_label=eq.FY2027'),
+   req('/acc_v_provisional_tax_schedule?select=*&fiscal_year_label=eq.FY2027&order=due_date.asc'),
+   req('/acc_tax_adjustments?select=*&fiscal_year_label=eq.FY2027&order=adjustment_date.asc,id.asc'),
+   req('/acc_tax_settings?select=*&id=eq.1')
+  ]);
+  const t=tc[0]||{},w=wp[0]||{};
+  pbt.textContent=money(t.accounting_profit_before_tax);taxable.textContent=money(t.estimated_taxable_income);tax.textContent=money(t.estimated_income_tax);taxstatus.textContent=t.tax_status||'—';
+  regime.innerHTML=`Tax regime: <b>${String(t.tax_regime||'').replaceAll('_',' ')}</b> | Regime confirmed: <b>${t.regime_confirmed?'Yes':'No'}</b> | Missing-cost occurrences: <b>${t.missing_cost_inputs||0}</b>`;
+  itr14.innerHTML=[
+   ['Financial year',`${w.year_start||''} to ${w.year_end||''}`],['Revenue',money(w.revenue)],['Cost of Sales',money(w.cost_of_sales)],['Gross Profit',money(w.gross_profit)],
+   ['Other Income',money(w.other_income)],['Operating Expenses',money(w.operating_expenses)],['Accounting Profit Before Tax',money(w.profit_before_tax)],
+   ['Tax Increases / Add-backs',money(w.tax_increases)],['Tax Deductions / Allowances',money(w.tax_decreases)],['Estimated Taxable Income',money(w.estimated_taxable_income)],
+   ['Estimated Income Tax',money(w.estimated_income_tax)],['ITR14 due date',w.itr14_due_date||'']
+  ].map(x=>`<tr><th>${x[0]}</th><td class="right">${x[1]}</td></tr>`).join('');
+  adjustments.innerHTML=ad.map(x=>`<tr><td>${x.adjustment_date}</td><td>${x.adjustment_type.replaceAll('_',' ')}</td><td>${x.description}</td><td>${x.reference||''}</td><td class="right">${money(x.amount)}</td></tr>`).join('');
+  irp6.innerHTML=ps.map(x=>`<tr><td>${x.period_type.replaceAll('_',' ')}</td><td>${x.due_date}</td><td>${x.status}</td><td class="right">${money(x.current_estimated_taxable_income)}</td><td class="right">${money(x.current_estimated_income_tax)}</td><td class="right">${money(x.amount_paid)}</td><td>${x.payment_date||''}</td><td>${x.sars_reference||''}</td></tr>`).join('');
+  const s=st[0]||{};settings.innerHTML=`<b>Tax regime:</b> ${String(s.tax_regime||'').replaceAll('_',' ')} &nbsp; | &nbsp; <b>Confirmed:</b> ${s.regime_confirmed?'Yes':'No'} &nbsp; | &nbsp; <b>Standard company rate:</b> ${(Number(s.standard_company_rate||0)*100).toFixed(0)}% &nbsp; | &nbsp; <b>SBC eligibility:</b> ${String(s.sbc_eligibility_status||'').replaceAll('_',' ')}`;
+  adjDate.value=adjDate.value||new Date().toISOString().slice(0,10);
+ }catch(e){document.body.insertAdjacentHTML('beforeend','<div class="wrap msg bad">Could not load SARS reports: '+e.message+'</div>')}
+}
+async function saveAdjustment(){
+ try{
+  if(!await verify())return;
+  const amt=Number(adjAmount.value||0);if(!adjDate.value||!adjDesc.value.trim()||amt<=0)throw new Error('Date, description and a positive amount are required.');
+  await req('/acc_tax_adjustments',{method:'POST',body:JSON.stringify({fiscal_year_label:'FY2027',adjustment_date:adjDate.value,adjustment_type:adjType.value,description:adjDesc.value.trim(),amount:amt,reference:adjRef.value.trim()||null,notes:adjNotes.value.trim()||null,created_by:jwt(tok()).sub})});
+  adjmsg.textContent='Tax adjustment saved.';adjmsg.className='msg ok';adjAmount.value='';adjDesc.value='';adjRef.value='';adjNotes.value='';await loadAll();
+ }catch(e){adjmsg.textContent=e.message;adjmsg.className='msg bad'}
+}
+loadAll();
+</script></body></html>
