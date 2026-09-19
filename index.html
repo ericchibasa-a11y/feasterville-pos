@@ -193,7 +193,7 @@ body.print-report #reportContent { position:absolute; left:0; top:0; width:100%;
 <div class="row"><span>Discount</span><input id="discount" type="number" min="0" value="0" style="width:100px"></div>
 <div class="row grand"><span>TOTAL</span><span id="total">R0.00</span></div>
 <div class="pay">
-<label>Payment<br><select id="payment"><option>Cash</option><option>Card</option><option>EFT</option><option>Other</option></select></label>
+<label>Payment<br><select id="payment"><option>Cash</option><option>Card</option><option>Mr D</option><option>EFT</option><option>Other</option></select></label>
 <label>Amount Received<br><input id="received" type="number" min="0" value="0" oninput="render()"></label>
 </div>
 <div class="row"><span>Change</span><b id="change">R0.00</b></div>
@@ -7638,4 +7638,70 @@ window.openHistoricalCashupV59=open;window.loadHistoricalCashupV59=load;
 })();
 </script>
 <!-- BUILD: V76_FINAL_SINGLE_CASHUP_20260918 -->
+
+<script>
+/* V79 — SIVANA MR D MENU AUTO PAYMENT */
+(function(){
+  'use strict';
+  if(window.__fvSivanaMrdAutoPaymentV79)return;
+  window.__fvSivanaMrdAutoPaymentV79=true;
+
+  function activeStore(){
+    const u=window.salesSessionUser||window.currentUser||{};
+    if(String(u.role||'').toLowerCase()!=='manager' && u.store_code) return String(u.store_code).toUpperCase();
+    return String(localStorage.getItem('feastervilleStoreCode')||'NDAYENI').toUpperCase();
+  }
+
+  function paymentEl(){ return document.getElementById('payment'); }
+
+  function ensureMrDOption(){
+    const p=paymentEl();
+    if(!p)return null;
+    const exists=Array.from(p.options).some(o=>String(o.value||o.textContent||'').trim().toLowerCase()==='mr d');
+    if(!exists){
+      const opt=document.createElement('option');
+      opt.value='Mr D'; opt.textContent='Mr D';
+      const card=Array.from(p.options).find(o=>String(o.value||o.textContent||'').trim().toLowerCase()==='card');
+      if(card && card.nextSibling) p.insertBefore(opt,card.nextSibling); else p.appendChild(opt);
+    }
+    return p;
+  }
+
+  function setPayment(value){
+    if(activeStore()!=='SIVANA')return;
+    const p=ensureMrDOption(); if(!p)return;
+    if(String(p.value||'')===value)return;
+    p.value=value;
+    p.dispatchEvent(new Event('change',{bubbles:true}));
+  }
+
+  function syncFromVisibleMenu(){
+    if(activeStore()!=='SIVANA')return;
+    const mrd=document.querySelector('#salesMainMenu [data-main-sales-menu="MRD"]');
+    const store=document.querySelector('#salesMainMenu [data-main-sales-menu="STORE"]');
+    const p=ensureMrDOption(); if(!p)return;
+    if(mrd && mrd.classList.contains('active')){
+      setPayment('Mr D');
+    }else if(store && store.classList.contains('active') && String(p.value||'').trim().toLowerCase()==='mr d'){
+      setPayment('Cash');
+    }
+  }
+
+  document.addEventListener('click',function(e){
+    const btn=e.target && e.target.closest ? e.target.closest('#salesMainMenu [data-main-sales-menu]') : null;
+    if(!btn || activeStore()!=='SIVANA')return;
+    const mode=String(btn.dataset.mainSalesMenu||'').toUpperCase();
+    if(mode==='MRD') setPayment('Mr D');
+    else if(mode==='STORE'){
+      const p=ensureMrDOption();
+      if(p && String(p.value||'').trim().toLowerCase()==='mr d') setPayment('Cash');
+    }
+  },true);
+
+  [100,500,1200,2500,5000].forEach(ms=>setTimeout(syncFromVisibleMenu,ms));
+  document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible')setTimeout(syncFromVisibleMenu,50); });
+  window.fvSivanaMrdAutoPaymentV79=syncFromVisibleMenu;
+})();
+</script>
+<!-- BUILD: V79_SIVANA_MRD_AUTO_PAYMENT_20260919 -->
 </html>
