@@ -1,0 +1,204 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Feasterville Audit & Financial Reporting</title>
+<style>
+*{box-sizing:border-box}body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8;color:#17212b}
+.top{background:#111827;color:#fff;padding:18px}.wrap{max-width:1240px;margin:18px auto;padding:0 14px}
+.nav,.actions,.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:end}
+a.btn,button{border:0;border-radius:8px;padding:10px 14px;font-weight:800;cursor:pointer;text-decoration:none}
+.primary{background:#16a34a;color:#fff}.secondary{background:#334155;color:#fff}.warnbtn{background:#b45309;color:#fff}
+.card{background:#fff;border:1px solid #d9dee5;border-radius:12px;padding:18px;margin-bottom:18px;box-shadow:0 1px 3px #0001}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.stat{border:1px solid #e5e7eb;border-radius:10px;padding:13px;background:#fafafa}
+.stat .label{font-size:12px;color:#64748b;font-weight:700}.stat .value{font-size:22px;font-weight:900;margin-top:5px}
+label{font-size:12px;font-weight:800}input,select{padding:9px;border:1px solid #cbd5e1;border-radius:7px;margin-top:4px}
+.msg{font-weight:700;margin-top:10px}.ok{color:#15803d}.bad{color:#b91c1c}.warn{color:#b45309}.muted{color:#64748b}
+table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:900px}th,td{padding:8px;border-bottom:1px solid #e5e7eb;text-align:left;white-space:nowrap}
+th{background:#f8fafc;position:sticky;top:0}.right{text-align:right}.tablewrap{overflow:auto;max-height:520px;border:1px solid #e5e7eb;border-radius:8px}
+.tag{display:inline-block;padding:3px 7px;border-radius:999px;font-weight:800;font-size:11px}.good{background:#dcfce7;color:#166534}.pending{background:#fef3c7;color:#92400e}.na{background:#e2e8f0;color:#334155}.badtag{background:#fee2e2;color:#991b1b}
+.login{display:none;border-top:1px solid #ddd;margin-top:14px;padding-top:14px}.hidden{display:none!important}
+@media(max-width:900px){.grid{grid-template-columns:1fr 1fr}}@media(max-width:600px){.grid{grid-template-columns:1fr}}
+@media print{.top,.filters,.actions,.login,.no-print{display:none!important}.wrap{max-width:none;margin:0;padding:0}.card{box-shadow:none;border:0;padding:7px}.tablewrap{max-height:none;overflow:visible;border:0}table{font-size:9px;min-width:0}th{position:static}}
+</style>
+</head>
+<body>
+<div class="top"><div class="wrap" style="margin:0 auto">
+<h1 style="margin:0 0 8px">Feasterville — Audit & Financial Reporting</h1>
+<div class="nav">
+<a class="btn secondary" href="index.html">POS HOME</a>
+<a class="btn secondary" href="feasterville-accounting-foundation.html">ACCOUNTING FOUNDATION</a>
+<a class="btn secondary" href="month-end-closure-report.html">MONTH-END REPORT</a>
+<button class="secondary" onclick="loadAll()">REFRESH</button>
+<button class="secondary" onclick="window.print()">PRINT / SAVE PDF</button>
+</div></div></div>
+
+<div class="wrap">
+<div class="card">
+<h2>Manager Access</h2>
+<p class="muted">Audit-support dashboard. Posted ledger entries are locked; corrections must be made by reversal or adjustment journals.</p>
+<div id="who">Checking manager session…</div>
+<div id="login" class="login">
+<div class="grid">
+<label>Email<br><input id="email" type="email" autocomplete="username"></label>
+<label>Password<br><input id="password" type="password" autocomplete="current-password"></label>
+</div>
+<div class="actions"><button class="primary" onclick="signIn()">MANAGER SIGN IN</button></div>
+<div id="loginmsg" class="msg"></div>
+</div>
+</div>
+
+<div class="card filters">
+<label>From Date<br><input id="from" type="date" value="2026-03-01"></label>
+<label>To Date<br><input id="to" type="date" value="2027-02-28"></label>
+<label>Store<br><select id="store"><option value="ALL">All Stores</option><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select></label>
+<button class="primary" onclick="loadAll()">RUN AUDIT REPORTS</button>
+<button class="warnbtn" onclick="syncGL()">SYNC POS → GENERAL LEDGER</button>
+</div>
+<div id="status" class="msg">Ready.</div>
+
+<div class="card">
+<h2>Audit Reporting Summary</h2>
+<div class="grid">
+<div class="stat"><div class="label">Trial Balance</div><div class="value" id="tbStatus">—</div><div class="muted" id="tbSub"></div></div>
+<div class="stat"><div class="label">Posted POS Sales</div><div class="value" id="salesPosted">—</div><div class="muted" id="salesValue"></div></div>
+<div class="stat"><div class="label">Posted Expenses</div><div class="value" id="expPosted">—</div><div class="muted" id="expValue"></div></div>
+<div class="stat"><div class="label">Stock Receipts Pending</div><div class="value" id="stockPending">—</div><div class="muted" id="stockSub"></div></div>
+</div>
+</div>
+
+<div class="card">
+<h2>Financial Year & Reporting Readiness</h2>
+<div id="settings" class="muted"></div>
+<div class="tablewrap" style="margin-top:12px"><table>
+<thead><tr><th>Area</th><th>Requirement</th><th>Status</th><th>Notes</th></tr></thead>
+<tbody id="readiness"></tbody></table></div>
+</div>
+
+<div class="card">
+<h2>Operational Source → General Ledger Reconciliation</h2>
+<p class="muted">Confirms whether POS sales, store expenses and other income have been posted to the accounting ledger. Stock receipts stay on a separate audit schedule until their accounting classification and opening balances are available.</p>
+<div class="actions"><button class="secondary" onclick="exportTable('sourceRecon','source-reconciliation.csv')">EXPORT CSV</button></div>
+<div class="tablewrap"><table id="sourceRecon">
+<thead><tr><th>Date</th><th>Store</th><th>Source</th><th class="right">Source Count</th><th class="right">Source Value</th><th class="right">Posted Count</th><th class="right">Posted Value</th><th class="right">Difference</th><th class="right">Issues</th></tr></thead>
+<tbody id="sourceReconBody"></tbody></table></div>
+</div>
+
+<div class="card">
+<h2>Sales-to-Cash-Up Reconciliation</h2>
+<div class="actions"><button class="secondary" onclick="exportTable('cashRecon','cashup-reconciliation.csv')">EXPORT CSV</button></div>
+<div class="tablewrap"><table id="cashRecon">
+<thead><tr><th>Date</th><th>Store</th><th class="right">POS Sales</th><th class="right">Cash-Up Total</th><th class="right">Difference</th><th class="right">Cash Variance</th><th class="right">Sales Count</th><th class="right">Cash-Up Sales Count</th></tr></thead>
+<tbody id="cashReconBody"></tbody></table></div>
+</div>
+
+<div class="card">
+<h2>Estimated Cost of Sales Schedule</h2>
+<p class="muted">This is the audit-support consumption schedule from recipe usage and available production-input costs. It is not yet posted to the General Ledger because stock opening balances and remaining supplier costs are incomplete.</p>
+<div class="actions"><button class="secondary" onclick="exportTable('cogsTable','cogs-schedule.csv')">EXPORT CSV</button></div>
+<div class="tablewrap"><table id="cogsTable">
+<thead><tr><th>Month</th><th>Store</th><th>COGS Account</th><th class="right">Inputs Used</th><th class="right">Missing Costs</th><th class="right">Estimated COGS</th></tr></thead>
+<tbody id="cogsBody"></tbody></table></div>
+</div>
+
+<div class="card">
+<h2>Trial Balance</h2>
+<div class="actions"><button class="secondary" onclick="exportTable('tbTable','trial-balance.csv')">EXPORT CSV</button></div>
+<div class="tablewrap"><table id="tbTable">
+<thead><tr><th>Code</th><th>Account</th><th>Type</th><th>Section</th><th class="right">Debit</th><th class="right">Credit</th><th class="right">Balance</th></tr></thead>
+<tbody id="tb"></tbody></table></div>
+</div>
+
+<div class="card">
+<h2>Recent Posted Journals</h2>
+<div class="actions"><button class="secondary" onclick="exportTable('journalsTable','general-ledger-journals.csv')">EXPORT CSV</button></div>
+<div class="tablewrap"><table id="journalsTable">
+<thead><tr><th>Date</th><th>Reference</th><th>Description</th><th>Source</th><th>Store</th><th>Status</th><th class="right">Debit</th><th class="right">Credit</th></tr></thead>
+<tbody id="journals"></tbody></table></div>
+</div>
+
+<div class="card">
+<h2>Current Scope / Limitations</h2>
+<ul>
+<li>Financial year-end is configured as <b>28 February</b>.</li>
+<li>Feasterville is currently configured as <b>not VAT registered</b>; VAT201 is therefore not included.</li>
+<li>Payroll/PAYE/UIF/SDL remains outside Feasterville for now.</li>
+<li>Opening bank, loans, capital/equity, fixed assets, creditors and debtors remain outside Feasterville and must be loaded later before the Statement of Financial Position and Cash Flow can be final.</li>
+<li>Stock receipts are retained as an audit schedule and are not automatically posted to the GL yet, avoiding unsupported assumptions about supplier liability/payment classification.</li>
+</ul>
+</div>
+</div>
+
+<script>
+const ROOT='https://sflyjcgbxbcwspfuzone.supabase.co',BASE=ROOT+'/rest/v1',KEY='sb_publishable_iASq-tni6KYrFK0R2S35zA_mpwt4MqM';
+function tok(){return sessionStorage.getItem('feastervilleCloudAccessToken')||localStorage.getItem('feastervilleCloudAccessToken')||''}
+function parseJwt(t){try{return JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')))}catch{return {}}}
+async function req(path,opt={}){const t=tok();if(!t)throw new Error('No active manager login');const r=await fetch(BASE+path,{...opt,headers:{apikey:KEY,Authorization:'Bearer '+t,'Content-Type':'application/json',...(opt.headers||{})}});if(!r.ok)throw new Error(await r.text());return r.status===204?null:r.json()}
+async function rpc(name,body){const t=tok();if(!t)throw new Error('No active manager login');const r=await fetch(ROOT+'/rest/v1/rpc/'+name,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+t,'Content-Type':'application/json'},body:JSON.stringify(body)});if(!r.ok)throw new Error(await r.text());return r.json()}
+async function verify(){try{const p=parseJwt(tok());if(!p.sub)throw new Error('No login');const me=await req('/pos_profiles?select=role,active,display_name&user_id=eq.'+p.sub);if(!me[0]||me[0].role!=='manager'||me[0].active===false)throw new Error('Manager access required');who.textContent='Manager session active: '+(me[0].display_name||'Manager');login.style.display='none';return true}catch(e){who.textContent='Manager sign in required.';login.style.display='block';return false}}
+async function signIn(){try{const r=await fetch(ROOT+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({email:email.value.trim(),password:password.value})});const d=await r.json();if(!r.ok)throw new Error(d.error_description||d.msg||'Sign in failed');sessionStorage.setItem('feastervilleCloudAccessToken',d.access_token);localStorage.setItem('feastervilleCloudAccessToken',d.access_token);loginmsg.textContent='Signed in.';await loadAll()}catch(e){loginmsg.textContent=e.message}}
+const money=n=>'R'+Number(n||0).toLocaleString('en-ZA',{minimumFractionDigits:2,maximumFractionDigits:2});
+const q=v=>encodeURIComponent(v);
+function daterange(field='tx_date'){return `${field}=gte.${from.value}&${field}=lte.${to.value}`}
+function storeFilter(){return store.value==='ALL'?'':'&store_code=eq.'+q(store.value)}
+function tag(status){let c=status==='COMPLETE'?'good':status==='NOT_APPLICABLE'?'na':status==='PENDING'?'badtag':'pending';return `<span class="tag ${c}">${status}</span>`}
+
+async function syncGL(){
+ try{
+  if(!await verify())return;
+  status.textContent='Synchronising operational POS transactions to the General Ledger…';status.className='msg warn';
+  const r=await rpc('acc_sync_operational_ledger',{p_from:from.value,p_to:to.value,p_store_code:store.value});
+  status.textContent=`Sync complete. Sales posted: ${r.sales_posted||0}; expenses posted: ${r.expenses_posted||0}; other income: ${r.other_income_posted||0}. Stock receipts remain on audit schedule: ${r.stock_receipts_pending||0}.`;
+  status.className='msg ok';await loadAll();
+ }catch(e){status.textContent='Sync failed: '+e.message;status.className='msg bad'}
+}
+
+async function loadSettings(){
+ const s=await req('/acc_settings?select=financial_year_end_month,financial_year_end_day,vat_registered,payroll_in_scope,opening_balances_status,reporting_framework,notes&id=eq.1');
+ if(s[0])settings.innerHTML=`<b>Year-end:</b> ${String(s[0].financial_year_end_day).padStart(2,'0')}/${String(s[0].financial_year_end_month).padStart(2,'0')} &nbsp; | &nbsp; <b>VAT registered:</b> ${s[0].vat_registered?'Yes':'No'} &nbsp; | &nbsp; <b>Payroll in Feasterville:</b> ${s[0].payroll_in_scope?'Yes':'No'} &nbsp; | &nbsp; <b>Opening balances:</b> ${s[0].opening_balances_status}`;
+ const r=await req('/acc_v_reporting_readiness?select=area,item,status,notes&fiscal_year=eq.FY2027&order=area.asc,item.asc');
+ readiness.innerHTML=r.map(x=>`<tr><td>${x.area}</td><td>${x.item}</td><td>${tag(x.status)}</td><td style="white-space:normal">${x.notes||''}</td></tr>`).join('');
+}
+async function loadSourceRecon(){
+ const r=await req('/acc_v_operational_source_reconciliation?select=*&'+daterange()+storeFilter()+'&order=tx_date.asc,store_code.asc,source_type.asc');
+ sourceReconBody.innerHTML=r.map(x=>`<tr><td>${x.tx_date}</td><td>${x.store_code}</td><td>${x.source_type}</td><td class="right">${x.source_count}</td><td class="right">${money(x.source_value)}</td><td class="right">${x.posted_count}</td><td class="right">${money(x.posted_value)}</td><td class="right">${money(x.value_difference)}</td><td class="right">${x.issue_count}</td></tr>`).join('');
+ let sales=r.filter(x=>x.source_type==='POS_SALE'), exp=r.filter(x=>x.source_type==='STORE_EXPENSE'), stock=r.filter(x=>x.source_type==='STOCK_RECEIPT_PENDING');
+ salesPosted.textContent=sales.reduce((a,x)=>a+Number(x.posted_count||0),0); salesValue.textContent=money(sales.reduce((a,x)=>a+Number(x.posted_value||0),0));
+ expPosted.textContent=exp.reduce((a,x)=>a+Number(x.posted_count||0),0); expValue.textContent=money(exp.reduce((a,x)=>a+Number(x.posted_value||0),0));
+ stockPending.textContent=stock.reduce((a,x)=>a+Number(x.source_count||0),0); stockSub.textContent=`${stock.reduce((a,x)=>a+Number(x.issue_count||0),0)} missing-cost receipt(s)`;
+}
+async function loadCashRecon(){
+ const r=await req('/acc_v_cashup_reconciliation?select=*&'+daterange()+storeFilter()+'&order=tx_date.asc,store_code.asc');
+ cashReconBody.innerHTML=r.map(x=>`<tr><td>${x.tx_date}</td><td>${x.store_code}</td><td class="right">${money(x.total_sales)}</td><td class="right">${money(x.cashup_total)}</td><td class="right">${money(x.sales_to_cashup_difference)}</td><td class="right">${money(x.cash_variance)}</td><td class="right">${x.sale_count}</td><td class="right">${x.cashup_sale_count}</td></tr>`).join('');
+}
+async function loadCOGS(){
+ const f=`month_start=gte.${from.value.substring(0,7)}-01&month_start=lte.${to.value.substring(0,7)}-01`+(store.value==='ALL'?'':'&store_code=eq.'+q(store.value));
+ const r=await req('/acc_v_cogs_monthly_summary?select=*&'+f+'&order=month_start.asc,store_code.asc,cogs_account_code.asc');
+ cogsBody.innerHTML=r.map(x=>`<tr><td>${x.month_start}</td><td>${x.store_code}</td><td>${x.cogs_account_code}</td><td class="right">${x.inputs_used}</td><td class="right">${x.missing_cost_inputs}</td><td class="right">${money(x.estimated_cogs)}</td></tr>`).join('');
+}
+async function loadTB(){
+ const r=await req('/acc_v_trial_balance?select=code,name,account_type,statement_section,debit,credit,balance&order=code.asc');
+ tb.innerHTML=r.map(x=>`<tr><td>${x.code}</td><td>${x.name}</td><td>${x.account_type}</td><td>${x.statement_section}</td><td class="right">${money(x.debit)}</td><td class="right">${money(x.credit)}</td><td class="right">${money(x.balance)}</td></tr>`).join('');
+ const d=r.reduce((a,x)=>a+Number(x.debit||0),0),c=r.reduce((a,x)=>a+Number(x.credit||0),0);
+ tbStatus.textContent=Math.abs(d-c)<0.01?'BALANCED':'OUT OF BALANCE';tbSub.textContent=`Debit ${money(d)} | Credit ${money(c)}`;
+}
+async function loadJournals(){
+ let p='/acc_v_journal_totals?select=journal_date,reference,description,source_type,store_code,status,total_debit,total_credit&journal_date=gte.'+from.value+'&journal_date=lte.'+to.value+storeFilter()+'&order=journal_date.desc,id.desc&limit=150';
+ const r=await req(p);journals.innerHTML=r.map(x=>`<tr><td>${x.journal_date}</td><td>${x.reference||''}</td><td>${x.description||''}</td><td>${x.source_type}</td><td>${x.store_code||''}</td><td>${x.status}</td><td class="right">${money(x.total_debit)}</td><td class="right">${money(x.total_credit)}</td></tr>`).join('');
+}
+async function loadAll(){
+ try{
+  if(!await verify())return;
+  status.textContent='Loading audit reports…';status.className='msg warn';
+  await Promise.all([loadSettings(),loadSourceRecon(),loadCashRecon(),loadCOGS(),loadTB(),loadJournals()]);
+  status.textContent='Audit reports loaded.';status.className='msg ok';
+ }catch(e){status.textContent='Could not load audit reports: '+e.message;status.className='msg bad'}
+}
+function exportTable(id,name){
+ const t=document.getElementById(id),rows=[...t.querySelectorAll('tr')].map(tr=>[...tr.children].map(td=>'"'+td.innerText.replace(/"/g,'""')+'"').join(','));
+ const b=new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();URL.revokeObjectURL(a.href);
+}
+loadAll();
+</script>
+</body></html>
