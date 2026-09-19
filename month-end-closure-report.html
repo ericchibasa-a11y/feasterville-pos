@@ -39,7 +39,7 @@
       <div class="section-title"><h2 id="reportTitle">Month-End Summary</h2><div id="closureTag"></div></div>
       <div class="cards">
         <div class="card"><div class="label">POS Sales</div><div class="value" id="salesCard">R0.00</div><div class="sub" id="saleCountCard">0 completed sales</div></div>
-        <div class="card"><div class="label">Cost of Sales</div><div class="value" id="cogsCard">R0.00</div><div class="sub">Opening inventory + purchases − closing inventory</div></div>
+        <div class="card"><div class="label">Cost of Sales</div><div class="value" id="cogsCard">R0.00</div><div class="sub">Recipe consumption ± month-end stock variance</div></div>
         <div class="card"><div class="label">Gross Profit</div><div class="value" id="grossCard">R0.00</div><div class="sub" id="grossMarginCard">0.0% margin</div></div>
         <div class="card"><div class="label">Operating Expenses</div><div class="value" id="opexCard">R0.00</div><div class="sub">Expenses captured in POS</div></div>
         <div class="card"><div class="label">Net Profit / (Loss)</div><div class="value" id="netCard">R0.00</div><div class="sub">After other income and operating expenses</div></div>
@@ -170,8 +170,12 @@ async function load(){
     lastInventory=rows;
 
     const invOpening=rows.reduce((a,r)=>a+r.openingValue,0),purchases=rows.reduce((a,r)=>a+r.purchaseCost,0),closingInv=rows.reduce((a,r)=>a+r.closingValue,0);
-    const cogs=Math.max(0,invOpening+purchases-closingInv);
     const consumptionCost=rows.reduce((a,r)=>a+r.consumptionCost,0);
+    // Cost of Sales is driven by actual recipe consumption. At month-end, any physical
+    // stock shortage/surplus is added/subtracted as an inventory variance adjustment.
+    // This avoids a false R0 COGS during an open month when closing stock is still expected stock.
+    const stockVarianceCost=rows.reduce((a,r)=>a+(r.endCount?((r.expectedClose-r.physicalClose)*r.endAvg):0),0);
+    const cogs=Math.max(0,consumptionCost+stockVarianceCost);
     const salesTotal=sales.reduce((a,r)=>a+n(r.total),0),otherTotal=other.reduce((a,r)=>a+n(r.amount),0),opex=expenses.reduce((a,r)=>a+n(r.amount),0);
     const gross=salesTotal-cogs,net=gross+otherTotal-opex,grossMargin=salesTotal?gross/salesTotal*100:0;
     const pmt={Cash:0,Card:0,'Mr D':0,'Uber Eats':0,Other:0};sales.forEach(s=>addBy(pmt,normalizePayment(s.payment),s.total));
@@ -189,7 +193,7 @@ async function load(){
     const issues=[];if(!periodComplete)issues.push('The selected month has not ended yet.');if(counted<activeRows.length)issues.push((activeRows.length-counted)+' active production input(s) do not have a physical count dated '+end+'.');if(missingReceiptCosts)issues.push(missingReceiptCosts+' stock receipt(s) have quantity received but no purchase cost.');if(missingCostBasis)issues.push(missingCostBasis+' inventory item(s) have stock movement but no usable cost basis.');if(cashupDays<salesDays)issues.push((salesDays-cashupDays)+' sales day(s) do not have a closed cash-up.');if(!issues.length)issues.push('All key month-end checks passed.');$('controlNote').innerHTML='<b>Closure check:</b> '+issues.map(esc).join(' ');
 
     $('plBody').innerHTML=[
-      ['POS Sales',salesTotal,'major'],['Less: Cost of Sales',-cogs,''],['GROSS PROFIT',gross,'major'],['Other Income',otherTotal,''],['Less: Operating Expenses',-opex,''],['NET PROFIT / (LOSS)',net,'profit'],['','', ''],['Opening Inventory',invOpening,''],['Production Input Purchases',purchases,''],['Closing Inventory',closingInv,''],['Recipe Consumption Cost (control)',consumptionCost,'']
+      ['POS Sales',salesTotal,'major'],['Less: Cost of Sales',-cogs,''],['GROSS PROFIT',gross,'major'],['Other Income',otherTotal,''],['Less: Operating Expenses',-opex,''],['NET PROFIT / (LOSS)',net,'profit'],['','', ''],['Opening Inventory',invOpening,''],['Production Input Purchases',purchases,''],['Closing Inventory',closingInv,''],['Recipe Consumption Cost (control)',consumptionCost,''],['Month-End Stock Variance Cost',stockVarianceCost,'']
     ].map(([l,v,cls])=>l?`<tr class="${cls}"><td>${esc(l)}</td><td class="num">${money(v)}</td></tr>`:'<tr><td colspan="2">&nbsp;</td></tr>').join('');
     $('paymentBody').innerHTML=Object.entries(pmt).map(([k,v])=>`<tr><td>${esc(k)}</td><td class="num">${money(v)}</td></tr>`).join('')+`<tr class="total-row"><td>Total POS Sales</td><td class="num">${money(salesTotal)}</td></tr>`;
     $('expenseBody').innerHTML=Object.keys(expBy).sort((a,b)=>expBy[b]-expBy[a]).map(k=>`<tr><td>${esc(k)}</td><td class="num">${money(expBy[k])}</td><td class="num">${opex?((expBy[k]/opex)*100).toFixed(1):'0.0'}%</td></tr>`).join('')+`<tr class="total-row"><td>Total Operating Expenses</td><td class="num">${money(opex)}</td><td class="num">100.0%</td></tr>`;
