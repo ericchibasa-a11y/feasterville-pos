@@ -3,7 +3,7 @@
 *{box-sizing:border-box}body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8;color:#17212b}.top{position:sticky;top:0;z-index:20;background:#111827;padding:10px;box-shadow:0 2px 8px #0003}.nav{max-width:1180px;margin:auto;display:flex;gap:8px;flex-wrap:wrap}.nav button,.nav a{border:0;border-radius:8px;padding:11px 14px;font-weight:700;cursor:pointer;text-decoration:none;background:#fff;color:#111827}.nav .primary{background:#16a34a;color:white}.wrap{max-width:1180px;margin:18px auto;padding:0 14px}.card{background:#fff;border:1px solid #d9dee5;border-radius:12px;padding:18px;margin-bottom:18px;box-shadow:0 1px 3px #0001}h1,h2{margin-top:0}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}label{font-weight:700;font-size:13px}input,select{width:100%;padding:10px;border:1px solid #b9c2cc;border-radius:7px;margin-top:5px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}button.save{background:#16a34a;color:#fff;border:0;border-radius:8px;padding:11px 18px;font-weight:800;cursor:pointer}button.secondary{background:#334155;color:#fff;border:0;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer}.msg{margin-top:10px;font-weight:700}.ok{color:#15803d}.bad{color:#b91c1c}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}.toolbar>*{max-width:320px}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px;border-bottom:1px solid #e5e7eb;text-align:left}th{background:#f8fafc;position:sticky;top:60px}.tablewrap{overflow:auto;max-height:520px}.pill{padding:3px 7px;border-radius:12px;background:#dcfce7;color:#166534;font-weight:700}.inactive{background:#fee2e2;color:#991b1b}@media(max-width:760px){.grid{grid-template-columns:1fr}.nav button,.nav a{flex:1 1 auto;text-align:center}th{top:105px}}
 </style></head><body>
 <div class="top"><div class="nav">
-<a href="index.html">POS HOME</a><button class="primary" onclick="go('add')">ADD PRODUCTION INPUT</button><button onclick="go('list')">EXISTING INPUTS</button><button onclick="go('receipt')">RECEIVE STOCK</button><a href="production-input-consumption-report.html">CONSUMPTION REPORT</a><a href="month-end-closure-report.html">MONTH-END REPORT</a><button onclick="refreshAdmin()">REFRESH</button><button onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>
+<a href="index.html">POS HOME</a><button class="primary" onclick="go('add')">ADD PRODUCTION INPUT</button><button onclick="go('list')">EXISTING INPUTS</button><button onclick="go('receipt')">RECEIVE STOCK</button><button onclick="go('receiptHistory')">RECEIPT HISTORY</button><a href="production-input-consumption-report.html">CONSUMPTION REPORT</a><a href="month-end-closure-report.html">MONTH-END REPORT</a><button onclick="refreshAdmin()">REFRESH</button><button onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>
 </div></div>
 <div class="wrap">
 <div class="card"><h1>Production Input Administration</h1>
@@ -48,6 +48,26 @@
 <div class="actions"><button class="primary" onclick="saveReceipt()">SAVE STOCK RECEIPT</button><button onclick="clearReceipt()">CLEAR</button></div>
 <div id="receipt_status" class="msg"></div>
 </div>
+
+<div class="card" id="receiptHistory">
+<h2>Stock Received — Review Captured Entries</h2>
+<p style="margin-top:-6px;color:#475569">View-only receipt history from the live stock receipt register.</p>
+<div class="toolbar">
+  <select id="receiptHistoryStore">
+    <option value="NDAYENI">Ndayeni</option>
+    <option value="SIVANA">Sivana</option>
+  </select>
+  <button class="secondary" type="button" onclick="loadReceiptHistory()">REFRESH RECEIPTS</button>
+</div>
+<div id="receiptHistoryMsg" class="msg"></div>
+<div class="tablewrap">
+<table>
+<thead><tr><th>Date</th><th>Input</th><th>Qty</th><th>Unit</th><th>Unit Cost</th><th>Total Cost</th><th>Supplier</th><th>Reference</th><th>Received By</th></tr></thead>
+<tbody id="receiptHistoryBody"><tr><td colspan="9">Loading receipts...</td></tr></tbody>
+</table>
+</div>
+</div>
+
 <div class="card" id="list"><h2>Existing Production Inputs</h2><div class="toolbar"><select id="listStore" onchange="loadInputs()"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select><input id="search" placeholder="Search code, name or category" oninput="render()"></div><div class="tablewrap"><div id="listMsg" class="msg"></div><table><thead><tr><th>Code</th><th>Name</th><th>Category</th><th>Unit</th><th>Reorder</th><th>Status</th><th>Action</th></tr></thead><tbody id="tbody"></tbody></table></div></div>
 </div>
 <script>
@@ -131,10 +151,10 @@ async function api(path,opt={}){
   let p=path.startsWith('/')?path:'/rest/v1/'+path;
   return request(p,opt);
 }
-async function refreshAdmin(){if(await verifyManager())await loadInputs()}
+async function refreshAdmin(){if(await verifyManager()){await loadInputs();await loadReceiptHistory();}}
 function val(id){return (document.getElementById(id)?.value||'').trim()}
 function go(where){
-  const el=document.getElementById(where==='add'?'add':'list');
+  const el=document.getElementById(where);
   if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function clearForm(){
@@ -212,8 +232,52 @@ async function saveReceipt(){
  if(!Number.isFinite(qty)||qty<=0){receiptStatus('Quantity received must be greater than zero.',false);return;}
  if(!Number.isFinite(unit_cost)||unit_cost<0){receiptStatus('Unit cost cannot be negative.',false);return;}
  const payload={receipt_date,supplier:supplier||null,reference:reference||null,input_code,input_name,unit,qty,unit_cost,received_by:manager.name||manager.display_name||'Manager',created_by:manager.id,store_code:store};
- try{receiptStatus('Saving stock receipt...');await request('/rest/v1/pos_stock_receipts',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(payload)});receiptStatus('Stock receipt saved successfully.');}
+ try{
+   receiptStatus('Saving stock receipt...');
+   await request('/rest/v1/pos_stock_receipts',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(payload)});
+   receiptStatus('Stock receipt saved successfully.');
+   const hs=document.getElementById('receiptHistoryStore'); if(hs)hs.value=store;
+   await loadReceiptHistory();
+ }
  catch(e){receiptStatus('Could not save stock receipt: '+e.message,false);}
+}
+
+
+async function loadReceiptHistory(){
+  if(!guard())return;
+  const store=(document.getElementById('receiptHistoryStore')?.value||document.getElementById('r_store')?.value||'NDAYENI');
+  const body=document.getElementById('receiptHistoryBody');
+  const msg=document.getElementById('receiptHistoryMsg');
+  if(body)body.innerHTML='<tr><td colspan="9">Loading receipt history...</td></tr>';
+  if(msg){msg.textContent='Loading live stock receipts...';msg.className='msg';}
+  try{
+    const data=await request('/rest/v1/pos_stock_receipts?store_code=eq.'+
+      encodeURIComponent(store)+
+      '&select=id,receipt_date,input_code,input_name,qty,unit,unit_cost,supplier,reference,received_by,created_at&order=receipt_date.desc,created_at.desc&limit=200');
+    const items=Array.isArray(data)?data:[];
+    if(body){
+      body.innerHTML=items.length?items.map(x=>{
+        const qty=Number(x.qty||0);
+        const unitCost=Number(x.unit_cost||0);
+        const total=qty*unitCost;
+        return '<tr>'+
+          '<td>'+esc(x.receipt_date||'')+'</td>'+
+          '<td><b>'+esc(x.input_code||'')+'</b> — '+esc(x.input_name||'')+'</td>'+
+          '<td>'+qty.toFixed(3).replace(/\.?0+$/,'')+'</td>'+
+          '<td>'+esc(x.unit||'EA')+'</td>'+
+          '<td>R'+unitCost.toFixed(2)+'</td>'+
+          '<td>R'+total.toFixed(2)+'</td>'+
+          '<td>'+esc(x.supplier||'')+'</td>'+
+          '<td>'+esc(x.reference||'')+'</td>'+
+          '<td>'+esc(x.received_by||'')+'</td>'+
+        '</tr>';
+      }).join(''):'<tr><td colspan="9">No stock receipts found for this store.</td></tr>';
+    }
+    if(msg){msg.textContent=items.length+' receipt(s) loaded for '+(store==='SIVANA'?'Sivana':'Ndayeni')+'.';msg.className='msg ok';}
+  }catch(e){
+    if(body)body.innerHTML='<tr><td colspan="9">'+esc(e.message)+'</td></tr>';
+    if(msg){msg.textContent='Could not load receipt history: '+e.message;msg.className='msg bad';}
+  }
 }
 
 async function loadInputs(){
@@ -244,5 +308,19 @@ function render(){
 }
 function edit(x){document.getElementById('store').value=x.store_code;document.getElementById('code').value=x.code;document.getElementById('name').value=x.name;document.getElementById('category').value=x.category||'';document.getElementById('unit').value=x.unit||'EA';document.getElementById('reorder').value=x.reorder_level||0;document.getElementById('safety').value=x.safety_stock||0;document.getElementById('target').value=x.target_stock||0;document.getElementById('cycle').value=x.purchase_cycle_days||7;document.getElementById('group').value=x.purchase_group||'WEEKLY';document.getElementById('supplier').value=x.preferred_supplier||'';document.getElementById('cost').value=x.preferred_unit_cost??'';document.getElementById('active').value=String(x.active!==false);go('add')}
 document.getElementById('store').value=localStorage.getItem('feastervilleStoreCode')||'NDAYENI';document.getElementById('listStore').value=document.getElementById('store').value;refreshAdmin();
-document.addEventListener('DOMContentLoaded',()=>{setReceiptDate();setTimeout(()=>populateReceiptInputs(),800);document.getElementById('r_store')?.addEventListener('change',async()=>{await populateReceiptInputs();});document.getElementById('r_input')?.addEventListener('change',applyReceiptDefaults);});
+document.addEventListener('DOMContentLoaded',()=>{
+  setReceiptDate();
+  const initialStore=localStorage.getItem('feastervilleStoreCode')||'NDAYENI';
+  const rs=document.getElementById('r_store'); if(rs)rs.value=initialStore;
+  const hs=document.getElementById('receiptHistoryStore'); if(hs)hs.value=initialStore;
+  setTimeout(async()=>{await populateReceiptInputs();await loadReceiptHistory();},800);
+  document.getElementById('r_store')?.addEventListener('change',async(e)=>{
+    const store=e.target.value;
+    const hist=document.getElementById('receiptHistoryStore'); if(hist)hist.value=store;
+    await populateReceiptInputs();
+    await loadReceiptHistory();
+  });
+  document.getElementById('receiptHistoryStore')?.addEventListener('change',loadReceiptHistory);
+  document.getElementById('r_input')?.addEventListener('change',applyReceiptDefaults);
+});
 </script></body></html>
