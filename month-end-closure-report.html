@@ -166,6 +166,12 @@ async function managerSignIn(){
 function setStatus(msg,type=''){const e=$('status');e.textContent=msg;e.className='status'+(type?' '+type:'')}
 function monthBounds(m){const [y,mm]=m.split('-').map(Number);const start=`${y}-${String(mm).padStart(2,'0')}-01`;const last=new Date(y,mm,0).getDate();const end=`${y}-${String(mm).padStart(2,'0')}-${String(last).padStart(2,'0')}`;return{start,end,label:new Date(y,mm-1,1).toLocaleDateString('en-ZA',{month:'long',year:'numeric'})}}
 function normalizePayment(p){p=String(p||'').toLowerCase().replace(/[_-]/g,' ').trim();if(p.includes('cash'))return'Cash';if(p.includes('card'))return'Card';if(p.includes('mr')&&p.includes('d'))return'Mr D';if(p.includes('uber'))return'Uber Eats';return'Other'}
+function isInventoryPurchaseExpense(e){
+  const c=String((e&&e.category)||'').toLowerCase();
+  const d=String((e&&e.description)||'').toLowerCase();
+  return /stock|ingredient|inventory|production input|raw material/.test(c) ||
+         /stock purchase|ingredient purchase|production input|raw material/.test(d);
+}
 function intendedCount(row){return !!row && (row.counted_by || n(row.physical_count)!==0 || (row.notes&&/count|physical|stocktake/i.test(row.notes)))}
 function closeOf(row){if(!row)return 0;return intendedCount(row)?n(row.physical_count):(n(row.opening_qty)+n(row.received_qty)-n(row.used_qty))}
 function weightedAvg(receipts,code,cutoff,store){let q=0,c=0;for(const r of receipts){if(r.store_code!==store||r.input_code!==code||r.receipt_date>cutoff)continue;const rq=n(r.qty),uc=n(r.unit_cost);if(rq>0&&uc>0){q+=rq;c+=rq*uc}}return q>0?c/q:0}
@@ -182,7 +188,7 @@ async function load(){
       api('pos_stock_receipts?select=store_code,input_code,input_name,unit,qty,unit_cost,receipt_date&store_code=in.('+stores.join(',')+')&receipt_date=lte.'+end+'&order=receipt_date.asc'),
       api('pos_sales?select=store_code,total,payment,sale_date&store_code=in.('+stores.join(',')+')&sale_date=gte.'+start+'&sale_date=lte.'+end),
       api('pos_other_income?select=store_code,amount,category,transaction_date&store_code=in.('+stores.join(',')+')&transaction_date=gte.'+start+'&transaction_date=lte.'+end),
-      api('pos_store_expenses?select=store_code,amount,category,expense_date&store_code=in.('+stores.join(',')+')&expense_date=gte.'+start+'&expense_date=lte.'+end),
+      api('pos_store_expenses?select=store_code,amount,category,description,expense_date&store_code=in.('+stores.join(',')+')&expense_date=gte.'+start+'&expense_date=lte.'+end),
       api('pos_daily_cashups?select=store_code,cashup_date,expected_cash,actual_cash,variance,status&store_code=in.('+stores.join(',')+')&cashup_date=gte.'+start+'&cashup_date=lte.'+end)
     ]);
 
@@ -226,10 +232,17 @@ async function load(){
     // This avoids a false R0 COGS during an open month when closing stock is still expected stock.
     const stockVarianceCost=rows.reduce((a,r)=>a+(r.endCount?((r.expectedClose-r.physicalClose)*r.endAvg):0),0);
     const cogs=Math.max(0,consumptionCost+stockVarianceCost);
-    const salesTotal=sales.reduce((a,r)=>a+n(r.total),0),otherTotal=other.reduce((a,r)=>a+n(r.amount),0),opex=expenses.reduce((a,r)=>a+n(r.amount),0);
+    const salesTotal=sales.reduce((a,r)=>a+n(r.total),0),otherTotal=other.reduce((a,r)=>a+n(r.amount),0);
+    // Inventory/ingredient purchases are balance-sheet stock movements, not operating expenses.
+    // Excluding them here prevents double-counting because production-input consumption is already
+    // recognised through Cost of Sales.
+    const inventoryPurchaseExpenses=expenses.filter(isInventoryPurchaseExpense);
+    const operatingExpenses=expenses.filter(e=>!isInventoryPurchaseExpense(e));
+    const inventoryPurchasesExcluded=inventoryPurchaseExpenses.reduce((a,r)=>a+n(r.amount),0);
+    const opex=operatingExpenses.reduce((a,r)=>a+n(r.amount),0);
     const gross=salesTotal-cogs,net=gross+otherTotal-opex,grossMargin=salesTotal?gross/salesTotal*100:0;
     const pmt={Cash:0,Card:0,'Mr D':0,'Uber Eats':0,Other:0};sales.forEach(s=>addBy(pmt,normalizePayment(s.payment),s.total));
-    const expBy={};expenses.forEach(e=>addBy(expBy,e.category||'Other Expenses',e.amount));
+    const expBy={};operatingExpenses.forEach(e=>addBy(expBy,e.category||'Other Expenses',e.amount));
     const activeRows=rows.filter(r=>r.active!==false);const counted=activeRows.filter(r=>r.endCount).length;const missingReceiptCosts=rows.reduce((a,r)=>a+r.missingCostReceipts,0);const missingCostBasis=rows.filter(r=>r.missingCostBasis).length;const missingCosts=missingReceiptCosts+missingCostBasis;
     const salesDays=uniqueCount(sales.map(s=>s.sale_date));const closedCashups=cashups.filter(c=>String(c.status||'').toUpperCase()==='CLOSED');const cashupDays=uniqueCount(closedCashups.map(c=>c.cashup_date));
     const cashVariance=closedCashups.reduce((a,c)=>a+(c.variance!=null?n(c.variance):(n(c.actual_cash)-n(c.expected_cash))),0);
@@ -243,15 +256,15 @@ async function load(){
     const issues=[];if(!periodComplete)issues.push('The selected month has not ended yet.');if(counted<activeRows.length)issues.push((activeRows.length-counted)+' active production input(s) do not have a physical count dated '+end+'.');if(missingReceiptCosts)issues.push(missingReceiptCosts+' stock receipt(s) have quantity received but no purchase cost.');if(missingCostBasis)issues.push(missingCostBasis+' inventory item(s) have stock movement but no usable cost basis.');if(cashupDays<salesDays)issues.push((salesDays-cashupDays)+' sales day(s) do not have a closed cash-up.');if(!issues.length)issues.push('All key month-end checks passed.');$('controlNote').innerHTML='<b>Closure check:</b> '+issues.map(esc).join(' ');
 
     $('plBody').innerHTML=[
-      ['POS Sales',salesTotal,'major'],['Less: Cost of Sales',-cogs,''],['GROSS PROFIT',gross,'major'],['Other Income',otherTotal,''],['Less: Operating Expenses',-opex,''],['NET PROFIT / (LOSS)',net,'profit'],['','', ''],['Opening Inventory',invOpening,''],['Production Input Purchases',purchases,''],['Closing Inventory',closingInv,''],['Recipe Consumption Cost (control)',consumptionCost,''],['Month-End Stock Variance Cost',stockVarianceCost,'']
+      ['POS Sales',salesTotal,'major'],['Less: Cost of Sales',-cogs,''],['GROSS PROFIT',gross,'major'],['Other Income',otherTotal,''],['Less: Operating Expenses',-opex,''],['NET PROFIT / (LOSS)',net,'profit'],['','', ''],['Opening Inventory',invOpening,''],['Production Input Purchases',purchases,''],['Inventory Purchases Captured as Store Expenses (excluded from Opex)',inventoryPurchasesExcluded,''],['Closing Inventory',closingInv,''],['Recipe Consumption Cost (control)',consumptionCost,''],['Month-End Stock Variance Cost',stockVarianceCost,'']
     ].map(([l,v,cls])=>l?`<tr class="${cls}"><td>${esc(l)}</td><td class="num">${money(v)}</td></tr>`:'<tr><td colspan="2">&nbsp;</td></tr>').join('');
     $('paymentBody').innerHTML=Object.entries(pmt).map(([k,v])=>`<tr><td>${esc(k)}</td><td class="num">${money(v)}</td></tr>`).join('')+`<tr class="total-row"><td>Total POS Sales</td><td class="num">${money(salesTotal)}</td></tr>`;
-    $('expenseBody').innerHTML=Object.keys(expBy).sort((a,b)=>expBy[b]-expBy[a]).map(k=>`<tr><td>${esc(k)}</td><td class="num">${money(expBy[k])}</td><td class="num">${opex?((expBy[k]/opex)*100).toFixed(1):'0.0'}%</td></tr>`).join('')+`<tr class="total-row"><td>Total Operating Expenses</td><td class="num">${money(opex)}</td><td class="num">100.0%</td></tr>`;
+    $('expenseBody').innerHTML=Object.keys(expBy).sort((a,b)=>expBy[b]-expBy[a]).map(k=>`<tr><td>${esc(k)}</td><td class="num">${money(expBy[k])}</td><td class="num">${opex?((expBy[k]/opex)*100).toFixed(1):'0.0'}%</td></tr>`).join('')+`<tr class="total-row"><td>Total Operating Expenses</td><td class="num">${money(opex)}</td><td class="num">${opex?'100.0':'0.0'}%</td></tr>`+(inventoryPurchasesExcluded?`<tr><td>Inventory/Ingredient Purchases excluded from Operating Expenses</td><td class="num">${money(inventoryPurchasesExcluded)}</td><td class="num">—</td></tr>`:'');
     $('inventoryBody').innerHTML=rows.sort((a,b)=>(a.store_code+a.name).localeCompare(b.store_code+b.name)).map(r=>{
       const stat=r.endCount?'<span class="tag good">COUNTED</span>':'<span class="tag warn">NO MONTH-END COUNT</span>';
       return `<tr><td>${esc(r.store_code)}</td><td>${esc(r.code)}</td><td>${esc(r.name)}</td><td>${esc(r.unit||'')}</td><td class="num">${qty(r.openingQty)}</td><td class="num">${money(r.openingValue)}</td><td class="num">${qty(r.receivedQty)}</td><td class="num">${money(r.purchaseCost)}</td><td class="num">${qty(r.usedQty)}</td><td class="num">${money(r.consumptionCost)}</td><td class="num">${qty(r.expectedClose)}</td><td class="num">${r.physicalClose==null?'—':qty(r.physicalClose)}</td><td class="num">${r.variance==null?'—':qty(r.variance)}</td><td class="num">${money(r.closingValue)}</td><td>${stat}</td></tr>`
     }).join('')+`<tr class="total-row"><td colspan="5">TOTAL</td><td class="num">${money(invOpening)}</td><td></td><td class="num">${money(purchases)}</td><td></td><td class="num">${money(consumptionCost)}</td><td colspan="3"></td><td class="num">${money(closingInv)}</td><td></td></tr>`;
-    $('generatedAt').textContent='Generated '+new Date().toLocaleString('en-ZA')+'. Production-input Cost of Sales is calculated as Opening Inventory + Purchases − Closing Inventory. Prior physical-count adjustments during the month are carried into expected closing quantities. Where a month-end physical count is missing, expected closing quantity is used provisionally.';
+    $('generatedAt').textContent='Generated '+new Date().toLocaleString('en-ZA')+'. Cost of Sales is based on recipe consumption using available production-input costs, adjusted by month-end physical stock variance where a month-end count exists. Inventory/ingredient purchases captured in Store Expenses are excluded from Operating Expenses to prevent double-counting. Where a month-end physical count is missing, expected closing quantity is used provisionally.';
     $('report').classList.remove('hidden');setStatus('Report loaded successfully for '+label+'.',ready?'good':issues.length?'warn':'');
   }catch(e){console.error(e);setStatus('Could not load month-end report: '+e.message,'bad')}
 }
