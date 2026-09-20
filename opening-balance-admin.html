@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Feasterville - Opening Balances</title>
+<style>
+*{box-sizing:border-box}body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8;color:#17212b}.top{position:sticky;top:0;z-index:20;background:#111827;padding:10px;box-shadow:0 2px 8px #0003}.nav{max-width:1240px;margin:auto;display:flex;gap:8px;flex-wrap:wrap}.nav button,.nav a{border:0;border-radius:8px;padding:11px 14px;font-weight:700;cursor:pointer;text-decoration:none;background:#fff;color:#111827}.nav .active{background:#2563eb;color:white}.nav .green{background:#16a34a;color:white}.wrap{max-width:1240px;margin:18px auto;padding:0 14px}.card{background:#fff;border:1px solid #d9dee5;border-radius:12px;padding:18px;margin-bottom:18px;box-shadow:0 1px 3px #0001}h1,h2{margin-top:0}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}label{font-weight:700;font-size:13px}input,select{width:100%;padding:10px;border:1px solid #b9c2cc;border-radius:7px;margin-top:5px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}button.primary{background:#2563eb;color:#fff;border:0;border-radius:8px;padding:11px 18px;font-weight:800;cursor:pointer}button.secondary{background:#334155;color:#fff;border:0;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer}.msg{margin-top:10px;font-weight:700}.ok{color:#15803d}.bad{color:#b91c1c}.note{background:#eff6ff;border:1px solid #bfdbfe;border-radius:9px;padding:12px;margin:12px 0;color:#1e3a8a}.toolbar{display:flex;gap:10px;align-items:end;flex-wrap:wrap}.toolbar>label{min-width:220px}.tablewrap{overflow:auto;max-height:620px;margin-top:14px}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px;border-bottom:1px solid #e5e7eb;text-align:left;white-space:nowrap}th{background:#f8fafc;position:sticky;top:60px;z-index:2}.qty{max-width:170px}.current{font-weight:800}.save{background:#16a34a;color:#fff;border:0;border-radius:7px;padding:8px 13px;font-weight:800;cursor:pointer}.muted{color:#64748b;font-size:13px}.statusbar{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px}.pill{padding:5px 9px;border-radius:999px;background:#e2e8f0;font-size:12px;font-weight:700}@media(max-width:760px){.grid{grid-template-columns:1fr}.nav button,.nav a{flex:1 1 auto;text-align:center}th{top:105px}.toolbar>label{min-width:100%}}
+</style>
+</head>
+<body>
+<div class="top"><div class="nav">
+<a href="index.html">POS HOME</a>
+<a class="green" href="production-input-admin.html">PRODUCTION INPUT ADMIN</a>
+<button class="active" type="button">OPENING BALANCES</button>
+<button type="button" onclick="loadBalances()">REFRESH</button>
+<button type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>
+</div></div>
+<div class="wrap">
+<div class="card">
+<h1>Opening Balances Administration</h1>
+<div id="who">Checking authorised Manager session…</div>
+<div class="note"><b>Manager only.</b> Adjust opening quantities by store. Production Input opening balances and Sellable Item opening balances are maintained separately. Normal stock receipts must still be captured through Production Input Admin.</div>
+<div id="adminLogin" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid #ddd">
+<h3 style="margin:0 0 10px">Manager Login</h3>
+<div class="grid"><div><label>Email<input id="adminEmail" type="email" autocomplete="username" placeholder="POS manager email"></label></div><div><label>Password<input id="adminPassword" type="password" autocomplete="current-password" placeholder="Password"></label></div></div>
+<div class="actions"><button class="primary" type="button" onclick="adminSignIn()">SIGN IN</button></div><div id="loginMsg" class="msg"></div>
+</div>
+</div>
+<div class="card" id="balancesCard">
+<h2>Adjust Opening Balances</h2>
+<div class="toolbar">
+<label>Store<select id="store"><option value="NDAYENI">Ndayini</option><option value="SIVANA">Sivana</option></select></label>
+<label>Item Type<select id="type"><option value="raw">Production Inputs</option><option value="finished">Sellable Items</option></select></label>
+<label>Search<input id="search" placeholder="Search code or item name"></label>
+<button class="primary" type="button" onclick="loadBalances()">LOAD / REFRESH</button>
+</div>
+<div class="statusbar"><span class="pill" id="datePill">Balance Date: —</span><span class="pill" id="countPill">0 items</span></div>
+<div id="msg" class="msg"></div>
+<div class="tablewrap"><table><thead><tr><th>Code</th><th>Item</th><th>Unit</th><th>Current Opening Balance</th><th>New Opening Balance</th><th>Action</th></tr></thead><tbody id="rows"><tr><td colspan="6">Sign in as Manager to load opening balances.</td></tr></tbody></table></div>
+</div>
+</div>
+<script>
+const ROOT='https://sflyjcgbxbcwspfuzone.supabase.co';
+const BASE=ROOT+'/rest/v1/';
+const KEY='sb_publishable_iASq-tni6KYrFK0R2S35zA_mpwt4MqM';
+let verifiedUser=null, loadedRows=[];
+function tok(){return sessionStorage.getItem('feastervilleCloudAccessToken')||localStorage.getItem('feastervilleCloudAccessToken')||''}
+function localDate(){try{return new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Johannesburg',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())}catch(_){return new Date().toISOString().slice(0,10)}}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+async function request(url,options){options=options||{};const headers=Object.assign({'apikey':KEY,'Content-Type':'application/json'},options.headers||{});const token=tok();if(token)headers.Authorization='Bearer '+token;const r=await fetch(url,Object.assign({},options,{headers}));const raw=await r.text();let body=null;if(raw){try{body=JSON.parse(raw)}catch(_){body=raw}}if(!r.ok){const detail=(body&&typeof body==='object'&&(body.msg||body.message||body.error_description||body.error))||raw||('HTTP '+r.status);throw new Error(detail)}return body}
+async function api(path,opt){return request(BASE+path,opt||{})}
+function msg(t,bad){const e=document.getElementById('msg');e.textContent=t||'';e.className='msg '+(bad?'bad':'ok')}
+function role(){return String(verifiedUser?.role||'').toLowerCase()}
+function guard(){const w=document.getElementById('who'),box=document.getElementById('adminLogin');if(role()!=='manager'){w.innerHTML='<span class="bad">Manager sign-in required.</span>';box.style.display='block';document.getElementById('balancesCard').style.opacity='.65';return false}box.style.display='none';document.getElementById('balancesCard').style.opacity='1';w.innerHTML='<span class="ok">Manager session active: '+esc(verifiedUser.name||'Manager')+'</span>';return true}
+async function getManagerProfile(authUser){const data=await api('pos_profiles?user_id=eq.'+encodeURIComponent(authUser.id)+'&select=user_id,display_name,role,store_code,active');const p=Array.isArray(data)&&data.length?data[0]:null;if(!p||String(p.role||'').toLowerCase()!=='manager'||p.active===false)throw new Error('Manager access required.');return p}
+async function activate(authData){if(!authData||!authData.access_token||!authData.user)throw new Error('No login session was returned.');sessionStorage.setItem('feastervilleCloudAccessToken',authData.access_token);if(authData.refresh_token)sessionStorage.setItem('feastervilleCloudRefreshToken',authData.refresh_token);const p=await getManagerProfile(authData.user);verifiedUser={id:authData.user.id,name:p.display_name||authData.user.email,role:'manager',store_code:p.store_code||null};window.currentUser=verifiedUser;guard()}
+async function verify(){const token=tok();if(!token){verifiedUser=null;guard();return false}try{const au=await request(ROOT+'/auth/v1/user');const p=await getManagerProfile(au);verifiedUser={id:au.id,name:p.display_name||au.email,role:'manager',store_code:p.store_code||null};window.currentUser=verifiedUser;guard();return true}catch(_){verifiedUser=null;window.currentUser=null;guard();return false}}
+async function adminSignIn(){const m=document.getElementById('loginMsg');try{m.textContent='Signing in...';m.className='msg';const email=document.getElementById('adminEmail').value.trim(),password=document.getElementById('adminPassword').value;if(!email||!password)throw new Error('Enter email and password.');const data=await request(ROOT+'/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email,password})});await activate(data);m.textContent='Manager signed in successfully.';m.className='msg ok';document.getElementById('adminPassword').value='';await loadBalances()}catch(e){m.textContent=e.message;m.className='msg bad'}}
+async function products(store){const r=await request(ROOT+'/functions/v1/pos-product-admin',{method:'POST',body:JSON.stringify({action:'list',store_code:store})});return ((r&&r.items)||[]).filter(x=>x.active!==false)}
+function renderFilter(){const q=String(document.getElementById('search').value||'').trim().toLowerCase();const rows=q?loadedRows.filter(x=>(x.code+' '+x.name).toLowerCase().includes(q)):loadedRows;const body=document.getElementById('rows');body.innerHTML=rows.map(x=>'<tr><td><b>'+esc(x.code)+'</b></td><td>'+esc(x.name)+'</td><td>'+esc(x.unit||'')+'</td><td class="current">'+Number(x.opening||0).toFixed(3)+'</td><td><input class="qty openingValue" type="number" min="0" step="0.001" value="'+Number(x.opening||0).toFixed(3)+'" data-code="'+esc(x.code)+'"></td><td><button class="save" type="button" data-code="'+esc(x.code)+'">SAVE</button></td></tr>').join('')||'<tr><td colspan="6">No matching items.</td></tr>';body.querySelectorAll('.save').forEach(b=>b.addEventListener('click',()=>saveOne(b.dataset.code)));document.getElementById('countPill').textContent=rows.length+' item'+(rows.length===1?'':'s')}
+async function loadBalances(){if(!guard())return;const store=document.getElementById('store').value,type=document.getElementById('type').value,d=localDate();localStorage.setItem('feastervilleStoreCode',store);document.getElementById('datePill').textContent='Balance Date: '+d;document.getElementById('rows').innerHTML='<tr><td colspan="6">Loading opening balances…</td></tr>';msg('');try{let items,counts,key;if(type==='raw'){[items,counts]=await Promise.all([api('pos_store_production_inputs?store_code=eq.'+encodeURIComponent(store)+'&active=eq.true&select=code,name,unit&order=name.asc'),api('pos_store_input_counts?store_code=eq.'+encodeURIComponent(store)+'&count_date=eq.'+d+'&select=input_code,opening_qty')]);key='input_code'}else{[items,counts]=await Promise.all([products(store),api('pos_store_product_counts?store_code=eq.'+encodeURIComponent(store)+'&count_date=eq.'+d+'&select=product_code,opening_qty')]);key='product_code'}const map=Object.fromEntries((counts||[]).map(x=>[x[key],x]));loadedRows=(items||[]).map(x=>({code:x.code,name:x.name,unit:type==='raw'?(x.unit||''):'EA',opening:Number(map[x.code]?.opening_qty||0)}));renderFilter();msg('Opening balances loaded for '+(store==='SIVANA'?'Sivana':'Ndayini')+'.')}catch(e){loadedRows=[];document.getElementById('rows').innerHTML='<tr><td colspan="6">Could not load opening balances.</td></tr>';msg('Could not load: '+e.message,true)}}
+async function saveOne(code){if(!guard())return;const store=document.getElementById('store').value,type=document.getElementById('type').value,d=localDate();const input=document.querySelector('.openingValue[data-code="'+CSS.escape(code)+'"]');const opening=Number(input?.value);if(!Number.isFinite(opening)||opening<0){alert('Enter a valid opening balance of zero or more.');return}try{if(type==='raw'){const old=(await api('pos_store_input_counts?store_code=eq.'+encodeURIComponent(store)+'&input_code=eq.'+encodeURIComponent(code)+'&count_date=eq.'+d+'&select=received_qty,used_qty,physical_count&limit=1'))[0]||{};await api('pos_store_input_counts?on_conflict=store_code,input_code,count_date',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({store_code:store,input_code:code,count_date:d,opening_qty:opening,received_qty:Number(old.received_qty||0),used_qty:Number(old.used_qty||0),physical_count:Number(old.physical_count||0)})})}else{await api('pos_store_product_counts?on_conflict=store_code,product_code,count_date',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({store_code:store,product_code:code,count_date:d,opening_qty:opening})})}const row=loadedRows.find(x=>x.code===code);if(row)row.opening=opening;renderFilter();msg(code+' opening balance saved successfully for '+(store==='SIVANA'?'Sivana':'Ndayini')+'.')}catch(e){msg('Could not save '+code+': '+e.message,true)}}
+document.getElementById('store').addEventListener('change',loadBalances);document.getElementById('type').addEventListener('change',loadBalances);document.getElementById('search').addEventListener('input',renderFilter);
+(async()=>{document.getElementById('datePill').textContent='Balance Date: '+localDate();document.getElementById('store').value=localStorage.getItem('feastervilleStoreCode')||'NDAYENI';if(await verify())await loadBalances()})();
+</script>
+</body>
+</html>

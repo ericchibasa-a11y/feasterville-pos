@@ -7637,5 +7637,39 @@ window.openHistoricalCashupV59=open;window.loadHistoricalCashupV59=load;
 })();
 </script>
 <!-- BUILD: V75_CASHUP_RESTORE_PLUS_PRODUCTION_ADMIN_20260918 -->
+
+<style id="fvOpeningBalancesAdminNavStyleV78">
+#fvOpeningBalancesAdminNav{background:#2563eb;color:#fff;font-weight:800}
+</style>
+<script>
+/* V78 — Manager Opening Balances dedicated administration access */
+(function(){
+ 'use strict';
+ if(window.__fvOpeningBalancesAdminNavV78)return;window.__fvOpeningBalancesAdminNavV78=true;
+ function role(){
+   const cu=window.currentUser||window.salesSessionUser||{};
+   return String(cu.role||'').toLowerCase();
+ }
+ function mount(){
+   const bar=document.getElementById('liveTopBar');
+   if(!bar)return;
+   let b=document.getElementById('fvOpeningBalancesAdminNav');
+   if(!b){
+     b=document.createElement('button');
+     b.id='fvOpeningBalancesAdminNav';
+     b.type='button';
+     b.textContent='OPENING BALANCES';
+     b.onclick=function(){window.location.href='opening-balance-admin.html';};
+     const prod=document.getElementById('fvProductionInputAdminV72');
+     if(prod&&prod.parentNode===bar)bar.insertBefore(b,prod.nextSibling);else bar.appendChild(b);
+   }
+   b.style.display=role()==='manager'?'inline-block':'none';
+ }
+ [50,300,800,1500,3000].forEach(ms=>setTimeout(mount,ms));
+ document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')mount();});
+ window.fvOpeningBalancesAdminMountV78=mount;
+})();
+</script>
+<!-- BUILD: V78_OPENING_BALANCES_DEDICATED_ADMIN_20260920 -->
 <!-- BUILD: STABLE_SALESPERSON_FIX_V2_20260920 -->
 </html>
