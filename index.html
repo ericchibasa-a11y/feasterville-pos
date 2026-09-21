@@ -8033,3 +8033,37 @@ window.openUnclosedCashupsV80=open;window.loadUnclosedCashupsV80=load;window.fvU
 <!-- BUILD: V82_CATEGORISED_DIRECT_ACCESS_NAV_20260921 -->
 
 </html>
+
+<script>
+/* V83 — keep categorised navigation in sync with the role after sign-in/sign-out. Navigation only. */
+(function(){
+ 'use strict';
+ if(window.__fvCategorisedNavLoginSyncV83)return; window.__fvCategorisedNavLoginSyncV83=true;
+ let lastRole='__boot__';
+ function currentRole(){
+   return String((window.inventorySessionUser&&window.inventorySessionUser.role)||
+                 (window.currentUser&&window.currentUser.role)||
+                 (window.salesSessionUser&&window.salesSessionUser.role)||'').toLowerCase();
+ }
+ function refresh(force){
+   const r=currentRole();
+   if(force || r!==lastRole){
+     lastRole=r;
+     try{ window.fvFunctionNavV82&&window.fvFunctionNavV82.build&&window.fvFunctionNavV82.build(); }catch(e){}
+     try{ window.fvFunctionNavV82&&window.fvFunctionNavV82.syncRole&&window.fvFunctionNavV82.syncRole(); }catch(e){}
+     const st=document.getElementById('fvFunctionNavStatusV82');
+     if(st && !r) st.textContent='Sign in to see the function categories available for your role.';
+     else if(st && r==='manager') st.textContent='Manager navigation ready — choose a category, then a function.';
+     else if(st && r==='salesperson') st.textContent='Salesperson navigation ready — POS & Sales and Cash-Ups are available.';
+     else if(st && r==='inventory_control') st.textContent='Inventory Controller navigation ready — Inventory functions are available.';
+   }
+ }
+ setInterval(()=>refresh(false),750);
+ document.addEventListener('click',()=>setTimeout(()=>refresh(true),250),true);
+ window.addEventListener('storage',()=>refresh(true));
+ window.addEventListener('focus',()=>refresh(true));
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refresh(true);});
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>refresh(true));else refresh(true);
+})();
+</script>
+<!-- BUILD: V83_CATEGORISED_NAV_LOGIN_ROLE_SYNC_20260921 -->
