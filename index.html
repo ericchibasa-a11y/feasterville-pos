@@ -4066,8 +4066,15 @@ document.addEventListener('DOMContentLoaded',function(){
 #fvCashupModal{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:100000;display:none;align-items:center;justify-content:center;padding:18px}
 #fvCashupCard{background:#fff;color:#171717;width:min(620px,96vw);max-height:92vh;overflow:auto;border-radius:14px;padding:20px;box-shadow:0 15px 50px rgba(0,0,0,.35)}
 #fvCashupCard table{width:100%;border-collapse:collapse;margin:12px 0}#fvCashupCard td{padding:7px;border-bottom:1px solid #ddd}#fvCashupCard td:last-child{text-align:right;font-weight:700}
-#fvCashupCard input,#fvCashupCard textarea{width:100%;padding:10px;margin:5px 0 10px;border:1px solid #bbb;border-radius:7px}
+#fvCashupCard input,#fvCashupCard textarea,#fvCashupCard select{width:100%;padding:10px;margin:5px 0 10px;border:1px solid #bbb;border-radius:7px;box-sizing:border-box}
+#fvCashExpenseEntry{display:grid;grid-template-columns:1.25fr 1fr auto;gap:10px;align-items:end}
+#fvCashExpenseEntry button{margin:5px 0 10px;padding:10px 14px;border:0;border-radius:8px;font-weight:700;cursor:pointer;background:#34465c;color:#fff;white-space:nowrap}
+#fvCashExpenseList{margin:0 0 10px;padding:10px 12px;border:1px solid #d6dde5;border-radius:8px;background:#f8fafc;font-size:13px}
+#fvCashExpenseList .fv-exp-row{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid #e4e9ee}
+#fvCashExpenseList .fv-exp-row:last-child{border-bottom:0}
+#fvCashExpenseList button{border:0;background:#e9eef4;border-radius:6px;padding:3px 7px;cursor:pointer}
 #fvCashupActions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}#fvCashupActions button{padding:10px 14px;border-radius:8px;border:0;font-weight:700;cursor:pointer}
+@media(max-width:600px){#fvCashExpenseEntry{grid-template-columns:1fr}}
 </style>
 <div id="fvCashupModal">
  <div id="fvCashupCard">
@@ -4075,10 +4082,15 @@ document.addEventListener('DOMContentLoaded',function(){
   <div id="fvCashupIdentity" class="small"></div>
   <div id="fvCashupSummary">Loading today's sales...</div>
   <label><b>Opening Cash Float (R)</b></label><input id="fvOpeningFloat" type="number" min="0" step="0.01" value="0">
-  <label><b>Cash Expense Type</b></label><select id="fvCashExpenseType"><option value="">No cash expense</option><option value="Kota Bread">Kota Bread</option><option value="Transport">Transport</option><option value="Electricity">Electricity</option><option value="Other Expenses">Other Expense</option></select>
-  <label><b>Cash Expense Paid (R)</b></label><input id="fvCashExpense" type="number" min="0" step="0.01" value="0" placeholder="Amount paid from till">
+  <div id="fvCashExpenseEntry">
+    <div><label><b>Cash Expense Type</b></label><select id="fvCashExpenseType"><option value="">No cash expense</option><option value="Kota Bread">Kota Bread</option><option value="Transport">Transport</option><option value="Electricity">Electricity</option><option value="Other Expenses">Other Expense</option></select></div>
+    <div><label><b>Cash Expense Paid (R)</b></label><input id="fvCashExpense" type="number" min="0" step="0.01" value="0" placeholder="Amount paid from till"></div>
+    <button type="button" id="fvAddCashExpense">ADD EXPENSE</button>
+  </div>
+  <div id="fvCashExpenseDetailWrap" style="display:none"><label><b>Other Expense Description</b></label><input id="fvCashExpenseDetail" placeholder="Describe the Other Expense"></div>
+  <div id="fvCashExpenseList">No cash expenses added.</div>
   <label><b>Actual Cash Counted (R)</b></label><input id="fvActualCash" type="number" min="0" step="0.01" placeholder="Enter cash counted">
-  <label><b>Notes</b></label><textarea id="fvCashupNotes" rows="2" placeholder="Required for Other Expense"></textarea>
+  <label><b>Notes</b></label><textarea id="fvCashupNotes" rows="3" placeholder="Additional cash-up notes (all added expenses will also be saved in Notes)"></textarea>
   <div id="fvCashupVariance" style="font-weight:700;margin:8px 0 14px"></div>
   <div id="fvCashupActions"><button type="button" onclick="closeFvCashupModal()">CANCEL</button><button type="button" class="primary" id="fvSubmitCashup">CLOSE DAY</button></div>
  </div>
@@ -4091,6 +4103,7 @@ document.addEventListener('DOMContentLoaded',function(){
  const BASE='https://sflyjcgbxbcwspfuzone.supabase.co/rest/v1';
  const KEY='sb_publishable_iASq-tni6KYrFK0R2S35zA_mpwt4MqM';
  let totals=null;
+ let cashExpenses=[];
  const money=n=>'R'+Number(n||0).toFixed(2);
  function u(){if(window.currentUser&&String(window.currentUser.role||'').toLowerCase()==='manager')return window.currentUser;return window.salesSessionUser||window.currentUser||null}
  function tok(){return sessionStorage.getItem('feastervilleCloudAccessToken')||localStorage.getItem('feastervilleCloudAccessToken')||''}
@@ -4135,7 +4148,35 @@ document.addEventListener('DOMContentLoaded',function(){
    rows.forEach(r=>{let v=Number(r.total||0),b=payBucket(r.payment);x[b]+=v;x.total+=v});return x;
  }
  async function existing(){const me=u();if(!me||!me.id)return[];return api('pos_daily_cashups?store_code=eq.'+encodeURIComponent(store())+'&cashup_date=eq.'+day()+'&user_id=eq.'+encodeURIComponent(me.id)+'&select=*')}
- function variance(){if(!totals)return;let f=Number(document.getElementById('fvOpeningFloat').value||0),e=Number(document.getElementById('fvCashExpense').value||0),a=Number(document.getElementById('fvActualCash').value||0),expected=totals.cash+f-e,v=a-expected;document.getElementById('fvCashupVariance').textContent='Expected cash: '+money(expected)+' (after cash expense '+money(e)+') | Difference: '+money(v)}
+ function expenseTotal(){return cashExpenses.reduce((a,x)=>a+Number(x.amount||0),0)}
+ function renderExpenseList(){
+   const box=document.getElementById('fvCashExpenseList');if(!box)return;
+   if(!cashExpenses.length){box.textContent='No cash expenses added.';}else{
+     box.innerHTML=cashExpenses.map((x,i)=>'<div class="fv-exp-row"><span><b>'+x.type+'</b>'+(x.detail?' — '+x.detail:'')+'</span><span>'+money(x.amount)+' <button type="button" data-exp-remove="'+i+'">REMOVE</button></span></div>').join('')+'<div class="fv-exp-row"><span><b>Total Expenses</b></span><span><b>'+money(expenseTotal())+'</b></span></div>';
+     box.querySelectorAll('[data-exp-remove]').forEach(b=>b.onclick=function(){cashExpenses.splice(Number(this.getAttribute('data-exp-remove')),1);renderExpenseList();renderCashupSummary();variance();});
+   }
+ }
+ function renderCashupSummary(){
+   if(!totals)return;
+   document.getElementById('fvCashupSummary').innerHTML='<table><tr><td>Number of sales</td><td>'+totals.count+'</td></tr><tr><td>Cash Sales</td><td>'+money(totals.cash)+'</td></tr><tr><td>Card Sales</td><td>'+money(totals.card)+'</td></tr><tr><td>Mr D</td><td>'+money(totals.mrd)+'</td></tr><tr><td>Uber Eats</td><td>'+money(totals.uber)+'</td></tr><tr><td><b>Total Expenses</b></td><td><b>'+money(expenseTotal())+'</b></td></tr><tr><td><b>Total Sales</b></td><td><b>'+money(totals.total)+'</b></td></tr></table>';
+ }
+ function clearPendingExpense(){
+   document.getElementById('fvCashExpenseType').value='';
+   document.getElementById('fvCashExpense').value='0';
+   const d=document.getElementById('fvCashExpenseDetail');if(d)d.value='';
+   const w=document.getElementById('fvCashExpenseDetailWrap');if(w)w.style.display='none';
+ }
+ function addPendingExpense(showAlert=true){
+   const type=document.getElementById('fvCashExpenseType').value;
+   const amount=Number(document.getElementById('fvCashExpense').value||0);
+   const detail=(document.getElementById('fvCashExpenseDetail')?.value||'').trim();
+   if(!type){if(showAlert)alert('Select the cash expense type.');return false}
+   if(!(amount>0)){if(showAlert)alert('Enter the cash expense amount.');return false}
+   if(type==='Other Expenses'&&!detail){if(showAlert)alert('Describe the Other Expense.');return false}
+   cashExpenses.push({type,amount,detail});
+   clearPendingExpense();renderExpenseList();renderCashupSummary();variance();return true;
+ }
+ function variance(){if(!totals)return;let f=Number(document.getElementById('fvOpeningFloat').value||0),e=expenseTotal(),a=Number(document.getElementById('fvActualCash').value||0),expected=totals.cash+f-e,v=a-expected;document.getElementById('fvCashupVariance').textContent='Expected cash: '+money(expected)+' (after total expenses '+money(e)+') | Difference: '+money(v)}
  window.openFvCashup=async function(){
    try{
     const me=u();if(!me||!['salesperson','manager'].includes(me.role)){alert('Cash-up is available to Salesperson and Manager accounts only.');return}
@@ -4149,18 +4190,28 @@ document.addEventListener('DOMContentLoaded',function(){
     }
     let ex=await existing();if(ex.length){alert((me.role==='manager'?'This store':'Your sales')+' for '+day()+' have already been closed.');return}
     document.getElementById('fvCashupModal').style.display='flex';document.getElementById('fvCashupIdentity').textContent=(me.role==='manager'?'Manager — All store sales':(me.name||me.display_name||me.email))+' — '+(store()==='SIVANA'?'Sivana':'Ndayini')+' — '+day();
-    totals=await calc();document.getElementById('fvCashupSummary').innerHTML='<table><tr><td>Number of sales</td><td>'+totals.count+'</td></tr><tr><td>Cash Sales</td><td>'+money(totals.cash)+'</td></tr><tr><td>Card Sales</td><td>'+money(totals.card)+'</td></tr><tr><td>Mr D</td><td>'+money(totals.mrd)+'</td></tr><tr><td>Uber Eats</td><td>'+money(totals.uber)+'</td></tr><tr><td>Other</td><td>'+money(totals.other)+'</td></tr><tr><td><b>Total Sales</b></td><td><b>'+money(totals.total)+'</b></td></tr></table>';variance();
+    cashExpenses=[];clearPendingExpense();renderExpenseList();document.getElementById('fvCashupNotes').value='';document.getElementById('fvActualCash').value='';
+    totals=await calc();renderCashupSummary();variance();
    }catch(e){console.error(e);alert('Could not prepare cash-up: '+e.message)}
  }
  window.closeFvCashupModal=function(){document.getElementById('fvCashupModal').style.display='none'};
- document.getElementById('fvOpeningFloat').addEventListener('input',variance);document.getElementById('fvCashExpense').addEventListener('input',variance);document.getElementById('fvActualCash').addEventListener('input',variance);
+ document.getElementById('fvOpeningFloat').addEventListener('input',variance);document.getElementById('fvActualCash').addEventListener('input',variance);
+ document.getElementById('fvCashExpenseType').addEventListener('change',function(){document.getElementById('fvCashExpenseDetailWrap').style.display=this.value==='Other Expenses'?'block':'none';});
+ document.getElementById('fvAddCashExpense').addEventListener('click',function(){addPendingExpense(true)});
  document.getElementById('fvSubmitCashup').onclick=async function(){
    try{
     const me=u();if(!me||!totals)return;let actualRaw=document.getElementById('fvActualCash').value;if(actualRaw===''){alert('Enter the actual cash counted.');return}
     let ex=await existing();if(ex.length){alert('This day is already closed.');return}
-    let f=Number(document.getElementById('fvOpeningFloat').value||0),e=Number(document.getElementById('fvCashExpense').value||0),expenseType=document.getElementById('fvCashExpenseType').value,expenseNotes=document.getElementById('fvCashupNotes').value.trim();if(e>0&&!expenseType){alert('Select the cash expense type.');return}if(e>0&&expenseType==='Other Expenses'&&!expenseNotes){alert('Describe the Other Expense in Notes.');return}let a=Number(actualRaw),expected=totals.cash+f-e,notes=(e>0?'Cash expense: '+expenseType+' — '+money(e)+(expenseNotes?' | '+expenseNotes:''):(expenseNotes||null));
+    const pendingType=document.getElementById('fvCashExpenseType').value,pendingAmount=Number(document.getElementById('fvCashExpense').value||0);
+    if(pendingType||pendingAmount>0){if(!addPendingExpense(true))return;}
+    let f=Number(document.getElementById('fvOpeningFloat').value||0),e=expenseTotal(),cashupNotes=document.getElementById('fvCashupNotes').value.trim();
+    let a=Number(actualRaw),expected=totals.cash+f-e;
+    const expenseNote=cashExpenses.length?'Cash expenses: '+cashExpenses.map(x=>x.type+' — '+money(x.amount)+(x.detail?' ('+x.detail+')':'')).join(' | ')+' | Total Expenses — '+money(e):'';
+    let notes=[expenseNote,cashupNotes].filter(Boolean).join(' | ')||null;
     let payload={store_code:store(),cashup_date:day(),user_id:me.id,salesperson_name:me.role==='manager'?('Manager — '+(store()==='SIVANA'?'Sivana':'Ndayini')):(me.name||me.display_name||me.email||'Salesperson'),opening_float:f,cash_sales:totals.cash,card_sales:totals.card,mr_d_sales:totals.mrd,uber_eats_sales:totals.uber,other_sales:totals.other,total_sales:totals.total,expected_cash:expected,actual_cash:a,sale_count:totals.count,notes:notes,status:'CLOSED'};
-    await api('pos_daily_cashups',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify(payload)});if(e>0)await api('pos_store_expenses',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({store_code:store(),expense_date:day(),category:expenseType,supplier:null,description:expenseNotes||('Cash paid from till — '+expenseType),payment_method:'Cash',amount:e,reference:'Cash-Up '+day()})});closeFvCashupModal();alert('Day closed successfully. Expected cash '+money(expected)+' | Actual cash '+money(a)+' | Difference '+money(a-expected));
+    await api('pos_daily_cashups',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify(payload)});
+    for(const x of cashExpenses){await api('pos_store_expenses',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({store_code:store(),expense_date:day(),category:x.type,supplier:null,description:x.detail||('Cash paid from till — '+x.type),payment_method:'Cash',amount:x.amount,reference:'Cash-Up '+day()})});}
+    cashExpenses=[];clearPendingExpense();renderExpenseList();closeFvCashupModal();alert('Day closed successfully. Total expenses '+money(e)+' | Expected cash '+money(expected)+' | Actual cash '+money(a)+' | Difference '+money(a-expected));
    }catch(e){console.error(e);alert('Cash-up could not be saved: '+e.message)}
  };
  function addButton(){return;let me=u();if(!me||!['salesperson','manager'].includes(me.role)||document.getElementById('fvCashupBtn'))return;let target=document.querySelector('header .actions')||document.querySelector('header')||document.querySelector('.topbar')||document.body;let b=document.createElement('button');b.id='fvCashupBtn';b.type='button';b.textContent=me.role==='manager'?'STORE CASH-UP / CLOSE DAY':'CLOSE DAY / CASH-UP';b.onclick=openFvCashup;target.appendChild(b)}
@@ -4168,7 +4219,7 @@ document.addEventListener('DOMContentLoaded',function(){
  setInterval(addButton,1000);addButton();
 })();
 </script>
-<!-- BUILD: SALESPERSON_MANAGER_DAILY_CASHUP_V55_20260909 -->
+<!-- BUILD: SALESPERSON_MANAGER_DAILY_CASHUP_V56_MULTI_EXPENSE_20260921 -->
 
 
 <script>
