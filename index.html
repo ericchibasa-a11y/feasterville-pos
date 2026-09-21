@@ -96,7 +96,7 @@ body.print-report #reportContent { position:absolute; left:0; top:0; width:100%;
   <b>STORE:</b>
   <select id="storeLocationSelect" style="font-weight:700">
     <option value="NDAYENI">Ndayeni</option>
-    <option value="SIVANA">Sivana</option>
+    <option value="SIVANA">Sivana</option><option value="BIRCH_ACRES">Birch Acres</option>
       </select>
   <span id="storeLocationBadge" style="font-weight:700">Ndayeni POS</span>
 </div>
@@ -244,7 +244,7 @@ body.print-report #reportContent { position:absolute; left:0; top:0; width:100%;
   <h2>Sellable Items Management</h2>
   <p class="small">Manager only. Edit the sellable menu for the selected store. Changes are saved live and do not affect the other store.</p>
   <div class="order-head">
-    <label><b>Store</b><br><select id="itemStore"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select></label>
+    <label><b>Store</b><br><select id="itemStore"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option><option value="BIRCH_ACRES">Birch Acres</option></select></label>
     <label><b>Code</b><br><input id="itemCode" placeholder="e.g. K1"></label>
     <label><b>Description</b><br><input id="itemName" placeholder="Item description" style="min-width:280px"></label>
     <label><b>Category</b><br><input id="itemCategory" placeholder="Category"></label>
@@ -266,7 +266,7 @@ body.print-report #reportContent { position:absolute; left:0; top:0; width:100%;
 <input id="staffEmail" type="email" placeholder="Salesperson email">
 <input id="staffDisplayName" placeholder="Display name">
 <input id="staffPassword" type="password" placeholder="Temporary password (min 6)">
-<label><b>Assigned Store</b><br><select id="staffStore"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select></label>
+<label><b>Assigned Store</b><br><select id="staffStore"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option><option value="BIRCH_ACRES">Birch Acres</option></select></label>
 <button class="primary" type="button" id="createStaffBtn">CREATE SALESPERSON</button>
 <button type="button" id="refreshStaffBtn">REFRESH USERS</button>
 </div>
@@ -497,7 +497,7 @@ body.print-report #reportContent { position:absolute; left:0; top:0; width:100%;
   <h2>Store Profit &amp; Loss</h2>
   <p class="small">Manager only. Uses live POS sales, other income and captured store expenses. Sales are taken directly from completed POS sales to avoid cash-up duplication.</p>
   <div class="order-head" style="align-items:end;flex-wrap:wrap">
-    <label><b>Store</b><br><select id="plStore"><option value="ALL">All Stores</option><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select></label>
+    <label><b>Store</b><br><select id="plStore"><option value="ALL">All Stores</option><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option><option value="BIRCH_ACRES">Birch Acres</option></select></label>
     <label><b>From Date</b><br><input id="plFrom" type="date"></label>
     <label><b>To Date</b><br><input id="plTo" type="date"></label>
     <button type="button" class="primary" id="plRefreshBtn">VIEW PROFIT / LOSS</button>
@@ -507,10 +507,10 @@ body.print-report #reportContent { position:absolute; left:0; top:0; width:100%;
   <p id="plStatus" class="small"></p>
   <div class="inv-grid" style="margin:12px 0">
     <div class="inv-card" style="min-width:360px;flex:1"><h3 style="margin-top:0">Capture Other Income</h3><div style="display:flex;flex-direction:row;gap:10px;align-items:flex-end;flex-wrap:wrap">
-      <label style="display:block;flex:1;min-width:130px"><b>Store</b><br><select id="oiStore" style="width:100%;box-sizing:border-box"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select></label><label style="display:block;flex:1;min-width:130px"><b>Date</b><br><input id="oiDate" style="width:100%;box-sizing:border-box" type="date"></label><label style="display:block;flex:1;min-width:130px"><b>Category</b><br><select id="oiCategory" style="width:100%;box-sizing:border-box"><option>Other Income</option><option>Commission</option><option>Delivery Income</option><option>Refund / Recovery</option><option>Sale of Waste / Scrap</option><option>Other</option></select></label><label style="display:block;flex:1;min-width:130px"><b>Amount</b><br><input id="oiAmount" style="width:100%;box-sizing:border-box" type="number" min="0" step="0.01" placeholder="R0.00"></label><label style="display:block;flex:1;min-width:130px"><b>Description</b><br><input id="oiDescription" style="width:100%;box-sizing:border-box" placeholder="Income details"></label><button type="button" class="primary" id="oiSaveBtn">SAVE OTHER INCOME</button>
+      <label style="display:block;flex:1;min-width:130px"><b>Store</b><br><select id="oiStore" style="width:100%;box-sizing:border-box"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option><option value="BIRCH_ACRES">Birch Acres</option></select></label><label style="display:block;flex:1;min-width:130px"><b>Date</b><br><input id="oiDate" style="width:100%;box-sizing:border-box" type="date"></label><label style="display:block;flex:1;min-width:130px"><b>Category</b><br><select id="oiCategory" style="width:100%;box-sizing:border-box"><option>Other Income</option><option>Commission</option><option>Delivery Income</option><option>Refund / Recovery</option><option>Sale of Waste / Scrap</option><option>Other</option></select></label><label style="display:block;flex:1;min-width:130px"><b>Amount</b><br><input id="oiAmount" style="width:100%;box-sizing:border-box" type="number" min="0" step="0.01" placeholder="R0.00"></label><label style="display:block;flex:1;min-width:130px"><b>Description</b><br><input id="oiDescription" style="width:100%;box-sizing:border-box" placeholder="Income details"></label><button type="button" class="primary" id="oiSaveBtn">SAVE OTHER INCOME</button>
     </div></div>
     <div class="inv-card" style="min-width:420px;flex:1"><h3 style="margin-top:0">Capture Other Expense</h3><div style="display:flex;flex-direction:row;gap:10px;align-items:flex-end;flex-wrap:wrap">
-      <label style="display:block;flex:1;min-width:130px"><b>Store</b><br><select id="oeStore" style="width:100%;box-sizing:border-box"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select></label><label style="display:block;flex:1;min-width:130px"><b>Date</b><br><input id="oeDate" style="width:100%;box-sizing:border-box" type="date"></label><label style="display:block;flex:1;min-width:130px"><b>Category</b><br><select id="oeCategory" style="width:100%;box-sizing:border-box"><option>Fuel</option><option>Maintenance</option><option>Staff Transport</option><option>Advertising</option><option>Electricity</option><option>Water</option><option>Rent</option><option>Wages / Salaries</option><option>Bank Charges</option><option>Cleaning</option><option>Security</option><option>Telephone / Data</option><option>Other Expenses</option></select></label><label style="display:block;flex:1;min-width:130px"><b>Amount</b><br><input id="oeAmount" style="width:100%;box-sizing:border-box" type="number" min="0" step="0.01" placeholder="R0.00"></label><label style="display:block;flex:1;min-width:130px"><b>Supplier / Description</b><br><input id="oeDescription" style="width:100%;box-sizing:border-box" placeholder="Expense details"></label><button type="button" class="primary" id="oeSaveBtn">SAVE EXPENSE</button>
+      <label style="display:block;flex:1;min-width:130px"><b>Store</b><br><select id="oeStore" style="width:100%;box-sizing:border-box"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option><option value="BIRCH_ACRES">Birch Acres</option></select></label><label style="display:block;flex:1;min-width:130px"><b>Date</b><br><input id="oeDate" style="width:100%;box-sizing:border-box" type="date"></label><label style="display:block;flex:1;min-width:130px"><b>Category</b><br><select id="oeCategory" style="width:100%;box-sizing:border-box"><option>Fuel</option><option>Maintenance</option><option>Staff Transport</option><option>Advertising</option><option>Electricity</option><option>Water</option><option>Rent</option><option>Wages / Salaries</option><option>Bank Charges</option><option>Cleaning</option><option>Security</option><option>Telephone / Data</option><option>Other Expenses</option></select></label><label style="display:block;flex:1;min-width:130px"><b>Amount</b><br><input id="oeAmount" style="width:100%;box-sizing:border-box" type="number" min="0" step="0.01" placeholder="R0.00"></label><label style="display:block;flex:1;min-width:130px"><b>Supplier / Description</b><br><input id="oeDescription" style="width:100%;box-sizing:border-box" placeholder="Expense details"></label><button type="button" class="primary" id="oeSaveBtn">SAVE EXPENSE</button>
     </div></div>
   </div><p id="otherCaptureStatus" class="small"></p>
   <div id="plPrintArea">
@@ -530,7 +530,7 @@ body.print-report #reportContent { position:absolute; left:0; top:0; width:100%;
 
 <section class="panel manager-only" id="storesComparisonPanel" style="grid-column:1/-1;display:none">
   <h2>Stores Comparison &amp; Final Feasterville Profit / Loss</h2>
-  <p class="small">Manager only. Compares Ndayeni and Sivana side by side for the selected period, then combines both stores into one final Feasterville profit or loss statement.</p>
+  <p class="small">Manager only. Compares Ndayeni, Sivana and Birch Acres side by side for the selected period, then combines all stores into one final Feasterville profit or loss statement.</p>
   <div class="order-head" style="align-items:end;flex-wrap:wrap">
     <label><b>From Date</b><br><input id="scFrom" type="date"></label>
     <label><b>To Date</b><br><input id="scTo" type="date"></label>
@@ -542,12 +542,12 @@ body.print-report #reportContent { position:absolute; left:0; top:0; width:100%;
   <div id="scPrintArea">
     <h3>Store Performance Comparison</h3>
     <div style="overflow:auto"><table class="inv-table">
-      <thead><tr><th>Measure</th><th style="text-align:right">Ndayeni</th><th style="text-align:right">Sivana</th><th style="text-align:right">Feasterville Total</th></tr></thead>
+      <thead><tr><th>Measure</th><th style="text-align:right">Ndayeni</th><th style="text-align:right">Sivana</th><th style="text-align:right">Birch Acres</th><th style="text-align:right">Feasterville Total</th></tr></thead>
       <tbody id="scComparisonRows"><tr><td colspan="4">Open this section to load the store comparison.</td></tr></tbody>
     </table></div>
     <div class="inv-grid" style="margin-top:12px">
       <div class="inv-card">Ndayeni Profit / (Loss)<br><b id="scNdayeniNet">R0.00</b></div>
-      <div class="inv-card">Sivana Profit / (Loss)<br><b id="scSivanaNet">R0.00</b></div>
+      <div class="inv-card">Sivana Profit / (Loss)<br><b id="scSivanaNet">R0.00</b></div><div class="inv-card">Birch Acres Profit / (Loss)<br><b id="scBirchNet">R0.00</b></div>
       <div class="inv-card">Final Feasterville Profit / (Loss)<br><b id="scFinalNet">R0.00</b></div>
       <div class="inv-card">Final Profit Margin<br><b id="scFinalMargin">0.0%</b></div>
     </div>
@@ -558,7 +558,7 @@ body.print-report #reportContent { position:absolute; left:0; top:0; width:100%;
     </table></div>
     <h3>Expenses by Store</h3>
     <div style="overflow:auto"><table class="inv-table">
-      <thead><tr><th>Expense Category</th><th style="text-align:right">Ndayeni</th><th style="text-align:right">Sivana</th><th style="text-align:right">Total</th></tr></thead>
+      <thead><tr><th>Expense Category</th><th style="text-align:right">Ndayeni</th><th style="text-align:right">Sivana</th><th style="text-align:right">Birch Acres</th><th style="text-align:right">Total</th></tr></thead>
       <tbody id="scExpenseRows"><tr><td colspan="4">No data loaded.</td></tr></tbody>
     </table></div>
   </div>
@@ -568,7 +568,7 @@ body.print-report #reportContent { position:absolute; left:0; top:0; width:100%;
   <h2>Costing & Pricing / Profitability</h2>
   <p class="small">Manager only. Capture purchase costs for production inputs and direct costs for sellable items. The system uses recipes to calculate product cost, gross profit, margin and suggested selling price.</p>
   <div class="order-head" style="align-items:end;flex-wrap:wrap">
-    <label><b>Store</b><br><select id="costStore"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select></label>
+    <label><b>Store</b><br><select id="costStore"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option><option value="BIRCH_ACRES">Birch Acres</option></select></label>
     <label><b>Target Gross Margin %</b><br><input id="costTargetMargin" type="number" min="0" max="99" step="0.1" value="35" style="width:120px"></label>
     <label><b>Overhead Allowance %</b><br><input id="costOverheadPct" type="number" min="0" max="99" step="0.1" value="0" style="width:120px"></label>
     <label><b>Mr D Fee %</b><br><input id="costMrdFeePct" type="number" min="0" max="99" step="0.1" value="0" style="width:120px"></label>
@@ -825,7 +825,7 @@ const products=[{"category": "REGULAR KOTA", "code": "K1", "name": "Atchar/Lettu
 const ndayeniProducts=[{"category":"REGULAR KOTA","code":"K1","name":"Atchar/Lettuce + Chips + Polony + Special","price":20},{"category":"REGULAR KOTA","code":"K2","name":"Atchar/Lettuce + Chips + Polony + Special + Cheese","price":25},{"category":"REGULAR KOTA","code":"K3","name":"Atchar/Lettuce + Chips + Polony + Special + Vienna","price":28},{"category":"REGULAR KOTA","code":"K4","name":"Atchar/Lettuce + Chips + Vienna + Egg + Cheese","price":33},{"category":"REGULAR KOTA","code":"K5","name":"Atchar/Lettuce + Chips + Chicken Burger + Cheese","price":34},{"category":"REGULAR KOTA","code":"K6","name":"Atchar/Lettuce + Chips + Beef Burger + Cheese","price":36},{"category":"REGULAR KOTA","code":"K7","name":"Atchar/Lettuce + Chips + Russian + Egg + Cheese","price":40},{"category":"REGULAR KOTA","code":"K8","name":"Atchar/Lettuce + Chips + Cheese + Russian + Vienna + Egg","price":47},{"category":"REGULAR KOTA","code":"K9","name":"Atchar/Lettuce + Chips + Beef Burger + Ham + Vienna + Egg + Cheese","price":50},{"category":"REGULAR KOTA","code":"K10","name":"Atchar/Lettuce + Chips + Polony + Beef Burger + Russian + Egg + Cheese","price":55},{"category":"REGULAR KOTA","code":"K11","name":"Atchar/Lettuce + Chips + Special + Polony + Russian + Vienna + Ham + Egg + Cheese","price":60},{"category":"RIB PATTY KOTA","code":"RK1","name":"Rib Patty + Chips + Egg + Cheese","price":40},{"category":"RIB PATTY KOTA","code":"RK2","name":"Rib Patty + Chips + Vienna + Cheese","price":45},{"category":"RIB PATTY KOTA","code":"RK3","name":"Rib Patty + Chips + Ham + Cheese + Egg","price":55},{"category":"RIB PATTY KOTA","code":"RK4","name":"Rib Patty + Chips + Egg + Russian + Bacon + Cheese","price":60},{"category":"RIB PATTY KOTA","code":"RK5","name":"Rib Patty + Chips + Ham + Russian + Vienna + Cheese","price":65},{"category":"CHIPS","code":"C01","name":"Regular Chips","price":20.0},{"category":"CHIPS","code":"C02","name":"Medium Chips","price":30.0},{"category":"CHIPS","code":"C03","name":"Large Chips","price":40.0},{"category":"CHIPS","code":"C04","name":"Xtra-Large Chips","price":50.0},{"category":"CHIPS","code":"C05","name":"Jumbo Chips","price":60.0},{"category":"RUSSIAN & CHIPS","code":"RC1","name":"Russian and Regular Chips","price":30.0},{"category":"RUSSIAN & CHIPS","code":"RC2","name":"2 x Russian and Regular Chips","price":40.0},{"category":"RUSSIAN & CHIPS","code":"RC4","name":"4 x Russian and Regular Chips","price":50.0},{"category":"RUSSIAN & CHIPS","code":"RC5","name":"5 x Russian and Regular Chips","price":60.0},{"category":"VIENNA & CHIPS","code":"VC1","name":"1 x Vienna and Regular Chips","price":29.0},{"category":"VIENNA & CHIPS","code":"VC2","name":"2 x Vienna and Regular Chips","price":38.0},{"category":"ADD-ONS","code":"A01","name":"Pork Rib Patty","price":20.0},{"category":"ADD-ONS","code":"A02","name":"Chicken Rib Patty","price":20.0},{"category":"ADD-ONS","code":"A03","name":"Egg","price":5.0},{"category":"ADD-ONS","code":"A04","name":"Russian","price":13.0},{"category":"ADD-ONS","code":"A05","name":"Vienna","price":10.0},{"category":"ADD-ONS","code":"A06","name":"Cheese","price":5.0},{"category":"ADD-ONS","code":"A07","name":"Beef Burger Patty","price":18.0},{"category":"ADD-ONS","code":"A08","name":"Chicken Burger Patty","price":12.0},{"category":"ADD-ONS","code":"A09","name":"Large Pop Corn","price":8.0},{"category":"ADD-ONS","code":"A10","name":"Medium Pop Corn","price":6.0},{"category":"RIB BURGER","code":"RB1","name":"Rib Burger","price":35.0},{"category":"RIB BURGER","code":"RB2","name":"Rib Burger Chips","price":42.0},{"category":"RIB BURGER","code":"RB3","name":"Rib Burger Cheese Chips","price":48.0},{"category":"RIB BURGER","code":"RB4","name":"Rib Burger Cheese Egg Chips","price":55.0},{"category":"RIB BURGER","code":"RB5","name":"Rib Burger Bacon Egg Cheese Chips","price":60.0},{"category":"BEEF BURGER","code":"BB1","name":"Beef Burger Plain","price":28.0},{"category":"BEEF BURGER","code":"BB2","name":"Beef Burger with Chips","price":36.0},{"category":"BEEF BURGER","code":"BB3","name":"Beef Burger Cheese Chips","price":42.0},{"category":"BEEF BURGER","code":"BB4","name":"Beef Burger Egg Cheese Chips","price":49.0},{"category":"BEEF BURGER","code":"BB5","name":"Beef Burger Bacon Egg Cheese Chips","price":58.0},{"category":"CHICKEN BURGER","code":"CB1","name":"Chicken Burger Plain","price":25.0},{"category":"CHICKEN BURGER","code":"CB2","name":"Chicken Burger with Chips","price":35.0},{"category":"CHICKEN BURGER","code":"CB3","name":"Chicken Burger Cheese Chips","price":40.0},{"category":"CHICKEN BURGER","code":"CB4","name":"Chicken Burger Egg Cheese Chips","price":44.0},{"category":"CHICKEN BURGER","code":"CB5","name":"Chicken Burger x2 Egg Cheese Chips","price":55.0},{"category":"CHICKEN KOTA","code":"CK2","name":"Chips + Chicken Polony + Chicken Vienna + Cheese","price":32.0},{"category":"CHICKEN KOTA","code":"CK3","name":"Chips + Chicken Polony + Chicken Burger + Cheese + Egg","price":35.0},{"category":"CHICKEN KOTA","code":"CK4","name":"Chips + Chicken Polony + Chicken Vienna + Cheese + Egg","price":40.0},{"category":"CHICKEN KOTA","code":"CK5","name":"Chips + Chicken Polony + Chicken Vienna + Chicken Burger + Cheese","price":47.0},{"category":"CHICKEN KOTA","code":"CK6","name":"Chips + Chicken Polony + Chicken Burger + Chicken Vienna + Cheese + Egg","price":55.0},{"category":"CHICKEN KOTA","code":"CK7","name":"Chips + Chicken Polony + Chicken Rib Patty + Chicken Vienna + Cheese + Egg","price":65.0},{"category":"RIB WRAP KOTA","code":"RW1","name":"Chips + Polony + Rib Patty + Special + Cheese","price":42.0},{"category":"RIB WRAP KOTA","code":"RW2","name":"Chips + Polony + Rib Patty + Special + Egg + Cheese","price":47.0},{"category":"RIB WRAP KOTA","code":"RW3","name":"Chips + Polony + Rib Patty + Russian + Cheese + Egg","price":55.0},{"category":"RIB WRAP KOTA","code":"RW4","name":"Chips + Polony + Rib Patty + Ham + Vienna + Egg + Cheese","price":60.0},{"category":"CHICKEN WRAP","code":"CW1","name":"Lettuce + Tomato + Chicken Breast + Cheese","price":35.0},{"category":"CHICKEN WRAP","code":"CW2","name":"Lettuce + Tomato + Chicken Breast + Chicken Patty + Cheese","price":40.0},{"category":"CHICKEN WRAP","code":"CW3","name":"Lettuce + Tomato + Chicken Breast + Chicken Rib Patty + Cheese","price":55.0},{"category":"WINGS & RIBS COMBO","code":"WR1","name":"4 Chicken Wings + 2 Piece Rib with Value Chips","price":65.0},{"category":"WINGS & RIBS COMBO","code":"WR2","name":"8 Chicken Wings + 4 PCS Ribs with Value Chips","price":96.0},{"category":"WINGS & RIBS COMBO","code":"WR3","name":"10 Chicken Wings + 5 PCS Ribs with Value Chips","price":130.0},{"category":"CHICKEN WINGS","code":"W01","name":"4 Chicken Wings with Value Chips","price":40.0},{"category":"CHICKEN WINGS","code":"W02","name":"6 Chicken Wings with Value Chips","price":52.0},{"category":"CHICKEN WINGS","code":"W03","name":"12 Chicken Wings with Value Chips","price":85.0},{"category":"BBQ PORK RIBS","code":"PR1","name":"2 PCS BBQ Cocktail Rib with Value Chips","price":50.0},{"category":"BBQ PORK RIBS","code":"PR2","name":"3 PCS BBQ Cocktail Ribs with Value Chips","price":60.0},{"category":"BBQ PORK RIBS","code":"PR3","name":"5 PCS BBQ Cocktail Ribs with Value Chips","price":90.0},{"category":"BBQ PORK RIBS","code":"PR4","name":"Full Rack Pork Rib with Regular Chips","price":210.0},{"category":"ICE CREAM","code":"ICE-001","name":"ICup Tin Roof","price":25.0},{"category":"ICE CREAM","code":"ICE-002","name":"ICup Mango","price":25.0},{"category":"ICE CREAM","code":"ICE-003","name":"ICup Almond","price":25.0},{"category":"ICE CREAM","code":"ICE-004","name":"ICup Pistachio Nuts","price":25.0},{"category":"ICE CREAM","code":"ICE-005","name":"ICup Bufree","price":25.0},{"category":"ICE CREAM","code":"ICE-006","name":"Polar Sundae","price":15.0},{"category":"ICE CREAM","code":"ICE-007","name":"Polar I Cone","price":20.0},{"category":"ICE CREAM","code":"ICE-008","name":"Milky Pie Almond","price":15.0},{"category":"ICE CREAM","code":"ICE-009","name":"Maxi Choc Almond","price":25.0},{"category":"ICE CREAM","code":"ICE-010","name":"Maxi White Almond","price":25.0},{"category":"ICE CREAM","code":"ICE-011","name":"Maxi Classic","price":25.0},{"category":"ICE CREAM","code":"ICE-012","name":"Cone Ice Cream","price":7.0},{"category":"ICE CREAM","code":"ICE-013","name":"Cup Ice Cream","price":10.0},{"category":"ICE CREAM","code":"ICE-014","name":"Bubblegum","price":10.0},{"category":"ICE CREAM","code":"ICE-015","name":"Flavour Mania Cups","price":12.0},{"category":"ICE CREAM","code":"ICE-016","name":"Jolly Jelly Ice Cream","price":10.0},{"category":"ICE CREAM","code":"ICE-017","name":"Split Mix","price":8.0},{"category":"ICE CREAM","code":"ICE-018","name":"Snow Pie","price":12.0},{"category":"ICE CREAM","code":"ICE-019","name":"Rave Strawberry","price":10.0},{"category":"ICE CREAM","code":"ICE-020","name":"Choc Overload","price":10.0},{"category":"ICE CREAM","code":"ICE-021","name":"Banana Berry","price":10.0},{"category":"ICE CREAM","code":"ICE-022","name":"Banana Split","price":10.0},{"category":"ICE CREAM","code":"ICE-023","name":"Ice Cream Panda Pops","price":7.0},{"category":"ICE CREAM","code":"ICE-024","name":"Polar Eish","price":10.0},{"category":"ICE CREAM","code":"ICE-025","name":"Three in One","price":10.0},{"category":"ICE CREAM","code":"ICE-026","name":"Polar Split","price":10.0},{"category":"ICE CREAM","code":"ICE-027","name":"Litchilik","price":10.0},{"category":"ICE CREAM","code":"ICE-028","name":"Custard & Jelly","price":10.0},{"category":"ICE CREAM","code":"ICE-029","name":"Milky Mix","price":10.0},{"category":"ICE CREAM","code":"ICE-030","name":"Rave Blackcurrant","price":10.0},{"category":"ICE CREAM","code":"ICE-031","name":"Caramello","price":15.0},{"category":"ICE CREAM","code":"ICE-032","name":"Choc 99","price":15.0},{"category":"ICE CREAM","code":"ICE-033","name":"Fruity Licks Mix","price":10.0},{"category":"ICE CREAM","code":"ICE-034","name":"Polar Raspberry","price":10.0},{"category":"ICE CREAM","code":"ICE-035","name":"Polar Pop Orange","price":10.0},{"category":"ICE CREAM","code":"ICE-036","name":"Polar Tropaz","price":10.0},{"category":"ICE CREAM","code":"ICE-037","name":"Polar Apple","price":10.0},{"category":"ICE CREAM","code":"ICE-038","name":"Polar Pineapple","price":10.0},{"category":"ICE CREAM","code":"ICE-039","name":"Grandelch","price":10.0},{"category":"ICE CREAM","code":"ICE-040","name":"Top Hat","price":10.0},{"category":"ICE CREAM","code":"ICE-041","name":"Polar Pop","price":10.0},{"category":"ICE CREAM","code":"ICE-042","name":"Banana and Strawberry 500ml","price":25.0},{"category":"ICE CREAM","code":"ICE-043","name":"Vanilla and Strawberry 500ml","price":25.0},{"category":"ICE CREAM","code":"ICE-044","name":"Vanilla Flavoured 500ml","price":25.0},{"category":"ICE CREAM","code":"ICE-045","name":"Chocolate, Vanilla and Strawberry 500ml","price":25.0},{"category":"ICE CREAM","code":"ICE-046","name":"Chocolate and Vanilla 500ml","price":25.0},{"category":"ICE CREAM","code":"ICE-047","name":"Caramel Dip","price":12.0},{"category":"ICE CREAM","code":"ICE-048","name":"Nice Cream 500ml Banana Split","price":15.0},{"category":"ICE CREAM","code":"ICE-049","name":"Nice Cream 500ml Vanilla","price":15.0},{"category":"ICE CREAM","code":"ICE-050","name":"Nice Cream 500ml Vanilla/Strawberry","price":15.0},{"category":"ICE CREAM","code":"ICE-051","name":"Milky Pie","price":12.0},{"category":"ADD ON ITEMS","code":"A01","name":"Extra Pork Rib Patty","price":20.0},{"category":"ADD ON ITEMS","code":"A02","name":"Extra Chicken Rib Patty","price":20.0},{"category":"ADD ON ITEMS","code":"A03","name":"Extra Egg","price":5.0},{"category":"ADD ON ITEMS","code":"A04","name":"Extra Russian","price":13.0},{"category":"ADD ON ITEMS","code":"A05","name":"Extra Vienna","price":10.0},{"category":"ADD ON ITEMS","code":"A06","name":"Extra Cheese","price":5.0},{"category":"ADD ON ITEMS","code":"A07","name":"Extra Beef Burger","price":12.0},{"category":"ADD ON ITEMS","code":"A08","name":"Extra Chicken Burger","price":10.0},{"category":"ADD ON ITEMS","code":"A09","name":"Large Pop Corn","price":12.0},{"category":"ADD ON ITEMS","code":"A10","name":"Medium Pop Corn","price":8.0},{"category":"ADD ON ITEMS","code":"A11","name":"Extra Chips","price":15.0},{"category":"ADD ON ITEMS","code":"A12","name":"Extra Ham","price":10.0},{"category":"ADD ON ITEMS","code":"A13","name":"Extra Bacon","price":10.0}];
 let liveStoreProducts={};
 const selectedStoreCode=()=>{const u=window.salesSessionUser||window.currentUser;return u?.role==='manager'?(localStorage.getItem('feastervilleStoreCode')||'NDAYENI'):(u?.store_code||localStorage.getItem('feastervilleStoreCode')||'NDAYENI');};
-const baseProductsForStore=(store)=>store==='NDAYENI'?ndayeniProducts:products;
+const baseProductsForStore=(store)=>store==='SIVANA'?products:ndayeniProducts;
 const activeProducts=()=>{
   const store=selectedStoreCode();
   const live=(typeof liveStoreProducts!=='undefined'&&liveStoreProducts[store])||(window.liveStoreProducts&&window.liveStoreProducts[store]);
@@ -2747,8 +2747,8 @@ document.addEventListener('DOMContentLoaded',function(){
   window.loadSellableItems=async function(){
     if(!window.currentUser)return;
     try{
-      for(const store of ['NDAYENI','SIVANA'])await seedStore(store);
-      for(const store of ['NDAYENI','SIVANA']){
+      for(const store of ['NDAYENI','SIVANA','BIRCH_ACRES'])await seedStore(store);
+      for(const store of ['NDAYENI','SIVANA','BIRCH_ACRES']){
         const result=await adminProduct('list',{store_code:store});
         liveStoreProducts[store]=result.items||[];
       }
@@ -2787,7 +2787,7 @@ document.addEventListener('DOMContentLoaded',function(){
       if(!code||!name||!category||!Number.isFinite(price)||price<0)throw new Error('Enter code, description, category and a valid price.');
       await adminProduct('save',{store_code:store,code:code,name:name,category:category,price:price});
       $id('itemCode').readOnly=false;$id('itemCode').value='';$id('itemName').value='';$id('itemCategory').value='';$id('itemPrice').value='';
-      msg(code+' saved for '+(store==='SIVANA'?'Sivana':'Ndayeni')+'.');await loadSellableItems();
+      msg(code+' saved for '+(store==='SIVANA'?'Sivana':store==='BIRCH_ACRES'?'Birch Acres':'Ndayeni')+'.');await loadSellableItems();
     }catch(e){msg(e.message,true);}
   }
   document.addEventListener('DOMContentLoaded',()=>{
@@ -2850,7 +2850,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
     const badge=document.getElementById('storeLocationBadge');
     if(badge){
-      const name=store==='SIVANA'?'Sivana':'Ndayeni';
+      const name=store==='SIVANA'?'Sivana':store==='BIRCH_ACRES'?'Birch Acres':'Ndayeni';
       badge.textContent=name+' POS'+(window.currentUser.role==='manager'?' — MANAGER':' — LOCKED TO YOUR ACCOUNT');
     }
   }
@@ -2980,7 +2980,7 @@ document.addEventListener('DOMContentLoaded',function(){
      select.disabled=false;
      if(container){container.style.display='';container.hidden=false;}
      if(!select.querySelector('option[value="NDAYENI"]')){
-       select.innerHTML='<option value="NDAYENI">Ndayini</option><option value="SIVANA">Sivana</option>';
+       select.innerHTML='<option value="NDAYENI">Ndayini</option><option value="SIVANA">Sivana</option><option value="BIRCH_ACRES">Birch Acres</option>';
      }
      const saved=localStorage.getItem('feastervilleStoreCode')||'NDAYENI';
      select.value=saved;
@@ -4183,7 +4183,7 @@ document.addEventListener('DOMContentLoaded',function(){
     if(me.role==='manager'){
       let ident=document.getElementById('fvCashupIdentity');
       if(!document.getElementById('fvManagerCashupStore')){
-        ident.insertAdjacentHTML('afterend','<label id="fvManagerCashupStoreLabel" style="display:block;margin:10px 0"><b>Store to Cash-Up</b><select id="fvManagerCashupStore" style="width:100%;padding:10px;margin-top:5px"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select></label>');
+        ident.insertAdjacentHTML('afterend','<label id="fvManagerCashupStoreLabel" style="display:block;margin:10px 0"><b>Store to Cash-Up</b><select id="fvManagerCashupStore" style="width:100%;padding:10px;margin-top:5px"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option><option value="BIRCH_ACRES">Birch Acres</option></select></label>');
         document.getElementById('fvManagerCashupStore').value=localStorage.getItem('feastervilleStoreCode')||'NDAYENI';
         document.getElementById('fvManagerCashupStore').addEventListener('change',()=>{localStorage.setItem('feastervilleStoreCode',document.getElementById('fvManagerCashupStore').value);window.openFvCashup();});
       }
@@ -5535,7 +5535,7 @@ function inventoryMode(){
  // Store is fixed to the user's assigned store.
  try{localStorage.setItem('feastervilleStoreCode',store())}catch(e){}
  const ss=document.getElementById('storeLocationSelect');if(ss){ss.value=store();ss.disabled=true}
- const badge=document.getElementById('storeLocationBadge');if(badge)badge.textContent=(store()==='SIVANA'?'Sivana':'Ndayini')+' Inventory Control';
+ const badge=document.getElementById('storeLocationBadge');if(badge)badge.textContent=(store()==='SIVANA'?'Sivana':store()==='BIRCH_ACRES'?'Birch Acres':'Ndayini')+' Inventory Control';
  const ub=document.getElementById('userBadge');if(ub)ub.textContent='Inventory Controller: '+(user().name||user().username||'User');
  const lu=document.getElementById('liveUser');if(lu)lu.textContent='Inventory Controller: '+(user().name||user().username||'User');
 
@@ -7061,28 +7061,28 @@ async function load(){
  if(U().role!=='manager')return;setDates();
  const from=document.getElementById('scFrom')?.value,to=document.getElementById('scTo')?.value,status=document.getElementById('scStatus');
  if(!from||!to)return alert('Select From Date and To Date.');if(from>to)return alert('From Date cannot be after To Date.');
- if(status)status.textContent='Loading Ndayeni, Sivana and final Feasterville Profit & Loss...';
+ if(status)status.textContent='Loading Ndayeni, Sivana, Birch Acres and final Feasterville Profit & Loss...';
  try{
   const [sales,other,exp]=await Promise.all([
-   api('pos_sales?select=store_code,total,sale_date&sale_date=gte.'+from+'&sale_date=lte.'+to+'&store_code=in.(NDAYENI,SIVANA)'),
-   api('pos_other_income?select=store_code,amount,category,transaction_date&transaction_date=gte.'+from+'&transaction_date=lte.'+to+'&store_code=in.(NDAYENI,SIVANA)'),
-   api('pos_store_expenses?select=store_code,amount,category,expense_date&expense_date=gte.'+from+'&expense_date=lte.'+to+'&store_code=in.(NDAYENI,SIVANA)')
+   api('pos_sales?select=store_code,total,sale_date&sale_date=gte.'+from+'&sale_date=lte.'+to+'&store_code=in.(NDAYENI,SIVANA,BIRCH_ACRES)'),
+   api('pos_other_income?select=store_code,amount,category,transaction_date&transaction_date=gte.'+from+'&transaction_date=lte.'+to+'&store_code=in.(NDAYENI,SIVANA,BIRCH_ACRES)'),
+   api('pos_store_expenses?select=store_code,amount,category,expense_date&expense_date=gte.'+from+'&expense_date=lte.'+to+'&store_code=in.(NDAYENI,SIVANA,BIRCH_ACRES)')
   ]);
-  const d={NDAYENI:blank(),SIVANA:blank()};
+  const d={NDAYENI:blank(),SIVANA:blank(),BIRCH_ACRES:blank()};
   (sales||[]).forEach(x=>{const k=String(x.store_code||'').toUpperCase();if(d[k]){d[k].sales+=Number(x.total||0);d[k].count++}});
   (other||[]).forEach(x=>{const k=String(x.store_code||'').toUpperCase();if(d[k])d[k].other+=Number(x.amount||0)});
   (exp||[]).forEach(x=>{const k=String(x.store_code||'').toUpperCase();if(d[k]){d[k].expenses+=Number(x.amount||0);addExp(d[k],x)}});
   Object.values(d).forEach(x=>{x.income=x.sales+x.other;x.net=x.income-x.expenses});
-  const n=d.NDAYENI,v=d.SIVANA,t={sales:n.sales+v.sales,other:n.other+v.other,income:n.income+v.income,expenses:n.expenses+v.expenses,net:n.net+v.net,count:n.count+v.count};
-  const rows=[['POS Sales',n.sales,v.sales,t.sales],['Other Income',n.other,v.other,t.other],['Total Income',n.income,v.income,t.income],['Total Expenses',n.expenses,v.expenses,t.expenses],['NET PROFIT / (LOSS)',n.net,v.net,t.net]];
-  document.getElementById('scComparisonRows').innerHTML=rows.map((r,i)=>'<tr'+(i===4?' style="font-weight:bold"':'')+'><td>'+r[0]+'</td><td style="text-align:right">'+money(r[1])+'</td><td style="text-align:right">'+money(r[2])+'</td><td style="text-align:right">'+money(r[3])+'</td></tr>').join('');
-  paint('scNdayeniNet',n.net);paint('scSivanaNet',v.net);paint('scFinalNet',t.net);
+  const n=d.NDAYENI,v=d.SIVANA,b=d.BIRCH_ACRES,t={sales:n.sales+v.sales+b.sales,other:n.other+v.other+b.other,income:n.income+v.income+b.income,expenses:n.expenses+v.expenses+b.expenses,net:n.net+v.net+b.net,count:n.count+v.count+b.count};
+  const rows=[['POS Sales',n.sales,v.sales,b.sales,t.sales],['Other Income',n.other,v.other,b.other,t.other],['Total Income',n.income,v.income,b.income,t.income],['Total Expenses',n.expenses,v.expenses,b.expenses,t.expenses],['NET PROFIT / (LOSS)',n.net,v.net,b.net,t.net]];
+  document.getElementById('scComparisonRows').innerHTML=rows.map((r,i)=>'<tr'+(i===4?' style="font-weight:bold"':'')+'><td>'+r[0]+'</td><td style="text-align:right">'+money(r[1])+'</td><td style="text-align:right">'+money(r[2])+'</td><td style="text-align:right">'+money(r[3])+'</td><td style="text-align:right">'+money(r[4])+'</td></tr>').join('');
+  paint('scNdayeniNet',n.net);paint('scSivanaNet',v.net);paint('scBirchNet',b.net);paint('scFinalNet',t.net);
   const margin=t.income>0?t.net/t.income*100:0,me=document.getElementById('scFinalMargin');if(me){me.textContent=margin.toFixed(1)+'%';me.style.color=margin<0?'#b00020':'#176b2c'}
-  const cats=[...new Set([...Object.keys(n.expBy),...Object.keys(v.expBy)])].sort((a,b)=>((n.expBy[b]||0)+(v.expBy[b]||0))-((n.expBy[a]||0)+(v.expBy[a]||0)));
-  document.getElementById('scExpenseRows').innerHTML=cats.map(c=>'<tr><td>'+esc(c)+'</td><td style="text-align:right">'+money(n.expBy[c]||0)+'</td><td style="text-align:right">'+money(v.expBy[c]||0)+'</td><td style="text-align:right">'+money((n.expBy[c]||0)+(v.expBy[c]||0))+'</td></tr>').join('')||'<tr><td colspan="4">No expenses captured for this period.</td></tr>';
-  const expLines=cats.map(c=>'<tr><td>&nbsp;&nbsp;'+esc(c)+'</td><td style="text-align:right">'+money((n.expBy[c]||0)+(v.expBy[c]||0))+'</td></tr>').join('')||'<tr><td>&nbsp;&nbsp;No expenses captured</td><td style="text-align:right">R0.00</td></tr>';
-  document.getElementById('scFinalRows').innerHTML='<tr><td>Ndayeni POS Sales</td><td style="text-align:right">'+money(n.sales)+'</td></tr><tr><td>Sivana POS Sales</td><td style="text-align:right">'+money(v.sales)+'</td></tr><tr><td>Other Income — Both Stores</td><td style="text-align:right">'+money(t.other)+'</td></tr><tr><td><b>TOTAL FEASTERVILLE INCOME</b></td><td style="text-align:right"><b>'+money(t.income)+'</b></td></tr><tr><td colspan="2"><b>LESS: FEASTERVILLE EXPENSES</b></td></tr>'+expLines+'<tr><td><b>TOTAL FEASTERVILLE EXPENSES</b></td><td style="text-align:right"><b>'+money(t.expenses)+'</b></td></tr><tr><td><b>FINAL FEASTERVILLE '+(t.net<0?'LOSS':'PROFIT')+'</b></td><td style="text-align:right"><b>'+money(t.net)+'</b></td></tr>';
-  if(status)status.textContent='Ndayeni vs Sivana — '+from+' to '+to+' — '+t.count+' completed sale(s) combined.';
+  const cats=[...new Set([...Object.keys(n.expBy),...Object.keys(v.expBy),...Object.keys(b.expBy)])].sort((x,y)=>((n.expBy[y]||0)+(v.expBy[y]||0)+(b.expBy[y]||0))-((n.expBy[x]||0)+(v.expBy[x]||0)+(b.expBy[x]||0)));
+  document.getElementById('scExpenseRows').innerHTML=cats.map(c=>'<tr><td>'+esc(c)+'</td><td style="text-align:right">'+money(n.expBy[c]||0)+'</td><td style="text-align:right">'+money(v.expBy[c]||0)+'</td><td style="text-align:right">'+money(b.expBy[c]||0)+'</td><td style="text-align:right">'+money((n.expBy[c]||0)+(v.expBy[c]||0)+(b.expBy[c]||0))+'</td></tr>').join('')||'<tr><td colspan="5">No expenses captured for this period.</td></tr>';
+  const expLines=cats.map(c=>'<tr><td>&nbsp;&nbsp;'+esc(c)+'</td><td style="text-align:right">'+money((n.expBy[c]||0)+(v.expBy[c]||0)+(b.expBy[c]||0))+'</td></tr>').join('')||'<tr><td>&nbsp;&nbsp;No expenses captured</td><td style="text-align:right">R0.00</td></tr>';
+  document.getElementById('scFinalRows').innerHTML='<tr><td>Ndayeni POS Sales</td><td style="text-align:right">'+money(n.sales)+'</td></tr><tr><td>Sivana POS Sales</td><td style="text-align:right">'+money(v.sales)+'</td></tr><tr><td>Birch Acres POS Sales</td><td style="text-align:right">'+money(b.sales)+'</td></tr><tr><td>Other Income — All Stores</td><td style="text-align:right">'+money(t.other)+'</td></tr><tr><td><b>TOTAL FEASTERVILLE INCOME</b></td><td style="text-align:right"><b>'+money(t.income)+'</b></td></tr><tr><td colspan="2"><b>LESS: FEASTERVILLE EXPENSES</b></td></tr>'+expLines+'<tr><td><b>TOTAL FEASTERVILLE EXPENSES</b></td><td style="text-align:right"><b>'+money(t.expenses)+'</b></td></tr><tr><td><b>FINAL FEASTERVILLE '+(t.net<0?'LOSS':'PROFIT')+'</b></td><td style="text-align:right"><b>'+money(t.net)+'</b></td></tr>';
+  if(status)status.textContent='Ndayeni vs Sivana vs Birch Acres — '+from+' to '+to+' — '+t.count+' completed sale(s) combined.';
  }catch(e){console.error(e);if(status)status.textContent='Could not load store comparison: '+e.message}
 }
 window.loadStoresComparisonV49=load;
@@ -7245,7 +7245,7 @@ window.loadICReceiptReviewV54=review;setTimeout(()=>{enforce();review();},700);s
       <div class="fvHistNoPrintV59" style="display:flex;gap:8px"><button type="button" id="fvHistPrintV59" class="secondary">PRINT / SAVE PDF</button><button type="button" id="fvHistCloseV59" class="danger">CLOSE</button></div>
     </div>
     <div id="fvHistoricalCashupFiltersV59" class="fvHistNoPrintV59">
-      <div><label>Store</label><select id="fvHistStoreV59"><option value="ALL">All Stores</option><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select></div>
+      <div><label>Store</label><select id="fvHistStoreV59"><option value="ALL">All Stores</option><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option><option value="BIRCH_ACRES">Birch Acres</option></select></div>
       <div><label>From Date</label><input id="fvHistFromV59" type="date"></div>
       <div><label>To Date</label><input id="fvHistToV59" type="date"></div>
       <button type="button" id="fvHistLoadV59" class="primary">VIEW CASH-UPS</button>
@@ -7604,7 +7604,7 @@ window.openHistoricalCashupV59=open;window.loadHistoricalCashupV59=load;
     let p=document.getElementById('fvOpeningBalancesPanel');
     if(p)return p;
     p=document.createElement('section'); p.id='fvOpeningBalancesPanel'; p.className='panel manager-only'; p.style.gridColumn='1/-1';
-    p.innerHTML='<h2>Opening Balances</h2><p class="small">Manager only. Set the opening quantity for the selected store. Production-input balances and sellable-item balances are kept separately. Use this for opening stock only; use stock received and counts for normal daily movements.</p><div class="order-head"><label><b>Store</b><br><select id="fvOpeningStore"><option value="NDAYENI">Ndayini</option><option value="SIVANA">Sivana</option></select></label><label><b>Item Type</b><br><select id="fvOpeningType"><option value="raw">Production Inputs</option><option value="finished">Sellable Items</option></select></label><button type="button" class="primary" id="fvOpeningRefresh">REFRESH</button></div><p class="small" id="fvOpeningMessage"></p><div style="overflow:auto"><table class="inv-table"><thead><tr><th>Code</th><th>Item</th><th>Unit</th><th>Current Opening Balance</th><th>New Opening Balance</th><th>Action</th></tr></thead><tbody id="fvOpeningRows"></tbody></table></div>';
+    p.innerHTML='<h2>Opening Balances</h2><p class="small">Manager only. Set the opening quantity for the selected store. Production-input balances and sellable-item balances are kept separately. Use this for opening stock only; use stock received and counts for normal daily movements.</p><div class="order-head"><label><b>Store</b><br><select id="fvOpeningStore"><option value="NDAYENI">Ndayini</option><option value="SIVANA">Sivana</option><option value="BIRCH_ACRES">Birch Acres</option></select></label><label><b>Item Type</b><br><select id="fvOpeningType"><option value="raw">Production Inputs</option><option value="finished">Sellable Items</option></select></label><button type="button" class="primary" id="fvOpeningRefresh">REFRESH</button></div><p class="small" id="fvOpeningMessage"></p><div style="overflow:auto"><table class="inv-table"><thead><tr><th>Code</th><th>Item</th><th>Unit</th><th>Current Opening Balance</th><th>New Opening Balance</th><th>Action</th></tr></thead><tbody id="fvOpeningRows"></tbody></table></div>';
     const host=document.getElementById('inventoryListingPanel')||document.getElementById('sellableItemsPanel')||document.querySelector('.manager-only');
     if(host&&host.parentNode)host.parentNode.insertBefore(p,host.nextSibling); else document.body.appendChild(p);
     p.querySelector('#fvOpeningStore').addEventListener('change',render);
@@ -7777,7 +7777,7 @@ window.openHistoricalCashupV59=open;window.loadHistoricalCashupV59=load;
    <button type="button" id="fvUnclosedCloseV80" class="danger">CLOSE</button>
   </div>
   <div id="fvUnclosedCashupFiltersV80">
-   <div><label>Store</label><select id="fvUnclosedStoreV80"><option value="ALL">All Stores</option><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select></div>
+   <div><label>Store</label><select id="fvUnclosedStoreV80"><option value="ALL">All Stores</option><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option><option value="BIRCH_ACRES">Birch Acres</option></select></div>
    <div><label>From Date</label><input id="fvUnclosedFromV80" type="date"></div>
    <div><label>To Date</label><input id="fvUnclosedToV80" type="date"></div>
    <button type="button" id="fvUnclosedLoadV80" class="primary">VIEW UNCLOSED</button>
@@ -7842,7 +7842,7 @@ function configureAccess(){
  if(r==='salesperson'){
    const st=assignedStore();sel.innerHTML='<option value="'+E(st)+'">'+(st==='SIVANA'?'Sivana':'Ndayeni')+'</option>';sel.value=st;sel.disabled=true;sel.title='Salesperson access is locked to your assigned store';
  }else{
-   if(!sel.querySelector('option[value="ALL"]'))sel.innerHTML='<option value="ALL">All Stores</option><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option>';
+   if(!sel.querySelector('option[value="ALL"]'))sel.innerHTML='<option value="ALL">All Stores</option><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option><option value="BIRCH_ACRES">Birch Acres</option>';
    sel.disabled=false;sel.title='';
  }
  const sub=document.querySelector('#fvUnclosedCashupCardV80 h2 + .small');

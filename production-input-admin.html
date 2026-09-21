@@ -19,7 +19,7 @@
 </div></div>
 <div class="card" id="add"><h2>Add / Edit Production Input</h2>
 <div class="grid">
-<div><label>Store<select id="store"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select></label></div>
+<div><label>Store<select id="store"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option><option value="BIRCH_ACRES">Birch Acres</option></select></label></div>
 <div><label>Input Code<input id="code" placeholder="e.g. ICI-052"></label></div>
 <div><label>Input Name<input id="name" placeholder="Input name"></label></div>
 <div><label>Category<input id="category" placeholder="e.g. Ice Cream"></label></div>
@@ -37,7 +37,7 @@
 <h2>Sellable Items — Add / Edit</h2>
 <p style="margin-top:-6px;color:#475569">Manager only. Add new sellable items or edit the live menu for each store. Existing item codes are locked during editing to protect sales and recipe history.</p>
 <div class="grid">
-<div><label>Store<select id="s_store"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select></label></div>
+<div><label>Store<select id="s_store"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option><option value="BIRCH_ACRES">Birch Acres</option></select></label></div>
 <div><label>Item Code<input id="s_code" placeholder="e.g. K12"></label></div>
 <div><label>Item Description<input id="s_name" placeholder="Sellable item description"></label></div>
 <div><label>Category<input id="s_category" placeholder="e.g. KOTA, CHIPS, DRINKS"></label></div>
@@ -53,7 +53,7 @@
 <hr style="border:0;border-top:1px solid #e5e7eb;margin:18px 0">
 <h2 style="font-size:18px">Existing Sellable Items</h2>
 <div class="toolbar">
-<select id="s_listStore"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select>
+<select id="s_listStore"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option><option value="BIRCH_ACRES">Birch Acres</option></select>
 <input id="s_search" placeholder="Search code, description or category" oninput="renderSellableItems()">
 </div>
 <div class="tablewrap">
@@ -68,7 +68,7 @@
 <h2>Receive Production Input Stock</h2>
 <p class="muted">Capture opening stock or supplier receipts. Each receipt is saved to the live stock receipt register for audit and reconciliation.</p>
 <div class="grid">
-<label>Store<select id="r_store"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select></label>
+<label>Store<select id="r_store"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option><option value="BIRCH_ACRES">Birch Acres</option></select></label>
 <label>Production Input<select id="r_input"></select></label>
 <label>Receipt Date<input id="r_date" type="date"></label>
 <label>Supplier<input id="r_supplier" placeholder="e.g. Big Save"></label>
@@ -86,7 +86,7 @@
 <div class="toolbar">
   <select id="receiptHistoryStore">
     <option value="NDAYENI">Ndayeni</option>
-    <option value="SIVANA">Sivana</option>
+    <option value="SIVANA">Sivana</option><option value="BIRCH_ACRES">Birch Acres</option>
   </select>
   <button class="secondary" type="button" onclick="loadReceiptHistory()">REFRESH RECEIPTS</button>
 </div>
@@ -99,7 +99,7 @@
 </div>
 </div>
 
-<div class="card" id="list"><h2>Existing Production Inputs</h2><div class="toolbar"><select id="listStore" onchange="loadInputs()"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select><input id="search" placeholder="Search code, name or category" oninput="render()"></div><div class="tablewrap"><div id="listMsg" class="msg"></div><table><thead><tr><th>Code</th><th>Name</th><th>Category</th><th>Unit</th><th>Reorder</th><th>Status</th><th>Action</th></tr></thead><tbody id="tbody"></tbody></table></div></div>
+<div class="card" id="list"><h2>Existing Production Inputs</h2><div class="toolbar"><select id="listStore" onchange="loadInputs()"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option><option value="BIRCH_ACRES">Birch Acres</option></select><input id="search" placeholder="Search code, name or category" oninput="render()"></div><div class="tablewrap"><div id="listMsg" class="msg"></div><table><thead><tr><th>Code</th><th>Name</th><th>Category</th><th>Unit</th><th>Reorder</th><th>Status</th><th>Action</th></tr></thead><tbody id="tbody"></tbody></table></div></div>
 </div>
 <script>
 const ROOT='https://sflyjcgbxbcwspfuzone.supabase.co';
@@ -268,7 +268,7 @@ async function loadSellableItems(){
     const result=await adminProduct('list',{store_code:store});
     sellableRows=Array.isArray(result.items)?result.items:[];
     renderSellableItems();
-    sellableStatus(sellableRows.length+' sellable item(s) loaded for '+(store==='SIVANA'?'Sivana':'Ndayeni')+'.');
+    sellableStatus(sellableRows.length+' sellable item(s) loaded for '+(store==='SIVANA'?'Sivana':store==='BIRCH_ACRES'?'Birch Acres':'Ndayeni')+'.');
   }catch(e){
     sellableRows=[];
     if(body)body.innerHTML='<tr><td colspan="6">'+esc(e.message)+'</td></tr>';
@@ -309,7 +309,7 @@ async function saveSellableItem(){
     document.getElementById('s_listStore').value=store;
     clearSellableForm();
     await loadSellableItems();
-    sellableStatus(code+' saved successfully for '+(store==='SIVANA'?'Sivana':'Ndayeni')+'.');
+    sellableStatus(code+' saved successfully for '+(store==='SIVANA'?'Sivana':store==='BIRCH_ACRES'?'Birch Acres':'Ndayeni')+'.');
   }catch(e){sellableStatus('Could not save sellable item: '+e.message,false);}
 }
 
@@ -327,7 +327,7 @@ async function populateReceiptInputs(){
    sel.innerHTML='<option value="">Select Production Input</option>'+items.map(x=>'<option value="'+esc(x.code)+'" data-name="'+esc(x.name)+'" data-unit="'+esc(x.unit||'EA')+'" data-cost="'+esc(x.preferred_unit_cost??'')+'" data-supplier="'+esc(x.preferred_supplier||'')+'">'+esc(x.code)+' — '+esc(x.name)+'</option>').join('');
    if(items.some(x=>x.code===current))sel.value=current;
    if(!items.length) receiptStatus('No active Production Inputs found for '+store+'.',false);
-   else receiptStatus(items.length+' Production Inputs ready for '+(store==='SIVANA'?'Sivana':'Ndayeni')+'.');
+   else receiptStatus(items.length+' Production Inputs ready for '+(store==='SIVANA'?'Sivana':store==='BIRCH_ACRES'?'Birch Acres':'Ndayeni')+'.');
  }catch(e){
    sel.innerHTML='<option value="">Could not load Production Inputs</option>';
    receiptStatus('Could not load Production Inputs: '+e.message,false);
@@ -386,7 +386,7 @@ async function loadReceiptHistory(){
         '</tr>';
       }).join(''):'<tr><td colspan="9">No stock receipts found for this store.</td></tr>';
     }
-    if(msg){msg.textContent=items.length+' receipt(s) loaded for '+(store==='SIVANA'?'Sivana':'Ndayeni')+'.';msg.className='msg ok';}
+    if(msg){msg.textContent=items.length+' receipt(s) loaded for '+(store==='SIVANA'?'Sivana':store==='BIRCH_ACRES'?'Birch Acres':'Ndayeni')+'.';msg.className='msg ok';}
   }catch(e){
     if(body)body.innerHTML='<tr><td colspan="9">'+esc(e.message)+'</td></tr>';
     if(msg){msg.textContent='Could not load receipt history: '+e.message;msg.className='msg bad';}
@@ -406,7 +406,7 @@ async function loadInputs(){
       '&select=id,store_code,code,name,category,unit,reorder_level,safety_stock,target_stock,purchase_cycle_days,purchase_group,preferred_supplier,preferred_unit_cost,active&order=category.asc,code.asc');
     rows=Array.isArray(data)?data:[];
     render();
-    if(msg){msg.textContent=rows.length+' Production Input(s) loaded for '+(store==='SIVANA'?'Sivana':'Ndayeni')+'.';msg.className='msg ok'}
+    if(msg){msg.textContent=rows.length+' Production Input(s) loaded for '+(store==='SIVANA'?'Sivana':store==='BIRCH_ACRES'?'Birch Acres':'Ndayeni')+'.';msg.className='msg ok'}
   }catch(e){
     rows=[];
     if(body)body.innerHTML='<tr><td colspan="7">'+esc(e.message)+'</td></tr>';
