@@ -4107,7 +4107,7 @@ document.addEventListener('DOMContentLoaded',function(){
  const money=n=>'R'+Number(n||0).toFixed(2);
  function u(){if(window.currentUser&&String(window.currentUser.role||'').toLowerCase()==='manager')return window.currentUser;return window.salesSessionUser||window.currentUser||null}
  function tok(){return sessionStorage.getItem('feastervilleCloudAccessToken')||localStorage.getItem('feastervilleCloudAccessToken')||''}
- function day(){const me=u();const target=String(window.fvCashupTargetDate||'');if(me&&me.role==='manager'&&/^\d{4}-\d{2}-\d{2}$/.test(target))return target;let d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+ function day(){const me=u();const target=String(window.fvCashupTargetDate||'');if(me&&['manager','salesperson'].includes(String(me.role||'').toLowerCase())&&/^\d{4}-\d{2}-\d{2}$/.test(target))return target;let d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
  function store(){const me=u();if(me&&me.role==='manager'){const sel=document.getElementById('fvManagerCashupStore');return (sel&&sel.value)||localStorage.getItem('feastervilleStoreCode')||'NDAYENI'}return (me&&me.store_code)||localStorage.getItem('feastervilleStoreCode')||'NDAYENI'}
  function headers(token,extra){return Object.assign({'apikey':KEY,'Authorization':'Bearer '+token,'Content-Type':'application/json'},extra||{})}
  function jwtNearExpiry(token){
@@ -7746,7 +7746,7 @@ window.openHistoricalCashupV59=open;window.loadHistoricalCashupV59=load;
 <div id="fvUnclosedCashupModalV80">
  <div id="fvUnclosedCashupCardV80">
   <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
-   <div><h2 style="margin:0">Unclosed Store Cash-Ups</h2><div class="small">Manager only — review store days with sales that do not yet have a Manager store cash-up, then complete the outstanding cash-up.</div></div>
+   <div><h2 style="margin:0">Unclosed Store Cash-Ups</h2><div class="small">Manager: review outstanding store cash-ups. Salesperson: review and complete only your own unclosed cash-ups for your assigned store.</div></div>
    <button type="button" id="fvUnclosedCloseV80" class="danger">CLOSE</button>
   </div>
   <div id="fvUnclosedCashupFiltersV80">
@@ -7767,14 +7767,16 @@ window.openHistoricalCashupV59=open;window.loadHistoricalCashupV59=load;
  </div>
 </div>
 <script>
-/* V80 — MANAGER UNCLOSED STORE CASH-UPS / REVISIT AND CLOSE */
+/* V81 — MANAGER + SALESPERSON UNCLOSED CASH-UPS / REVISIT AND CLOSE */
 (function(){
 'use strict';
-if(window.__fvUnclosedCashupV80)return;window.__fvUnclosedCashupV80=true;
+if(window.__fvUnclosedCashupV81)return;window.__fvUnclosedCashupV81=true;
 const ROOT='https://sflyjcgbxbcwspfuzone.supabase.co',KEY='sb_publishable_iASq-tni6KYrFK0R2S35zA_mpwt4MqM';
 const E=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const N=v=>Number(v||0),M=v=>'R'+N(v).toFixed(2);
-function role(){return String(window.currentUser?.role||'').toLowerCase()}
+function user(){if(window.currentUser&&String(window.currentUser.role||'').toLowerCase()==='manager')return window.currentUser;return window.salesSessionUser||window.currentUser||null}
+function role(){return String(user()?.role||'').toLowerCase()}
+function assignedStore(){const u=user();return String(u?.store_code||localStorage.getItem('feastervilleStoreCode')||'NDAYENI').toUpperCase()}
 function token(){return sessionStorage.getItem('feastervilleCloudAccessToken')||localStorage.getItem('feastervilleCloudAccessToken')||''}
 function refreshToken(){return sessionStorage.getItem('feastervilleCloudRefreshToken')||localStorage.getItem('feastervilleCloudRefreshToken')||''}
 async function refreshAuth(){
@@ -7799,57 +7801,83 @@ async function apiAll(path){
 function localDate(d=new Date()){return new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Johannesburg',year:'numeric',month:'2-digit',day:'2-digit'}).format(d)}
 function payBucket(p){p=String(p||'').toLowerCase().replace(/[^a-z0-9]/g,'');if(p==='cash')return'cash';if(p==='card')return'card';if(p==='mrd')return'mrd';if(p==='ubereats')return'uber';return'other'}
 function status(t,bad=false){const el=document.getElementById('fvUnclosedCashupStatusV80');if(el){el.textContent=t;el.style.color=bad?'#b91c1c':'#185b00'}}
-async function earliestDate(){const r=await api('pos_sales?select=sale_date&order=sale_date.asc&limit=1');return r?.[0]?.sale_date||localDate()}
+function salespersonNames(){const u=user()||{};return [u.name,u.display_name,u.email].filter(Boolean).map(v=>String(v).trim().toLowerCase())}
+function isOwnSale(r){if(role()!=='salesperson')return true;const names=salespersonNames();return names.includes(String(r.cashier||'').trim().toLowerCase())}
+async function earliestDate(){
+ let path='pos_sales?select=sale_date,store_code,cashier&order=sale_date.asc';
+ if(role()==='salesperson')path+='&store_code=eq.'+encodeURIComponent(assignedStore());
+ const rows=await apiAll(path),own=(rows||[]).filter(isOwnSale);return own?.[0]?.sale_date||localDate();
+}
 async function setAllDates(){const from=await earliestDate();document.getElementById('fvUnclosedFromV80').value=from;document.getElementById('fvUnclosedToV80').value=localDate()}
+function configureAccess(){
+ const r=role(),sel=document.getElementById('fvUnclosedStoreV80');
+ if(!sel)return;
+ if(r==='salesperson'){
+   const st=assignedStore();sel.innerHTML='<option value="'+E(st)+'">'+(st==='SIVANA'?'Sivana':'Ndayeni')+'</option>';sel.value=st;sel.disabled=true;sel.title='Salesperson access is locked to your assigned store';
+ }else{
+   if(!sel.querySelector('option[value="ALL"]'))sel.innerHTML='<option value="ALL">All Stores</option><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option>';
+   sel.disabled=false;sel.title='';
+ }
+ const sub=document.querySelector('#fvUnclosedCashupCardV80 h2 + .small');
+ if(sub)sub.textContent=r==='salesperson'?'Your unclosed cash-ups only — assigned store '+(assignedStore()==='SIVANA'?'Sivana':'Ndayeni')+'.':'Manager view — outstanding store cash-ups can be revisited and completed.';
+}
 function summary(rows){
  const x=rows.reduce((a,r)=>{a.sales+=r.total;a.cash+=r.cash;a.count+=r.count;return a},{sales:0,cash:0,count:0});
  document.getElementById('fvUnclosedCashupSummaryV80').innerHTML='<div>Unclosed Days<b>'+rows.length+'</b></div><div>Sales<b>'+M(x.sales)+'</b></div><div>Cash Sales<b>'+M(x.cash)+'</b></div><div>Sale Count<b>'+x.count+'</b></div>';
  const b=document.getElementById('fvUnclosedCashupBtnV80');if(b)b.textContent=rows.length?'UNCLOSED CASH-UPS ('+rows.length+')':'UNCLOSED CASH-UPS';
 }
 async function load(){
- if(role()!=='manager'){status('Manager access required.',true);return}
- const store=document.getElementById('fvUnclosedStoreV80').value,from=document.getElementById('fvUnclosedFromV80').value,to=document.getElementById('fvUnclosedToV80').value;
+ const r=role();if(!['manager','salesperson'].includes(r)){status('Cash-up access required.',true);return}
+ configureAccess();
+ const store=r==='salesperson'?assignedStore():document.getElementById('fvUnclosedStoreV80').value,from=document.getElementById('fvUnclosedFromV80').value,to=document.getElementById('fvUnclosedToV80').value;
  if(!from||!to)return status('Select From Date and To Date.',true);if(from>to)return status('From Date cannot be after To Date.',true);
- status('Checking sales and store cash-ups...');
+ status('Checking sales and cash-ups...');
  try{
-  let salesPath='pos_sales?sale_date=gte.'+encodeURIComponent(from)+'&sale_date=lte.'+encodeURIComponent(to)+'&select=sale_date,store_code,total,payment&order=sale_date.desc';
+  let salesPath='pos_sales?sale_date=gte.'+encodeURIComponent(from)+'&sale_date=lte.'+encodeURIComponent(to)+'&select=sale_date,store_code,total,payment,cashier&order=sale_date.desc';
   if(store!=='ALL')salesPath+='&store_code=eq.'+encodeURIComponent(store);
-  let closePath='pos_daily_cashups?cashup_date=gte.'+encodeURIComponent(from)+'&cashup_date=lte.'+encodeURIComponent(to)+'&select=store_code,cashup_date,salesperson_name,status';
+  let closePath='pos_daily_cashups?cashup_date=gte.'+encodeURIComponent(from)+'&cashup_date=lte.'+encodeURIComponent(to)+'&select=store_code,cashup_date,user_id,salesperson_name,status';
   if(store!=='ALL')closePath+='&store_code=eq.'+encodeURIComponent(store);
-  const [sales,closes]=await Promise.all([apiAll(salesPath),apiAll(closePath)]);
-  const closed=new Set((closes||[]).filter(r=>String(r.status||'').toUpperCase()==='CLOSED'&&/^manager\b/i.test(String(r.salesperson_name||''))).map(r=>String(r.store_code)+'|'+String(r.cashup_date)));
+  if(r==='salesperson'&&user()?.id)closePath+='&user_id=eq.'+encodeURIComponent(user().id);
+  let [sales,closes]=await Promise.all([apiAll(salesPath),apiAll(closePath)]);
+  if(r==='salesperson')sales=(sales||[]).filter(isOwnSale);
+  const closed=new Set((closes||[]).filter(x=>String(x.status||'').toUpperCase()==='CLOSED'&&(r==='manager'?/^manager\b/i.test(String(x.salesperson_name||'')):String(x.user_id||'')===String(user()?.id||''))).map(x=>String(x.store_code)+'|'+String(x.cashup_date)));
   const map=new Map();
-  (sales||[]).forEach(r=>{const key=String(r.store_code)+'|'+String(r.sale_date);if(!map.has(key))map.set(key,{store_code:r.store_code,date:r.sale_date,cash:0,card:0,mrd:0,uber:0,other:0,total:0,count:0});const x=map.get(key),v=N(r.total),b=payBucket(r.payment);x[b]+=v;x.total+=v;x.count++});
-  const rows=[...map.values()].filter(r=>!closed.has(String(r.store_code)+'|'+String(r.date))).sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(a.store_code).localeCompare(String(b.store_code)));
+  (sales||[]).forEach(x=>{const key=String(x.store_code)+'|'+String(x.sale_date);if(!map.has(key))map.set(key,{store_code:x.store_code,date:x.sale_date,cash:0,card:0,mrd:0,uber:0,other:0,total:0,count:0});const y=map.get(key),v=N(x.total),b=payBucket(x.payment);y[b]+=v;y.total+=v;y.count++});
+  const rows=[...map.values()].filter(x=>!closed.has(String(x.store_code)+'|'+String(x.date))).sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(a.store_code).localeCompare(String(b.store_code)));
   const body=document.getElementById('fvUnclosedCashupBodyV80');
-  body.innerHTML=rows.map(r=>'<tr><td>'+E(r.date)+'</td><td>'+E(r.store_code==='SIVANA'?'Sivana':'Ndayeni')+'</td><td class="num"><b>'+M(r.total)+'</b></td><td class="num">'+M(r.cash)+'</td><td class="num">'+M(r.card)+'</td><td class="num">'+M(r.mrd)+'</td><td class="num">'+M(r.uber)+'</td><td class="num">'+M(r.other)+'</td><td class="num">'+r.count+'</td><td><button type="button" data-date="'+E(r.date)+'" data-store="'+E(r.store_code)+'">CASH-UP</button></td></tr>').join('')||'<tr><td colspan="10">No unclosed store cash-ups found for this period.</td></tr>';
+  body.innerHTML=rows.map(x=>'<tr><td>'+E(x.date)+'</td><td>'+E(x.store_code==='SIVANA'?'Sivana':'Ndayeni')+'</td><td class="num"><b>'+M(x.total)+'</b></td><td class="num">'+M(x.cash)+'</td><td class="num">'+M(x.card)+'</td><td class="num">'+M(x.mrd)+'</td><td class="num">'+M(x.uber)+'</td><td class="num">'+M(x.other)+'</td><td class="num">'+x.count+'</td><td><button type="button" data-date="'+E(x.date)+'" data-store="'+E(x.store_code)+'">CASH-UP</button></td></tr>').join('')||'<tr><td colspan="10">No unclosed cash-ups found for this period.</td></tr>';
   body.querySelectorAll('button[data-date]').forEach(btn=>btn.onclick=function(){revisit(this.dataset.date,this.dataset.store)});
-  summary(rows);status(rows.length+' unclosed store cash-up'+(rows.length===1?'':'s')+' found.');
+  summary(rows);status(rows.length+' unclosed cash-up'+(rows.length===1?'':'s')+' found'+(r==='salesperson'?' for your account.':'.'));
  }catch(e){status('Could not check unclosed cash-ups: '+e.message,true)}
 }
 async function revisit(date,storeCode){
- if(role()!=='manager')return alert('Manager access required.');
- window.fvCashupTargetDate=date;localStorage.setItem('feastervilleStoreCode',storeCode);
- const sel=document.getElementById('fvManagerCashupStore');if(sel)sel.value=storeCode;
+ const r=role();if(!['manager','salesperson'].includes(r))return alert('Cash-up access required.');
+ if(r==='salesperson'&&String(storeCode).toUpperCase()!==assignedStore())return alert('You can only cash-up your assigned store.');
+ window.fvCashupTargetDate=date;
+ if(r==='manager')localStorage.setItem('feastervilleStoreCode',storeCode);else localStorage.setItem('feastervilleStoreCode',assignedStore());
+ const sel=document.getElementById('fvManagerCashupStore');if(sel&&r==='manager')sel.value=storeCode;
  document.getElementById('fvUnclosedCashupModalV80').style.display='none';
  if(typeof window.openFvCashup!=='function'){window.fvCashupTargetDate=null;return alert('Cash-up is still loading. Please try again.');}
  await window.openFvCashup();
 }
 async function open(){
- if(role()!=='manager')return alert('Manager access required.');
- const modal=document.getElementById('fvUnclosedCashupModalV80');modal.style.display='flex';
+ const r=role();if(!['manager','salesperson'].includes(r))return alert('Cash-up access required.');
+ configureAccess();const modal=document.getElementById('fvUnclosedCashupModalV80');modal.style.display='flex';
  if(!document.getElementById('fvUnclosedFromV80').value)await setAllDates();
  load();
 }
 function close(){document.getElementById('fvUnclosedCashupModalV80').style.display='none'}
 function mount(){
- let b=document.getElementById('fvUnclosedCashupBtnV80');
- if(role()==='manager'){
+ let b=document.getElementById('fvUnclosedCashupBtnV80'),r=role();
+ if(['manager','salesperson'].includes(r)){
   const h=document.querySelector('header');
-  if(h&&!b){b=document.createElement('button');b.id='fvUnclosedCashupBtnV80';b.type='button';b.textContent='UNCLOSED CASH-UPS';b.onclick=open;const hist=document.getElementById('fvHistoricalCashupBtnV59'),live=document.getElementById('fvManagerCashupHeaderV58');if(hist&&hist.parentNode===h)hist.insertAdjacentElement('afterend',b);else h.insertBefore(b,live||null)}
+  if(h&&!b){b=document.createElement('button');b.id='fvUnclosedCashupBtnV80';b.type='button';b.textContent='UNCLOSED CASH-UPS';b.onclick=open;
+   if(r==='manager'){const hist=document.getElementById('fvHistoricalCashupBtnV59'),live=document.getElementById('fvManagerCashupHeaderV58');if(hist&&hist.parentNode===h)hist.insertAdjacentElement('afterend',b);else h.insertBefore(b,live||null)}
+   else{const logout=Array.from(h.querySelectorAll('button')).find(x=>/LOGOUT/i.test(x.textContent||''));h.insertBefore(b,logout||null)}
+  }
   if(b)b.style.setProperty('display','inline-block','important');
  }else if(b)b.style.setProperty('display','none','important');
- document.documentElement.setAttribute('data-feasterville-build','V80');
+ document.documentElement.setAttribute('data-feasterville-build','V81');
 }
 function init(){
  document.getElementById('fvUnclosedCloseV80')?.addEventListener('click',close);
@@ -7862,5 +7890,146 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 window.openUnclosedCashupsV80=open;window.loadUnclosedCashupsV80=load;window.fvUnclosedCashupMountV80=mount;
 })();
 </script>
-<!-- BUILD: V80_MANAGER_UNCLOSED_CASHUPS_REVISIT_20260921 -->
+<!-- BUILD: V81_MANAGER_SALESPERSON_UNCLOSED_CASHUPS_REVISIT_20260921 -->
+
+
+<style id="fvCategorisedFunctionNavStyleV82">
+#fvFunctionNavV82{position:sticky;top:0;z-index:100050;background:#111827;color:#fff;padding:9px 12px;border-bottom:1px solid #334155;box-shadow:0 2px 8px #0003}
+#fvFunctionNavV82 .fvNavMainV82,#fvFunctionNavV82 .fvNavSubV82{max-width:1500px;margin:0 auto;display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+#fvFunctionNavV82 .fvNavMainV82 button{background:#fff;color:#111827;padding:9px 12px;font-size:12px;border-radius:7px}
+#fvFunctionNavV82 .fvNavMainV82 button.active{background:#8cc63f;color:#111}
+#fvFunctionNavV82 .fvNavSubV82{display:none;margin-top:8px;padding-top:8px;border-top:1px solid #374151}
+#fvFunctionNavV82 .fvNavSubV82.active{display:flex}
+#fvFunctionNavV82 .fvNavSubV82 button{background:#334155;color:#fff;padding:8px 11px;font-size:12px;border-radius:7px}
+#fvFunctionNavV82 .fvNavSubV82 button:hover{background:#475569}
+#fvFunctionNavV82 .fvNavHomeV82{background:#16a34a!important;color:#fff!important}
+#fvFunctionNavV82 .fvNavCloseV82{margin-left:auto;background:#475569!important;color:#fff!important}
+#fvFunctionNavStatusV82{max-width:1500px;margin:6px auto 0;font-size:11px;color:#d1d5db;min-height:14px}
+.fvNavFlashV82{outline:4px solid #8cc63f!important;outline-offset:3px;transition:outline .2s ease}
+@media(max-width:900px){#fvFunctionNavV82{position:sticky;top:0}#fvFunctionNavV82 .fvNavMainV82 button,#fvFunctionNavV82 .fvNavSubV82 button{flex:1 1 auto;text-align:center}}
+@media print{#fvFunctionNavV82{display:none!important}}
+</style>
+<script>
+/* V82 — categorised direct-access navigation. Navigation only: no calculations, stock logic, sales logic or reports are changed. */
+(function(){
+ 'use strict';
+ if(window.__fvCategorisedFunctionNavV82)return;window.__fvCategorisedFunctionNavV82=true;
+ const $=id=>document.getElementById(id);
+ const role=()=>String((window.inventorySessionUser&&window.inventorySessionUser.role)||(window.currentUser&&window.currentUser.role)||(window.salesSessionUser&&window.salesSessionUser.role)||'').toLowerCase();
+ const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ function status(t,bad){const e=$('fvFunctionNavStatusV82');if(e){e.textContent=t||'';e.style.color=bad?'#fecaca':'#d1d5db';}}
+ function heading(text){
+   const wanted=String(text||'').trim().toLowerCase();
+   return Array.from(document.querySelectorAll('h1,h2,h3')).find(h=>String(h.textContent||'').trim().toLowerCase()===wanted)||null;
+ }
+ function panelFromHeading(text){const h=heading(text);return h?(h.closest('.panel,section,div')||h):null;}
+ function scrollToEl(el,label){
+   if(!el){status((label||'Function')+' is still loading. Please try again in a moment.',true);return false;}
+   if(role()==='manager'&&getComputedStyle(el).display==='none')el.style.display='block';
+   if(getComputedStyle(el).display==='none'){status((label||'Function')+' is not available for the current role.',true);return false;}
+   const y=Math.max(0,el.getBoundingClientRect().top+window.scrollY-125);
+   window.scrollTo({top:y,behavior:'smooth'});
+   el.classList.add('fvNavFlashV82');setTimeout(()=>el.classList.remove('fvNavFlashV82'),1400);
+   status('Opened: '+(label||'selected function')+'.');
+   return true;
+ }
+ function target(id,label){
+   try{if(typeof window.applyRights==='function')window.applyRights();}catch(_){ }
+   return scrollToEl($(id),label);
+ }
+ function openPage(href,label){status('Opening '+label+'...');window.location.href=href;}
+ function openCashup(){
+   if(typeof window.openFvCashup==='function'){window.openFvCashup();status('Opened: Close Day / Cash-Up.');return;}
+   const b=$('fvManagerCashupHeaderV58');if(b){b.click();status('Opened: Close Day / Cash-Up.');return;} status('Cash-Up is still loading. Please try again in a moment.',true);
+ }
+ function historicalCashup(){
+   if(typeof window.openHistoricalCashupV59==='function'){window.openHistoricalCashupV59();status('Opened: Historical Cash-Up.');return;}
+   const b=$('fvHistoricalCashupBtnV59');if(b){b.click();status('Opened: Historical Cash-Up.');return;} status('Historical Cash-Up is still loading. Please try again in a moment.',true);
+ }
+ function unclosedCashup(){
+   if(typeof window.openUnclosedCashupsV80==='function'){window.openUnclosedCashupsV80();status('Opened: Unclosed Cash-Ups.');return;}
+   const b=$('fvUnclosedCashupBtnV80');if(b){b.click();status('Opened: Unclosed Cash-Ups.');return;} status('Unclosed Cash-Ups is still loading. Please try again in a moment.',true);
+ }
+ function loggedUsers(){
+   try{if(typeof window.refreshUserPresenceV58==='function')window.refreshUserPresenceV58();else if(typeof window.refreshUserPresence==='function')window.refreshUserPresence();}catch(_){ }
+   let el=$('fvAllUsersV59')||$('fvPresencePanel');
+   if(el){scrollToEl(el,'Currently Logged In Users');return;}
+   const host=$('accessPanel')||$('userPanel');
+   if(host)scrollToEl(host,'Users & Access');
+   setTimeout(()=>{el=$('fvAllUsersV59')||$('fvPresencePanel');if(el)scrollToEl(el,'Currently Logged In Users');else status('Currently Logged In Users is still loading. Please try again in a moment.',true);},700);
+ }
+ function finalProductLink(){const h=heading('Final Product → Production Inputs');scrollToEl(h?h.closest('.panel,section'):null,'Final Product → Production Inputs');}
+ function salesPanel(){const el=$('salesProductSearch');scrollToEl(el?el.closest('.panel'):null,'Sales Screen');}
+ function orderPanel(){const el=$('cart');scrollToEl(el?el.closest('.panel'):null,'Current Order');}
+ function todaySales(){const el=$('salesSummary');scrollToEl(el?el.closest('.panel'):null,"Today's Sales");}
+ const actions={
+   sales:salesPanel,order:orderPanel,today:todaySales,
+   closecash:openCashup,histcash:historicalCashup,unclosed:unclosedCashup,
+   inv:()=>target('inventoryListingPanel','Inventory Listing & Count Sheets'),
+   openbal:()=>openPage('opening-balance-admin.html','Opening Balances'),
+   prodadmin:()=>openPage('production-input-admin.html','Production Input Administration'),
+   prodstock:()=>target('productionInputsPanel','Production Input Stock'),
+   usage:()=>target('usagePanel','Production Input Usage From Sales'),
+   movements:()=>target('stockMovementPanel','Production Input Stock Movements'),
+   recon:()=>target('reconPanel','Inventory & Stock Count Reconciliation'),
+   sellable:()=>target('sellableItemsPanel','Sellable Items Management'),
+   recipe:()=>{const el=document.querySelector('#recipePanel');scrollToEl(el,'Product Inputs / Recipe Link');},
+   easyrecipe:()=>target('easyLinkPanel','Build Final Product Recipe'),
+   finalrecipe:finalProductLink,
+   masterinputs:()=>target('masterProductionEditorPanel','Master Production Inputs'),
+   reports:()=>target('reportsPanel','Sales & Inventory Reports'),
+   pl:()=>target('profitLossPanel','Store Profit & Loss'),
+   compare:()=>target('storesComparisonPanel','Stores Comparison & Final P&L'),
+   costing:()=>target('costingProfitPanel','Costing & Pricing / Profitability'),
+   monthend:()=>openPage('month-end-closure-report.html','Month-End Closure Report'),
+   audit:()=>openPage('feasterville-audit-reporting.html','Audit & Financial Reporting'),
+   users:()=>target('userPanel','Salesperson & User Management'),
+   access:()=>target('accessPanel','Access Rights & User Management'),
+   logged:loggedUsers
+ };
+ const groups=[
+  ['pos','POS & SALES',[['sales','SALES SCREEN'],['order','CURRENT ORDER'],['today',"TODAY'S SALES"]]],
+  ['cash','CASH-UPS',[['closecash','CLOSE DAY / CASH-UP'],['histcash','HISTORICAL CASH-UP'],['unclosed','UNCLOSED CASH-UPS']]],
+  ['inventory','INVENTORY',[['inv','INVENTORY LISTING & COUNT SHEETS'],['openbal','OPENING BALANCES'],['prodadmin','PRODUCTION INPUT ADMIN'],['prodstock','PRODUCTION INPUT STOCK'],['usage','USAGE FROM SALES'],['movements','STOCK MOVEMENTS'],['recon','STOCK RECONCILIATION']]],
+  ['products','PRODUCTS & RECIPES',[['sellable','SELLABLE ITEMS'],['recipe','PRODUCT INPUTS / RECIPE LINK'],['easyrecipe','BUILD FINAL PRODUCT RECIPE'],['finalrecipe','FINAL PRODUCT → INPUTS'],['masterinputs','MASTER PRODUCTION INPUTS']]],
+  ['reports','REPORTS & FINANCE',[['reports','SALES & INVENTORY REPORTS'],['pl','STORE PROFIT & LOSS'],['compare','STORES COMPARISON & FINAL P&L'],['costing','COSTING & PROFITABILITY'],['monthend','MONTH-END REPORT'],['audit','AUDIT & FINANCIAL REPORTING']]],
+  ['users','USERS & ACCESS',[['users','SALESPERSON & USER MANAGEMENT'],['access','ACCESS RIGHTS & USER MANAGEMENT'],['logged','CURRENTLY LOGGED IN USERS']]]
+ ];
+ function closeSubs(){document.querySelectorAll('#fvFunctionNavV82 .fvNavSubV82').forEach(x=>x.classList.remove('active'));document.querySelectorAll('#fvFunctionNavV82 .fvNavCatV82').forEach(x=>x.classList.remove('active'));}
+ function syncRole(){
+   const r=role(),nav=$('fvFunctionNavV82');if(!nav)return;
+   nav.querySelectorAll('[data-manager-cat="1"]').forEach(b=>b.style.display=r==='manager'?'inline-block':'none');
+   const cash=nav.querySelector('[data-group="cash"]');if(cash)cash.style.display=['manager','salesperson'].includes(r)?'inline-block':'none';
+   const inv=nav.querySelector('[data-group="inventory"]');if(inv&&r==='inventory_control')inv.style.display='inline-block';
+ }
+ function build(){
+   if($('fvFunctionNavV82')){syncRole();return;}
+   const header=document.querySelector('header');if(!header)return;
+   const nav=document.createElement('nav');nav.id='fvFunctionNavV82';nav.setAttribute('aria-label','Feasterville function navigation');
+   const main=document.createElement('div');main.className='fvNavMainV82';
+   const home=document.createElement('button');home.type='button';home.className='fvNavHomeV82';home.textContent='POS HOME / TOP';home.onclick=()=>window.scrollTo({top:0,behavior:'smooth'});main.appendChild(home);
+   groups.forEach(([key,label,items],idx)=>{
+     const b=document.createElement('button');b.type='button';b.className='fvNavCatV82';b.textContent=label;b.dataset.group=key;
+     if(['inventory','products','reports','users'].includes(key))b.dataset.managerCat='1';
+     b.onclick=()=>{const sub=$('fvSub_'+key+'_V82'),already=sub&&sub.classList.contains('active');closeSubs();if(!already&&sub){sub.classList.add('active');b.classList.add('active');status('Choose a '+label.toLowerCase()+' function below.');}};
+     main.appendChild(b);
+   });
+   const close=document.createElement('button');close.type='button';close.className='fvNavCloseV82';close.textContent='HIDE SUB-TABS';close.onclick=()=>{closeSubs();status('');};main.appendChild(close);
+   nav.appendChild(main);
+   groups.forEach(([key,label,items])=>{
+     const sub=document.createElement('div');sub.className='fvNavSubV82';sub.id='fvSub_'+key+'_V82';
+     items.forEach(([action,label2])=>{const b=document.createElement('button');b.type='button';b.textContent=label2;b.dataset.action=action;b.onclick=()=>{closeSubs();const fn=actions[action];if(fn)fn();};sub.appendChild(b);});
+     nav.appendChild(sub);
+   });
+   const st=document.createElement('div');st.id='fvFunctionNavStatusV82';st.textContent='Direct access menu — existing functions only; no duplicates added.';nav.appendChild(st);
+   header.insertAdjacentElement('afterend',nav);
+   syncRole();
+ }
+ function init(){build();[250,700,1500,3000,6500].forEach(ms=>setTimeout(()=>{build();syncRole();},ms));document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){build();syncRole();}});}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+ window.fvFunctionNavV82={build,syncRole,actions};
+})();
+</script>
+<!-- BUILD: V82_CATEGORISED_DIRECT_ACCESS_NAV_20260921 -->
+
 </html>
