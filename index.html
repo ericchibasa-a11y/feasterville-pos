@@ -7651,6 +7651,33 @@ window.openHistoricalCashupV59=open;window.loadHistoricalCashupV59=load;
   let tries=0, timer=setInterval(()=>{tries++;if((window.currentUser||{}).role==='manager'){clearInterval(timer);const p=panel();p.querySelector('#fvOpeningStore').value=store();render();}else if(tries>120)clearInterval(timer);},250);
 })();
 </script>
+
+<script>
+/* V84 — hide categorised function navigation until authenticated; role-safe category visibility. */
+(function(){
+ 'use strict';
+ if(window.__fvNavLoginVisibilityV84)return; window.__fvNavLoginVisibilityV84=true;
+ function role(){
+   return String((window.inventorySessionUser&&window.inventorySessionUser.role)||
+                 (window.currentUser&&window.currentUser.role)||
+                 (window.salesSessionUser&&window.salesSessionUser.role)||'').toLowerCase();
+ }
+ function sync(){
+   try{
+     if(window.fvFunctionNavV82&&window.fvFunctionNavV82.syncRole) window.fvFunctionNavV82.syncRole();
+     const nav=document.getElementById('fvFunctionNavV82');
+     const r=role();
+     if(nav && !r) nav.style.display='none';
+   }catch(e){}
+ }
+ [0,100,300,750,1500,3000].forEach(ms=>setTimeout(sync,ms));
+ setInterval(sync,1000);
+ document.addEventListener('click',()=>setTimeout(sync,150),true);
+ window.addEventListener('focus',sync);
+ document.addEventListener('visibilitychange',sync);
+})();
+</script>
+<!-- BUILD: V84_HIDE_NAV_UNTIL_AUTHENTICATED_20260921 -->
 </body>
 
 
@@ -7998,9 +8025,25 @@ window.openUnclosedCashupsV80=open;window.loadUnclosedCashupsV80=load;window.fvU
  function closeSubs(){document.querySelectorAll('#fvFunctionNavV82 .fvNavSubV82').forEach(x=>x.classList.remove('active'));document.querySelectorAll('#fvFunctionNavV82 .fvNavCatV82').forEach(x=>x.classList.remove('active'));}
  function syncRole(){
    const r=role(),nav=$('fvFunctionNavV82');if(!nav)return;
-   nav.querySelectorAll('[data-manager-cat="1"]').forEach(b=>b.style.display=r==='manager'?'inline-block':'none');
-   const cash=nav.querySelector('[data-group="cash"]');if(cash)cash.style.display=['manager','salesperson'].includes(r)?'inline-block':'none';
-   const inv=nav.querySelector('[data-group="inventory"]');if(inv&&r==='inventory_control')inv.style.display='inline-block';
+   // Do not show function navigation on the login screen. The role is not known yet.
+   if(!r){ nav.style.display='none'; closeSubs(); return; }
+   nav.style.display='block';
+   const pos=nav.querySelector('[data-group="pos"]');
+   const cash=nav.querySelector('[data-group="cash"]');
+   const inv=nav.querySelector('[data-group="inventory"]');
+   const products=nav.querySelector('[data-group="products"]');
+   const reports=nav.querySelector('[data-group="reports"]');
+   const users=nav.querySelector('[data-group="users"]');
+   // Start hidden, then expose only the categories authorised for the signed-in role.
+   [pos,cash,inv,products,reports,users].forEach(b=>{if(b)b.style.display='none';});
+   if(r==='manager'){
+     [pos,cash,inv,products,reports,users].forEach(b=>{if(b)b.style.display='inline-block';});
+   }else if(r==='salesperson'){
+     if(pos)pos.style.display='inline-block';
+     if(cash)cash.style.display='inline-block';
+   }else if(r==='inventory_control'){
+     if(inv)inv.style.display='inline-block';
+   }
  }
  function build(){
    if($('fvFunctionNavV82')){syncRole();return;}
