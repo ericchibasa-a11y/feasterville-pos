@@ -3,7 +3,7 @@
 *{box-sizing:border-box}body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8;color:#17212b}.top{position:sticky;top:0;z-index:20;background:#111827;padding:10px;box-shadow:0 2px 8px #0003}.nav{max-width:1180px;margin:auto;display:flex;gap:8px;flex-wrap:wrap}.nav button,.nav a{border:0;border-radius:8px;padding:11px 14px;font-weight:700;cursor:pointer;text-decoration:none;background:#fff;color:#111827}.nav .primary{background:#16a34a;color:white}.wrap{max-width:1180px;margin:18px auto;padding:0 14px}.card{background:#fff;border:1px solid #d9dee5;border-radius:12px;padding:18px;margin-bottom:18px;box-shadow:0 1px 3px #0001}h1,h2{margin-top:0}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}label{font-weight:700;font-size:13px}input,select{width:100%;padding:10px;border:1px solid #b9c2cc;border-radius:7px;margin-top:5px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}button.save{background:#16a34a;color:#fff;border:0;border-radius:8px;padding:11px 18px;font-weight:800;cursor:pointer}button.secondary{background:#334155;color:#fff;border:0;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer}.msg{margin-top:10px;font-weight:700}.ok{color:#15803d}.bad{color:#b91c1c}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}.toolbar>*{max-width:320px}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px;border-bottom:1px solid #e5e7eb;text-align:left}th{background:#f8fafc;position:sticky;top:60px}.tablewrap{overflow:auto;max-height:520px}.tablewrap th{top:0;z-index:2}.pill{padding:3px 7px;border-radius:12px;background:#dcfce7;color:#166534;font-weight:700}.inactive{background:#fee2e2;color:#991b1b}@media(max-width:760px){.grid{grid-template-columns:1fr}.nav button,.nav a{flex:1 1 auto;text-align:center}th{top:105px}}
 </style></head><body>
 <div class="top"><div class="nav">
-<a href="index.html">POS HOME</a><button class="primary" onclick="go('add')">ADD PRODUCTION INPUT</button><button onclick="go('list')">EXISTING INPUTS</button><button onclick="go('receipt')">RECEIVE STOCK</button><button onclick="go('receiptHistory')">RECEIPT HISTORY</button><a href="production-input-consumption-report.html">CONSUMPTION REPORT</a><a href="month-end-closure-report.html">MONTH-END REPORT</a><button onclick="refreshAdmin()">REFRESH</button><button onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>
+<a href="index.html">POS HOME</a><button class="primary" onclick="go('add')">ADD PRODUCTION INPUT</button><button onclick="go('list')">EXISTING INPUTS</button><button onclick="go('sellable')">SELLABLE ITEMS</button><button onclick="go('receipt')">RECEIVE STOCK</button><button onclick="go('receiptHistory')">RECEIPT HISTORY</button><a href="production-input-consumption-report.html">CONSUMPTION REPORT</a><a href="month-end-closure-report.html">MONTH-END REPORT</a><button onclick="refreshAdmin()">REFRESH</button><button onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>
 </div></div>
 <div class="wrap">
 <div class="card"><h1>Production Input Administration</h1>
@@ -33,6 +33,37 @@
 <div><label>Preferred Unit Cost (R)<input id="cost" type="number" step="0.01"></label></div>
 <div><label>Status<select id="active"><option value="true">Active</option><option value="false">Inactive</option></select></label></div>
 </div><div class="actions"><button class="save" onclick="saveInput()">SAVE INPUT</button><button class="secondary" onclick="clearForm()">CLEAR FORM</button></div><div id="msg" class="msg"></div></div>
+<div class="card" id="sellable">
+<h2>Sellable Items — Add / Edit</h2>
+<p style="margin-top:-6px;color:#475569">Manager only. Add new sellable items or edit the live menu for each store. Existing item codes are locked during editing to protect sales and recipe history.</p>
+<div class="grid">
+<div><label>Store<select id="s_store"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select></label></div>
+<div><label>Item Code<input id="s_code" placeholder="e.g. K12"></label></div>
+<div><label>Item Description<input id="s_name" placeholder="Sellable item description"></label></div>
+<div><label>Category<input id="s_category" placeholder="e.g. KOTA, CHIPS, DRINKS"></label></div>
+<div><label>Selling Price (R)<input id="s_price" type="number" min="0" step="0.01" placeholder="0.00"></label></div>
+<div><label>Status<select id="s_active"><option value="true">Active</option><option value="false">Inactive</option></select></label></div>
+</div>
+<div class="actions">
+<button class="save" type="button" onclick="saveSellableItem()">SAVE ITEM</button>
+<button class="secondary" type="button" onclick="clearSellableForm()">CLEAR FORM</button>
+<button class="secondary" type="button" onclick="loadSellableItems()">REFRESH ITEMS</button>
+</div>
+<div id="sellableMsg" class="msg"></div>
+<hr style="border:0;border-top:1px solid #e5e7eb;margin:18px 0">
+<h2 style="font-size:18px">Existing Sellable Items</h2>
+<div class="toolbar">
+<select id="s_listStore"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select>
+<input id="s_search" placeholder="Search code, description or category" oninput="renderSellableItems()">
+</div>
+<div class="tablewrap">
+<table>
+<thead><tr><th>Code</th><th>Description</th><th>Category</th><th>Price</th><th>Status</th><th>Action</th></tr></thead>
+<tbody id="sellableBody"><tr><td colspan="6">Sign in as Manager to load sellable items.</td></tr></tbody>
+</table>
+</div>
+</div>
+
 <div class="card" id="receipt">
 <h2>Receive Production Input Stock</h2>
 <p class="muted">Capture opening stock or supplier receipts. Each receipt is saved to the live stock receipt register for audit and reconciliation.</p>
@@ -142,6 +173,7 @@ async function adminSignIn(){
     m.textContent='Manager signed in successfully.';m.className='msg ok';
     document.getElementById('adminPassword').value='';
     await loadInputs();
+    await loadSellableItems();
   }catch(err){
     console.error(err);
     m.textContent=err.message;m.className='msg bad';
@@ -151,7 +183,7 @@ async function api(path,opt={}){
   let p=path.startsWith('/')?path:'/rest/v1/'+path;
   return request(p,opt);
 }
-async function refreshAdmin(){if(await verifyManager()){await loadInputs();await loadReceiptHistory();}}
+async function refreshAdmin(){if(await verifyManager()){await loadInputs();await loadSellableItems();await loadReceiptHistory();}}
 function val(id){return (document.getElementById(id)?.value||'').trim()}
 function go(where){
   const el=document.getElementById(where);
@@ -198,6 +230,87 @@ async function saveInput(){
     document.getElementById('listStore').value=store;
     await loadInputs();
   }catch(e){m.textContent='Could not save Production Input: '+e.message;m.className='msg bad'}
+}
+
+let sellableRows=[];
+function sellableStatus(msg,ok=true){
+  const e=document.getElementById('sellableMsg');
+  if(!e)return;
+  e.textContent=msg||'';
+  e.className='msg '+(ok?'ok':'bad');
+}
+async function adminProduct(action,payload={}){
+  const token=tok();
+  if(!token)throw new Error('Manager cloud session is missing. Please sign in again.');
+  const response=await fetch(ROOT+'/functions/v1/pos-product-admin',{
+    method:'POST',
+    headers:{'apikey':KEY,'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+    body:JSON.stringify(Object.assign({action},payload))
+  });
+  const raw=await response.text();
+  let body=null; try{body=raw?JSON.parse(raw):null}catch(_){body={error:raw}}
+  if(!response.ok)throw new Error((body&&body.error)||(body&&body.message)||raw||('HTTP '+response.status));
+  return body||{};
+}
+function clearSellableForm(){
+  ['s_code','s_name','s_category','s_price'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  const code=document.getElementById('s_code');if(code)code.readOnly=false;
+  const active=document.getElementById('s_active');if(active)active.value='true';
+  sellableStatus('');
+}
+async function loadSellableItems(){
+  if(!guard())return;
+  const store=document.getElementById('s_listStore')?.value||document.getElementById('s_store')?.value||'NDAYENI';
+  const body=document.getElementById('sellableBody');
+  if(body)body.innerHTML='<tr><td colspan="6">Loading live sellable items...</td></tr>';
+  sellableStatus('Loading from shared database...');
+  try{
+    const result=await adminProduct('list',{store_code:store});
+    sellableRows=Array.isArray(result.items)?result.items:[];
+    renderSellableItems();
+    sellableStatus(sellableRows.length+' sellable item(s) loaded for '+(store==='SIVANA'?'Sivana':'Ndayeni')+'.');
+  }catch(e){
+    sellableRows=[];
+    if(body)body.innerHTML='<tr><td colspan="6">'+esc(e.message)+'</td></tr>';
+    sellableStatus('Could not load sellable items: '+e.message,false);
+  }
+}
+function renderSellableItems(){
+  const q=String(document.getElementById('s_search')?.value||'').trim().toLowerCase();
+  const body=document.getElementById('sellableBody');if(!body)return;
+  const list=sellableRows.filter(x=>!q||[x.code,x.name,x.category].some(v=>String(v||'').toLowerCase().includes(q)));
+  body.innerHTML=list.map(x=>`<tr><td><b>${esc(x.code)}</b></td><td>${esc(x.name)}</td><td>${esc(x.category||'')}</td><td>R${Number(x.price||0).toFixed(2)}</td><td><span class="pill ${x.active===false?'inactive':''}">${x.active===false?'INACTIVE':'ACTIVE'}</span></td><td><button class="secondary" type="button" onclick='editSellableItem(${JSON.stringify(x).replace(/'/g,"&#39;")})'>EDIT</button></td></tr>`).join('')||'<tr><td colspan="6">No sellable items found.</td></tr>';
+}
+function editSellableItem(x){
+  const store=x.store_code||document.getElementById('s_listStore')?.value||'NDAYENI';
+  document.getElementById('s_store').value=store;
+  document.getElementById('s_listStore').value=store;
+  const code=document.getElementById('s_code');code.value=x.code||'';code.readOnly=true;
+  document.getElementById('s_name').value=x.name||'';
+  document.getElementById('s_category').value=x.category||'';
+  document.getElementById('s_price').value=Number(x.price||0);
+  document.getElementById('s_active').value=String(x.active!==false);
+  sellableStatus('Editing '+(x.code||'item')+'. Change the details and click SAVE ITEM.');
+  go('sellable');
+}
+async function saveSellableItem(){
+  if(!guard())return;
+  const store=document.getElementById('s_store').value;
+  const code=String(document.getElementById('s_code').value||'').trim().toUpperCase();
+  const name=String(document.getElementById('s_name').value||'').trim();
+  const category=String(document.getElementById('s_category').value||'').trim();
+  const price=Number(document.getElementById('s_price').value);
+  const active=document.getElementById('s_active').value==='true';
+  if(!code||!name||!category||!Number.isFinite(price)||price<0){sellableStatus('Item Code, Item Description, Category and a valid Selling Price are required.',false);return;}
+  try{
+    sellableStatus('Saving sellable item...');
+    await adminProduct('save',{store_code:store,code,name,category,price});
+    await adminProduct('active',{store_code:store,code,active});
+    document.getElementById('s_listStore').value=store;
+    clearSellableForm();
+    await loadSellableItems();
+    sellableStatus(code+' saved successfully for '+(store==='SIVANA'?'Sivana':'Ndayeni')+'.');
+  }catch(e){sellableStatus('Could not save sellable item: '+e.message,false);}
 }
 
 function receiptStatus(msg,ok=true){const e=document.getElementById('receipt_status');if(!e)return;e.textContent=msg||'';e.style.color=ok?'#166534':'#b91c1c';}
@@ -322,5 +435,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   });
   document.getElementById('receiptHistoryStore')?.addEventListener('change',loadReceiptHistory);
   document.getElementById('r_input')?.addEventListener('change',applyReceiptDefaults);
+  const ss=document.getElementById('s_store'); if(ss)ss.value=initialStore;
+  const sls=document.getElementById('s_listStore'); if(sls)sls.value=initialStore;
+  document.getElementById('s_store')?.addEventListener('change',(e)=>{const list=document.getElementById('s_listStore');if(list)list.value=e.target.value;clearSellableForm();loadSellableItems();});
+  document.getElementById('s_listStore')?.addEventListener('change',(e)=>{const form=document.getElementById('s_store');if(form)form.value=e.target.value;clearSellableForm();loadSellableItems();});
 });
-</script></body></html>
+</script>
+<!-- BUILD: PRODUCTION_INPUT_ADMIN_PLUS_SELLABLE_ITEMS_V1_20260921 -->
+</body></html>
