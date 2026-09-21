@@ -7849,8 +7849,14 @@ function configureAccess(){
  if(sub)sub.textContent=r==='salesperson'?'Your unclosed cash-ups only — assigned store '+(assignedStore()==='SIVANA'?'Sivana':'Ndayeni')+'.':'Manager view — outstanding store cash-ups can be revisited and completed.';
 }
 function summary(rows){
- const x=rows.reduce((a,r)=>{a.sales+=r.total;a.cash+=r.cash;a.count+=r.count;return a},{sales:0,cash:0,count:0});
- document.getElementById('fvUnclosedCashupSummaryV80').innerHTML='<div>Unclosed Days<b>'+rows.length+'</b></div><div>Sales<b>'+M(x.sales)+'</b></div><div>Cash Sales<b>'+M(x.cash)+'</b></div><div>Sale Count<b>'+x.count+'</b></div>';
+ const box=document.getElementById('fvUnclosedCashupSummaryV80');
+ if(role()==='salesperson'){
+   // Salespersons can review each unclosed day, but aggregate totals stay manager-only.
+   if(box){box.innerHTML='';box.style.display='none';}
+ }else{
+   const x=rows.reduce((a,r)=>{a.sales+=r.total;a.cash+=r.cash;a.count+=r.count;return a},{sales:0,cash:0,count:0});
+   if(box){box.style.display='flex';box.innerHTML='<div>Unclosed Days<b>'+rows.length+'</b></div><div>Sales<b>'+M(x.sales)+'</b></div><div>Cash Sales<b>'+M(x.cash)+'</b></div><div>Sale Count<b>'+x.count+'</b></div>';}
+ }
  const b=document.getElementById('fvUnclosedCashupBtnV80');if(b)b.textContent=rows.length?'UNCLOSED CASH-UPS ('+rows.length+')':'UNCLOSED CASH-UPS';
 }
 async function load(){
@@ -7917,7 +7923,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 window.openUnclosedCashupsV80=open;window.loadUnclosedCashupsV80=load;window.fvUnclosedCashupMountV80=mount;
 })();
 </script>
-<!-- BUILD: V81_MANAGER_SALESPERSON_UNCLOSED_CASHUPS_REVISIT_20260921 -->
+<!-- BUILD: V85_HIDE_SALESPERSON_UNCLOSED_TOP_TOTALS_20260921 -->
 
 
 <style id="fvCategorisedFunctionNavStyleV82">
