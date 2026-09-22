@@ -268,7 +268,7 @@ async function loadSellableItems(){
     const result=await adminProduct('list',{store_code:store});
     sellableRows=Array.isArray(result.items)?result.items:[];
     renderSellableItems();
-    sellableStatus(sellableRows.length+' sellable item(s) loaded for '+(store==='SIVANA'?'Sivana':store==='BIRCH_ACRES'?'Birch Acres':'Ndayeni')+'.');
+    sellableStatus(sellableRows.length+' sellable item(s) loaded for '+(store==='SIVANA'?'Sivana':'Ndayeni')+'.');
   }catch(e){
     sellableRows=[];
     if(body)body.innerHTML='<tr><td colspan="6">'+esc(e.message)+'</td></tr>';
@@ -309,7 +309,7 @@ async function saveSellableItem(){
     document.getElementById('s_listStore').value=store;
     clearSellableForm();
     await loadSellableItems();
-    sellableStatus(code+' saved successfully for '+(store==='SIVANA'?'Sivana':store==='BIRCH_ACRES'?'Birch Acres':'Ndayeni')+'.');
+    sellableStatus(code+' saved successfully for '+(store==='SIVANA'?'Sivana':'Ndayeni')+'.');
   }catch(e){sellableStatus('Could not save sellable item: '+e.message,false);}
 }
 
@@ -327,7 +327,7 @@ async function populateReceiptInputs(){
    sel.innerHTML='<option value="">Select Production Input</option>'+items.map(x=>'<option value="'+esc(x.code)+'" data-name="'+esc(x.name)+'" data-unit="'+esc(x.unit||'EA')+'" data-cost="'+esc(x.preferred_unit_cost??'')+'" data-supplier="'+esc(x.preferred_supplier||'')+'">'+esc(x.code)+' — '+esc(x.name)+'</option>').join('');
    if(items.some(x=>x.code===current))sel.value=current;
    if(!items.length) receiptStatus('No active Production Inputs found for '+store+'.',false);
-   else receiptStatus(items.length+' Production Inputs ready for '+(store==='SIVANA'?'Sivana':store==='BIRCH_ACRES'?'Birch Acres':'Ndayeni')+'.');
+   else receiptStatus(items.length+' Production Inputs ready for '+(store==='SIVANA'?'Sivana':'Ndayeni')+'.');
  }catch(e){
    sel.innerHTML='<option value="">Could not load Production Inputs</option>';
    receiptStatus('Could not load Production Inputs: '+e.message,false);
@@ -386,7 +386,7 @@ async function loadReceiptHistory(){
         '</tr>';
       }).join(''):'<tr><td colspan="9">No stock receipts found for this store.</td></tr>';
     }
-    if(msg){msg.textContent=items.length+' receipt(s) loaded for '+(store==='SIVANA'?'Sivana':store==='BIRCH_ACRES'?'Birch Acres':'Ndayeni')+'.';msg.className='msg ok';}
+    if(msg){msg.textContent=items.length+' receipt(s) loaded for '+(store==='SIVANA'?'Sivana':'Ndayeni')+'.';msg.className='msg ok';}
   }catch(e){
     if(body)body.innerHTML='<tr><td colspan="9">'+esc(e.message)+'</td></tr>';
     if(msg){msg.textContent='Could not load receipt history: '+e.message;msg.className='msg bad';}
@@ -406,7 +406,7 @@ async function loadInputs(){
       '&select=id,store_code,code,name,category,unit,reorder_level,safety_stock,target_stock,purchase_cycle_days,purchase_group,preferred_supplier,preferred_unit_cost,active&order=category.asc,code.asc');
     rows=Array.isArray(data)?data:[];
     render();
-    if(msg){msg.textContent=rows.length+' Production Input(s) loaded for '+(store==='SIVANA'?'Sivana':store==='BIRCH_ACRES'?'Birch Acres':'Ndayeni')+'.';msg.className='msg ok'}
+    if(msg){msg.textContent=rows.length+' Production Input(s) loaded for '+(store==='SIVANA'?'Sivana':'Ndayeni')+'.';msg.className='msg ok'}
   }catch(e){
     rows=[];
     if(body)body.innerHTML='<tr><td colspan="7">'+esc(e.message)+'</td></tr>';
@@ -442,4 +442,35 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 </script>
 <!-- BUILD: PRODUCTION_INPUT_ADMIN_PLUS_SELLABLE_ITEMS_V1_20260921 -->
+
+<script id="fvBirchAcresCoverageV91">
+/* V91 — Birch Acres full store-selector compatibility */
+(function(){
+  'use strict';
+  if(window.__fvBirchAcresCoverageV91)return;
+  window.__fvBirchAcresCoverageV91=true;
+  const CODE='BIRCH_ACRES', NAME='Birch Acres';
+  function ensureSelect(sel){
+    if(!sel || sel.tagName!=='SELECT') return;
+    const vals=Array.from(sel.options||[]).map(o=>String(o.value||'').toUpperCase());
+    if(vals.includes('NDAYENI') && vals.includes('SIVANA') && !vals.includes(CODE)){
+      const o=document.createElement('option');o.value=CODE;o.textContent=NAME;
+      const siv=Array.from(sel.options).find(x=>String(x.value||'').toUpperCase()==='SIVANA');
+      if(siv && siv.nextSibling) sel.insertBefore(o,siv.nextSibling); else sel.appendChild(o);
+    }
+  }
+  function apply(){document.querySelectorAll('select').forEach(ensureSelect);}
+  document.addEventListener('DOMContentLoaded',apply);
+  [50,250,750,1500,3000].forEach(ms=>setTimeout(apply,ms));
+  const obs=new MutationObserver(()=>apply());
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+  document.addEventListener('change',function(e){
+    if(e.target && e.target.tagName==='SELECT' && String(e.target.value||'').toUpperCase()===CODE){
+      try{localStorage.setItem('feastervilleStoreCode',CODE)}catch(_){ }
+    }
+  },true);
+  window.ensureBirchAcresCoverageV91=apply;
+})();
+</script>
+
 </body></html>

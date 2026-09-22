@@ -15,7 +15,7 @@
 <div class="wrap">
   <div class="top">
     <h1>FEASTERVILLE FOOD — MONTH-END CLOSURE REPORT</h1>
-    <p>Inventory reconciliation, Cost of Sales, Profit &amp; Loss, cash-up control and closing stock for Ndayeni and Sivana.</p>
+    <p>Inventory reconciliation, Cost of Sales, Profit &amp; Loss, cash-up control and closing stock for Ndayeni, Sivana and Birch Acres.</p>
     <div class="nav no-print">
       <button class="secondary" onclick="location.href='index.html'">POS HOME</button>
       <button class="secondary" onclick="location.href='production-input-admin.html'">PRODUCTION INPUT ADMIN</button>
@@ -25,7 +25,7 @@
 
   <div class="panel no-print">
     <div class="filters">
-      <label>Store<br><select id="store"><option value="ALL">All Stores</option><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select></label>
+      <label>Store<br><select id="store"><option value="ALL">All Stores</option><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option><option value="BIRCH_ACRES">Birch Acres</option></select></label>
       <label>Month<br><input id="month" type="month"></label>
       <button class="primary" id="loadBtn">VIEW MONTH-END REPORT</button>
       <button class="secondary" id="printBtn">PRINT / SAVE PDF</button>
@@ -179,7 +179,7 @@ function uniqueCount(a){return new Set(a).size}
 function addBy(obj,key,val){obj[key]=(obj[key]||0)+n(val)}
 let lastInventory=[];
 async function load(){
-  const st=$('store').value,m=$('month').value;if(!m)return alert('Select a month.');const {start,end,label}=monthBounds(m);const sf=st==='ALL'?'':'&store_code=eq.'+encodeURIComponent(st);const stores=st==='ALL'?['NDAYENI','SIVANA']:[st];
+  const st=$('store').value,m=$('month').value;if(!m)return alert('Select a month.');const {start,end,label}=monthBounds(m);const sf=st==='ALL'?'':'&store_code=eq.'+encodeURIComponent(st);const stores=st==='ALL'?['NDAYENI','SIVANA','BIRCH_ACRES']:[st];
   setStatus('Loading live month-end data...');$('report').classList.add('hidden');
   try{
     const [inputs,counts,receipts,sales,other,expenses,cashups]=await Promise.all([
@@ -249,7 +249,7 @@ async function load(){
     const today=new Date().toLocaleDateString('en-CA',{timeZone:'Africa/Johannesburg'});const periodComplete=today>=end;
     let ready=periodComplete&&counted===activeRows.length&&missingCosts===0;
 
-    $('reportTitle').textContent=(st==='ALL'?'All Stores':(st==='NDAYENI'?'Ndayeni':'Sivana'))+' — '+label+' Month-End Closure';
+    $('reportTitle').textContent=(st==='ALL'?'All Stores':(st==='NDAYENI'?'Ndayeni':st==='SIVANA'?'Sivana':'Birch Acres'))+' — '+label+' Month-End Closure';
     $('salesCard').textContent=money(salesTotal);$('saleCountCard').textContent=sales.length+' completed sale(s)';$('cogsCard').textContent=money(cogs);$('grossCard').textContent=money(gross);$('grossMarginCard').textContent=grossMargin.toFixed(1)+'% gross margin';$('opexCard').textContent=money(opex);$('netCard').textContent=money(net);$('netCard').style.color=net<0?'#b42318':'#176b2c';$('closingInvCard').textContent=money(closingInv);
     $('countedCard').textContent=counted+' / '+activeRows.length;$('countedSub').textContent='Physical counts dated '+end;$('costCard').textContent=missingCosts+' missing';$('salesDaysCard').textContent=salesDays;$('cashupDaysCard').textContent=cashupDays;$('cashupVarianceSub').textContent='Cash variance '+money(cashVariance);
     $('closureTag').innerHTML=!periodComplete?'<span class="tag warn">MONTH IN PROGRESS</span>':ready?'<span class="tag good">READY TO CLOSE</span>':'<span class="tag bad">REVIEW REQUIRED</span>';
@@ -273,5 +273,36 @@ function init(){const now=new Date(),m=now.getFullYear()+'-'+String(now.getMonth
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
+
+<script id="fvBirchAcresCoverageV91">
+/* V91 — Birch Acres full store-selector compatibility */
+(function(){
+  'use strict';
+  if(window.__fvBirchAcresCoverageV91)return;
+  window.__fvBirchAcresCoverageV91=true;
+  const CODE='BIRCH_ACRES', NAME='Birch Acres';
+  function ensureSelect(sel){
+    if(!sel || sel.tagName!=='SELECT') return;
+    const vals=Array.from(sel.options||[]).map(o=>String(o.value||'').toUpperCase());
+    if(vals.includes('NDAYENI') && vals.includes('SIVANA') && !vals.includes(CODE)){
+      const o=document.createElement('option');o.value=CODE;o.textContent=NAME;
+      const siv=Array.from(sel.options).find(x=>String(x.value||'').toUpperCase()==='SIVANA');
+      if(siv && siv.nextSibling) sel.insertBefore(o,siv.nextSibling); else sel.appendChild(o);
+    }
+  }
+  function apply(){document.querySelectorAll('select').forEach(ensureSelect);}
+  document.addEventListener('DOMContentLoaded',apply);
+  [50,250,750,1500,3000].forEach(ms=>setTimeout(apply,ms));
+  const obs=new MutationObserver(()=>apply());
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+  document.addEventListener('change',function(e){
+    if(e.target && e.target.tagName==='SELECT' && String(e.target.value||'').toUpperCase()===CODE){
+      try{localStorage.setItem('feastervilleStoreCode',CODE)}catch(_){ }
+    }
+  },true);
+  window.ensureBirchAcresCoverageV91=apply;
+})();
+</script>
+
 </body>
 </html>

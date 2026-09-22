@@ -40,7 +40,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px;borde
 <div class="card filters">
 <label>From Month<br><input id="fromMonth" type="month" value="2026-03"></label>
 <label>To Month<br><input id="toMonth" type="month" value="2027-02"></label>
-<label>Store<br><select id="store"><option value="ALL">All Stores</option><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option></select></label>
+<label>Store<br><select id="store"><option value="ALL">All Stores</option><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option><option value="BIRCH_ACRES">Birch Acres</option></select></label>
 <button class="primary" onclick="loadAll()">VIEW DRAFT STATEMENTS</button>
 </div>
 <div id="status" class="msg"></div>
@@ -147,4 +147,35 @@ async function loadAll(){
 }
 loadAll();
 </script>
+
+<script id="fvBirchAcresCoverageV91">
+/* V91 — Birch Acres full store-selector compatibility */
+(function(){
+  'use strict';
+  if(window.__fvBirchAcresCoverageV91)return;
+  window.__fvBirchAcresCoverageV91=true;
+  const CODE='BIRCH_ACRES', NAME='Birch Acres';
+  function ensureSelect(sel){
+    if(!sel || sel.tagName!=='SELECT') return;
+    const vals=Array.from(sel.options||[]).map(o=>String(o.value||'').toUpperCase());
+    if(vals.includes('NDAYENI') && vals.includes('SIVANA') && !vals.includes(CODE)){
+      const o=document.createElement('option');o.value=CODE;o.textContent=NAME;
+      const siv=Array.from(sel.options).find(x=>String(x.value||'').toUpperCase()==='SIVANA');
+      if(siv && siv.nextSibling) sel.insertBefore(o,siv.nextSibling); else sel.appendChild(o);
+    }
+  }
+  function apply(){document.querySelectorAll('select').forEach(ensureSelect);}
+  document.addEventListener('DOMContentLoaded',apply);
+  [50,250,750,1500,3000].forEach(ms=>setTimeout(apply,ms));
+  const obs=new MutationObserver(()=>apply());
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+  document.addEventListener('change',function(e){
+    if(e.target && e.target.tagName==='SELECT' && String(e.target.value||'').toUpperCase()===CODE){
+      try{localStorage.setItem('feastervilleStoreCode',CODE)}catch(_){ }
+    }
+  },true);
+  window.ensureBirchAcresCoverageV91=apply;
+})();
+</script>
+
 </body></html>
