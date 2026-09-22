@@ -898,7 +898,7 @@ function completeSale(){
 }
 function showReceipt(s){
  const r=document.getElementById('receiptPrint'); r.style.display='block'; r.scrollIntoView({behavior:'smooth',block:'center'});
- r.innerHTML='<h2>FEASTERVILLE FOOD — POS</h2><div>'+(((window.currentUser?.role==='manager'?(localStorage.getItem('feastervilleStoreCode')||'NDAYENI'):(window.currentUser?.store_code||'NDAYENI'))==='NDAYENI')?'1st Street, Ndayini Section, Tembisa':'51 Senagal Street, Isivana Section, Tembisa')+'</div><div>Order #'+String(s.orderNo).padStart(4,'0')+'</div><div>Date: '+s.date+' | Time: '+(s.time||'')+'</div><div>'+s.orderType+'</div><hr>'+
+ r.innerHTML='<h2>FEASTERVILLE FOOD — POS</h2><div>'+(()=>{const sc=(window.currentUser?.role==='manager'?(localStorage.getItem('feastervilleStoreCode')||'NDAYENI'):(window.currentUser?.store_code||'NDAYENI'));return sc==='NDAYENI'?'1st Street, Ndayini Section, Tembisa':sc==='BIRCH_ACRES'?'Birch Acres, Kempton Park':'51 Senagal Street, Isivana Section, Tembisa';})()+'</div><div>Order #'+String(s.orderNo).padStart(4,'0')+'</div><div>Date: '+s.date+' | Time: '+(s.time||'')+'</div><div>'+s.orderType+'</div><hr>'+
  s.items.map(i=>`${i.code}  x${i.qty}  ${money(i.qty*i.price)}`).join('<br>')+
  '<hr><b>TOTAL: '+money(s.total)+'</b><br>Payment: '+s.payment+'<br>Received: '+money(s.received)+'<br>Change: '+money(Math.max(s.received-s.total,0));
 }
@@ -928,7 +928,8 @@ function printReceipt(){
     '.receipt-item-values{display:flex!important;justify-content:space-between!important;gap:8px!important}'+
     'hr{border:0;border-top:1px dashed #000;margin:5px 0}'+
     'button{display:none!important}'+
-    '</style></head><body><div class="receipt-wrap">'+receiptHtml+'</div></body></html>';
+    '</style></head><body><div class="receipt-wrap">'+receiptHtml+'</div></body><!-- BUILD: V90_BIRCH_ACRES_ALL_STORE_COVERAGE_20260922 -->
+</html>';
 
   w.document.open();
   w.document.write(doc);
@@ -1772,7 +1773,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
     box.innerHTML=
       '<div style="font-family:monospace;max-width:80mm;margin:auto">'+
-      '<div style="text-align:center"><b>FEASTERVILLE FOOD — POS</b><br>'+(((window.currentUser?.role==='manager'?(localStorage.getItem('feastervilleStoreCode')||'NDAYENI'):(window.currentUser?.store_code||'NDAYENI'))==='NDAYENI')?'1st Street, Ndayini Section, Tembisa':'51 Senagal Street, Isivana Section, Tembisa')+'</div>'+
+      '<div style="text-align:center"><b>FEASTERVILLE FOOD — POS</b><br>'+(()=>{const sc=(window.currentUser?.role==='manager'?(localStorage.getItem('feastervilleStoreCode')||'NDAYENI'):(window.currentUser?.store_code||'NDAYENI'));return sc==='NDAYENI'?'1st Street, Ndayini Section, Tembisa':sc==='BIRCH_ACRES'?'Birch Acres, Kempton Park':'51 Senagal Street, Isivana Section, Tembisa';})()+'</div>'+
       '<hr>'+
       '<div>Order #'+String(sale.orderNo||'').padStart(4,'0')+'</div>'+
       '<div>Date: '+(sale.date||'')+'</div>'+
@@ -1890,7 +1891,8 @@ document.addEventListener('DOMContentLoaded',function(){
     if(!w){alert('Please allow pop-ups to print the receipt.');return;}
     const html='<!doctype html><html><head><meta charset="utf-8"><title>Receipt</title>'+
       '<style>@page{size:80mm auto;margin:0}body{width:80mm;margin:0;padding:4mm;box-sizing:border-box;font:11px monospace}hr{border:0;border-top:1px dashed #000}</style>'+
-      '</head><body>'+receipt.innerHTML+'</body></html>';
+      '</head><body>'+receipt.innerHTML+'</body><!-- BUILD: V90_BIRCH_ACRES_ALL_STORE_COVERAGE_20260922 -->
+</html>';
     w.document.open();w.document.write(html);w.document.close();w.focus();
     setTimeout(function(){w.print();},200);
   };
@@ -2106,7 +2108,7 @@ document.addEventListener('DOMContentLoaded',function(){
       const cloudUser=el('liveUser'); if(cloudUser)cloudUser.textContent=su.label;
       const overlay=el('liveLoginOverlay'); if(overlay)overlay.style.setProperty('display','none','important');
       const logout=el('liveLogout'); if(logout)logout.style.display='';
-      setStatus('ONLINE - '+(su.store_code==='SIVANA'?'Sivana':'Ndayeni'));
+      setStatus('ONLINE - '+(su.store_code==='SIVANA'?'Sivana':su.store_code==='BIRCH_ACRES'?'Birch Acres':'Ndayeni'));
       setMessage('');
 
       // Fetch ONLY the salesperson's sellable menu.
@@ -2163,7 +2165,7 @@ document.addEventListener('DOMContentLoaded',function(){
       const logout=el('liveLogout');
       if(logout) logout.style.display='';
 
-      setStatus('ONLINE - '+(iu.store_code==='SIVANA'?'Sivana':'Ndayeni')+' Inventory Controller');
+      setStatus('ONLINE - '+(iu.store_code==='SIVANA'?'Sivana':iu.store_code==='BIRCH_ACRES'?'Birch Acres':'Ndayeni')+' Inventory Controller');
       setMessage('');
 
       // Hide sales/manager areas immediately. V46/V47 inventory-controller
@@ -2481,7 +2483,7 @@ const U='https://sflyjcgbxbcwspfuzone.supabase.co',K='sb_publishable_iASq-tni6KY
 const $=id=>document.getElementById(id);
 function sm(t,b){if($('staffMessage')){$('staffMessage').textContent=t||'';$('staffMessage').style.color=b?'#a00':'#155b00';}}
 async function ac(p){const t=sessionStorage.getItem(TK)||'';if(!t)throw Error('Sign in as Manager first.');const r=await fetch(U+'/functions/v1/pos-user-admin',{method:'POST',headers:{apikey:K,Authorization:'Bearer '+t,'Content-Type':'application/json'},body:JSON.stringify(p)});const x=await r.text();let d={};try{d=x?JSON.parse(x):{};}catch(_){d={error:x};}if(!r.ok)throw Error(d.error||x||('HTTP '+r.status));return d;}
-async function loadStaff(){const b=$('staffRows');if(!b)return;b.innerHTML='<tr><td colspan="7">Loading live users...</td></tr>';try{const d=await ac({action:'list'}),u=d.users||[];b.innerHTML=u.length?u.map(x=>`<tr><td>${x.display_name||''}</td><td>${x.email||''}</td><td>${x.role||'salesperson'}</td><td>${x.role==='manager'?'ALL STORES':`<div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap"><select id="staffStore_${x.id}"><option value="NDAYENI" ${x.store_code==='NDAYENI'?'selected':''}>Ndayeni</option><option value="SIVANA" ${x.store_code==='SIVANA'?'selected':''}>Sivana</option></select><button type="button" onclick="ftSaveStaffStore('${x.id}')">SAVE STORE</button></div>`}</td><td><b>${x.active===false?'INACTIVE':'ACTIVE'}</b></td><td>${x.last_sign_in_at?new Date(x.last_sign_in_at).toLocaleString():'Never'}</td><td><button type="button" onclick="ftStaffActive('${x.id}',${x.active===false})">${x.active===false?'ACTIVATE':'DEACTIVATE'}</button> <button type="button" onclick="ftStaffPassword('${x.id}',${JSON.stringify(x.email||'')})">RESET PASSWORD</button></td></tr>`).join(''):'<tr><td colspan="7">No users found.</td></tr>';sm(u.length+' live user(s) loaded.');}catch(e){b.innerHTML='<tr><td colspan="6">'+e.message+'</td></tr>';sm(e.message,true);}}
+async function loadStaff(){const b=$('staffRows');if(!b)return;b.innerHTML='<tr><td colspan="7">Loading live users...</td></tr>';try{const d=await ac({action:'list'}),u=d.users||[];b.innerHTML=u.length?u.map(x=>`<tr><td>${x.display_name||''}</td><td>${x.email||''}</td><td>${x.role||'salesperson'}</td><td>${x.role==='manager'?'ALL STORES':`<div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap"><select id="staffStore_${x.id}"><option value="NDAYENI" ${x.store_code==='NDAYENI'?'selected':''}>Ndayeni</option><option value="SIVANA" ${x.store_code==='SIVANA'?'selected':''}>Sivana</option><option value="BIRCH_ACRES" ${x.store_code==='BIRCH_ACRES'?'selected':''}>Birch Acres</option></select><button type="button" onclick="ftSaveStaffStore('${x.id}')">SAVE STORE</button></div>`}</td><td><b>${x.active===false?'INACTIVE':'ACTIVE'}</b></td><td>${x.last_sign_in_at?new Date(x.last_sign_in_at).toLocaleString():'Never'}</td><td><button type="button" onclick="ftStaffActive('${x.id}',${x.active===false})">${x.active===false?'ACTIVATE':'DEACTIVATE'}</button> <button type="button" onclick="ftStaffPassword('${x.id}',${JSON.stringify(x.email||'')})">RESET PASSWORD</button></td></tr>`).join(''):'<tr><td colspan="7">No users found.</td></tr>';sm(u.length+' live user(s) loaded.');}catch(e){b.innerHTML='<tr><td colspan="6">'+e.message+'</td></tr>';sm(e.message,true);}}
 window.ftStaffActive=async(id,a)=>{try{await ac({action:'active',user_id:id,active:a});sm(a?'User activated.':'User deactivated.');await loadStaff();}catch(e){sm(e.message,true);}};
 window.ftSaveStaffStore=async function(id){
   const sel=document.getElementById('staffStore_'+id);
@@ -2490,7 +2492,7 @@ window.ftSaveStaffStore=async function(id){
   try{
     sm('Saving store assignment...');
     await ac({action:'store',user_id:id,store_code:store_code});
-    sm('Store assignment saved: '+(store_code==='SIVANA'?'Sivana':'Ndayeni')+'.');
+    sm('Store assignment saved: '+(store_code==='SIVANA'?'Sivana':store_code==='BIRCH_ACRES'?'Birch Acres':'Ndayeni')+'.');
     await loadStaff();
   }catch(e){
     sm(e.message,true);
@@ -2591,7 +2593,7 @@ window.loadLiveStaffUsers=loadStaff;
 (function(){
   const select=document.getElementById('storeLocationSelect');
   const badge=document.getElementById('storeLocationBadge');
-  const names={NDAYENI:'Ndayeni',SIVANA:'Sivana'};
+  const names={NDAYENI:'Ndayeni',SIVANA:'Sivana',BIRCH_ACRES:'Birch Acres'};
   const saved=localStorage.getItem('feastervilleStoreCode')||'NDAYENI';
   if(select)select.value=names[saved]?saved:'NDAYENI';
   function applyStore(){
@@ -2632,7 +2634,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
 <script>
 (function(){
-  const STORE_NAMES={NDAYENI:'Ndayeni',SIVANA:'Sivana'};
+  const STORE_NAMES={NDAYENI:'Ndayeni',SIVANA:'Sivana',BIRCH_ACRES:'Birch Acres'};
 
   function enforceStoreAccess(){
     const u=window.currentUser;
@@ -3023,6 +3025,7 @@ document.addEventListener('DOMContentLoaded',function(){
       <select id="countSheetStoreSelect" style="padding:8px 12px;min-width:180px">
         <option value="NDAYENI" ${s==='NDAYENI'?'selected':''}>Ndayini</option>
         <option value="SIVANA" ${s==='SIVANA'?'selected':''}>Sivana</option>
+        <option value="BIRCH_ACRES" ${s==='BIRCH_ACRES'?'selected':''}>Birch Acres</option>
       </select>
       <span style="font-size:13px">This Count Sheet will show only the selected store.</span>
     </div>`;
@@ -3120,6 +3123,7 @@ document.addEventListener('DOMContentLoaded',function(){
      <select id="${id}" class="production-section-store" style="padding:8px 12px;min-width:180px">
        <option value="NDAYENI" ${s==='NDAYENI'?'selected':''}>Ndayini</option>
        <option value="SIVANA" ${s==='SIVANA'?'selected':''}>Sivana</option>
+       <option value="BIRCH_ACRES" ${s==='BIRCH_ACRES'?'selected':''}>Birch Acres</option>
      </select>
      <span style="font-size:13px">Only data for this store is shown.</span>
    </div>`;
@@ -3194,7 +3198,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
     if(u.role!=='manager'){
       return `<div id="stockMovementStoreHolder" style="margin:10px 0;padding:10px 12px;background:#f2f2f2;border-radius:8px">
-        <b>Store:</b> ${s==='SIVANA'?'Sivana':'Ndayini'}
+        <b>Store:</b> ${s==='SIVANA'?'Sivana':s==='BIRCH_ACRES'?'Birch Acres':'Ndayini'}
       </div>`;
     }
 
@@ -3203,6 +3207,7 @@ document.addEventListener('DOMContentLoaded',function(){
       <select id="stockMovementStoreSelect" class="production-section-store" style="padding:8px 12px;min-width:180px">
         <option value="NDAYENI" ${s==='NDAYENI'?'selected':''}>Ndayini</option>
         <option value="SIVANA" ${s==='SIVANA'?'selected':''}>Sivana</option>
+        <option value="BIRCH_ACRES" ${s==='BIRCH_ACRES'?'selected':''}>Birch Acres</option>
       </select>
       <span style="font-size:13px">Purchases/receipts and stock movement data are for this store only.</span>
     </div>`;
@@ -5191,7 +5196,8 @@ function printOnlyV44(title,node){
       'th,td{border:1px solid #999;padding:3px 4px;text-align:left;vertical-align:top}'+
       'th{background:#eee}tr{page-break-inside:avoid}thead{display:table-header-group}'+
       'button,input,select{display:none!important}'+
-    '</style></head><body><h2>'+esc44(title)+'</h2>'+node.innerHTML+'</body></html>');
+    '</style></head><body><h2>'+esc44(title)+'</h2>'+node.innerHTML+'</body><!-- BUILD: V90_BIRCH_ACRES_ALL_STORE_COVERAGE_20260922 -->
+</html>');
   doc.close();
   setTimeout(()=>{
     frame.contentWindow.focus();
@@ -5331,7 +5337,8 @@ function printNode(title,node){
    'table,.inv-table{width:100%;border-collapse:collapse;table-layout:auto}th,td,.inv-table th,.inv-table td{border:1px solid #999;padding:3px 4px;text-align:left;vertical-align:top}'+
    'th,.inv-table th{background:#eee!important;color:#111!important}thead{display:table-header-group}tr{page-break-inside:avoid}'+
    'button,input,select{display:none!important}'+
-   '</style></head><body>'+node.innerHTML+'</body></html>');
+   '</style></head><body>'+node.innerHTML+'</body><!-- BUILD: V90_BIRCH_ACRES_ALL_STORE_COVERAGE_20260922 -->
+</html>');
   d.close();
   setTimeout(()=>{
     frame.contentWindow.focus();
@@ -5445,7 +5452,7 @@ async function renderAllowed(){
      const h2=pp.querySelector(':scope > h2');
      if(h2)h2.insertAdjacentElement('afterend',st);
    }
-   st.textContent='LIVE DATABASE — '+(store()==='SIVANA'?'Sivana':'Ndayini')+' — Updated '+new Date().toLocaleTimeString('en-ZA',{timeZone:'Africa/Johannesburg'});
+   st.textContent='LIVE DATABASE — '+(store()==='SIVANA'?'Sivana':store()==='BIRCH_ACRES'?'Birch Acres':'Ndayini')+' — Updated '+new Date().toLocaleTimeString('en-ZA',{timeZone:'Africa/Johannesburg'});
  }
  const sel=document.getElementById('piStockInput');
  if(sel){
@@ -5476,7 +5483,7 @@ async function renderAllowed(){
    const recon=document.getElementById('reconContent');
    if(recon){
      const nextRecon='<div id="fvICReconPrintV46"><h3>Production Inputs Reconciliation — '+today()+'</h3>'+
-      '<p class="small"><b>Store:</b> '+esc(store()==='SIVANA'?'Sivana':'Ndayini')+'</p>'+
+      '<p class="small"><b>Store:</b> '+esc(store()==='SIVANA'?'Sivana':store()==='BIRCH_ACRES'?'Birch Acres':'Ndayini')+'</p>'+
       '<table class="inv-table"><thead><tr><th>Code</th><th>Input</th><th>Unit</th><th>Opening</th><th>Received</th><th>Used</th><th>Expected</th><th>Physical</th><th>Variance</th><th>Action</th></tr></thead><tbody>'+
       rows().map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.unit)+'</td><td>'+fmt(r.opening)+'</td><td>'+fmt(r.received)+'</td><td>'+fmt(r.used)+'</td><td>'+fmt(r.expected)+'</td><td>'+fmt(r.physical)+'</td><td>'+fmt(r.variance)+'</td><td>'+(r.variance<0?'SHORTAGE':r.variance>0?'SURPLUS':'OK')+'</td></tr>').join('')+
       '</tbody></table></div>';
@@ -5525,7 +5532,8 @@ function printRecon(){
  if(!node||!node.innerHTML.trim())return alert('Open Production Inputs reconciliation first.');
  const w=window.open('','_blank','width=1200,height=800');
  if(!w)return alert('Please allow pop-ups to print the reconciliation.');
- w.document.write('<!doctype html><html><head><title>Production Inputs Reconciliation</title><style>@page{size:A4 landscape;margin:8mm}body{font-family:Arial;font-size:9pt}table{width:100%;border-collapse:collapse}th,td{border:1px solid #999;padding:4px;text-align:left}th{background:#eee}tr{page-break-inside:avoid}thead{display:table-header-group}</style></head><body>'+node.innerHTML+'</body></html>');
+ w.document.write('<!doctype html><html><head><title>Production Inputs Reconciliation</title><style>@page{size:A4 landscape;margin:8mm}body{font-family:Arial;font-size:9pt}table{width:100%;border-collapse:collapse}th,td{border:1px solid #999;padding:4px;text-align:left}th{background:#eee}tr{page-break-inside:avoid}thead{display:table-header-group}</style></head><body>'+node.innerHTML+'</body><!-- BUILD: V90_BIRCH_ACRES_ALL_STORE_COVERAGE_20260922 -->
+</html>');
  w.document.close();w.focus();setTimeout(()=>w.print(),300);
 }
 window.printRecon=printRecon;try{printRecon=window.printRecon}catch(e){}
@@ -5981,7 +5989,7 @@ async function render(){
       const h3=Array.from(panel.querySelectorAll(':scope > h3')).find(h=>/^2\./.test(h.textContent||''));
       if(h3)h3.insertAdjacentElement('afterend',st);
     }
-    if(st)st.textContent='LIVE STOCK LEDGER — '+(store()==='SIVANA'?'Sivana':'Ndayini')+
+    if(st)st.textContent='LIVE STOCK LEDGER — '+(store()==='SIVANA'?'Sivana':store()==='BIRCH_ACRES'?'Birch Acres':'Ndayini')+
       ' — Updated '+new Date().toLocaleTimeString('en-ZA',{timeZone:'Africa/Johannesburg'});
   }catch(e){
     console.error('V53 ledger refresh',e);
@@ -6872,7 +6880,8 @@ window.printSelectedSalesV45=function(){
  const body='<h1>Feasterville Food — Daily Sales Report</h1><p><b>Store:</b> '+E(s)+' &nbsp; <b>Period:</b> '+E(f)+(t!==f?' to '+E(t):'')+'</p><p><b>Number of Sales:</b> '+rows.length+' &nbsp;&nbsp; <b>Total Sales:</b> '+M(total)+'</p><h2>Payment Summary</h2><table><tr><th>Payment Method</th><th>Amount</th></tr>'+ph+'</table><h2>Sales Transactions</h2><table><tr><th>Date</th><th>Time</th><th>Cashier</th><th>Payment</th><th>Total</th></tr>'+rh+'</table>';
  const w=window.open('','_blank','width=1000,height=800');
  if(!w){alert('Please allow pop-ups for this POS, then try again.');return;}
- w.document.write('<!doctype html><html><head><title>Daily Sales Report</title><style>@page{size:A4;margin:12mm}body{font:11px Arial;color:#111}h1{font-size:20px}h2{font-size:14px;margin-top:18px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #bbb;padding:5px}th{background:#eee}tr{page-break-inside:avoid}</style></head><body>'+body+'</body></html>');
+ w.document.write('<!doctype html><html><head><title>Daily Sales Report</title><style>@page{size:A4;margin:12mm}body{font:11px Arial;color:#111}h1{font-size:20px}h2{font-size:14px;margin-top:18px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #bbb;padding:5px}th{background:#eee}tr{page-break-inside:avoid}</style></head><body>'+body+'</body><!-- BUILD: V90_BIRCH_ACRES_ALL_STORE_COVERAGE_20260922 -->
+</html>');
  w.document.close();w.focus();setTimeout(()=>w.print(),500);
 };
 })();
@@ -7003,7 +7012,8 @@ async function load(){
  }catch(e){console.error(e);if(status)status.textContent='Could not load Profit & Loss: '+e.message}
 }
 window.loadProfitLossV48=load;
-function install(){setDates();const r=document.getElementById('plRefreshBtn'),m=document.getElementById('plThisMonthBtn'),p=document.getElementById('plPrintBtn');if(r&&!r.dataset.v48){r.dataset.v48='1';r.onclick=load}if(m&&!m.dataset.v48){m.dataset.v48='1';m.onclick=()=>{document.getElementById('plFrom').value=monthStart();document.getElementById('plTo').value=day();load()}}if(p&&!p.dataset.v48){p.dataset.v48='1';p.onclick=()=>{const a=document.getElementById('plPrintArea');if(!a)return;const w=window.open('','_blank','width=1000,height=800');if(!w)return alert('Please allow pop-ups to print the Profit & Loss.');w.document.write('<!doctype html><html><head><title>Feasterville Profit & Loss</title><style>@page{size:A4;margin:12mm}body{font-family:Arial}table{width:100%;border-collapse:collapse}th,td{border:1px solid #bbb;padding:7px}.inv-grid{display:flex;gap:8px;flex-wrap:wrap}.inv-card{border:1px solid #ccc;padding:8px;min-width:150px}</style></head><body><h2>Feasterville Store Profit & Loss</h2><p>'+esc(document.getElementById('plStatus')?.textContent||'')+'</p>'+a.innerHTML+'</body></html>');w.document.close();w.focus();setTimeout(()=>w.print(),300)}}}
+function install(){setDates();const r=document.getElementById('plRefreshBtn'),m=document.getElementById('plThisMonthBtn'),p=document.getElementById('plPrintBtn');if(r&&!r.dataset.v48){r.dataset.v48='1';r.onclick=load}if(m&&!m.dataset.v48){m.dataset.v48='1';m.onclick=()=>{document.getElementById('plFrom').value=monthStart();document.getElementById('plTo').value=day();load()}}if(p&&!p.dataset.v48){p.dataset.v48='1';p.onclick=()=>{const a=document.getElementById('plPrintArea');if(!a)return;const w=window.open('','_blank','width=1000,height=800');if(!w)return alert('Please allow pop-ups to print the Profit & Loss.');w.document.write('<!doctype html><html><head><title>Feasterville Profit & Loss</title><style>@page{size:A4;margin:12mm}body{font-family:Arial}table{width:100%;border-collapse:collapse}th,td{border:1px solid #bbb;padding:7px}.inv-grid{display:flex;gap:8px;flex-wrap:wrap}.inv-card{border:1px solid #ccc;padding:8px;min-width:150px}</style></head><body><h2>Feasterville Store Profit & Loss</h2><p>'+esc(document.getElementById('plStatus')?.textContent||'')+'</p>'+a.innerHTML+'</body><!-- BUILD: V90_BIRCH_ACRES_ALL_STORE_COVERAGE_20260922 -->
+</html>');w.document.close();w.focus();setTimeout(()=>w.print(),300)}}}
 setTimeout(install,300);
 document.addEventListener('click',e=>{if((e.target?.dataset?.managerTarget||'')==='profitLossPanel')setTimeout(()=>{install();load()},100)},true);
 })();
@@ -7086,7 +7096,8 @@ async function load(){
  }catch(e){console.error(e);if(status)status.textContent='Could not load store comparison: '+e.message}
 }
 window.loadStoresComparisonV49=load;
-function print(){const a=document.getElementById('scPrintArea');if(!a)return;const w=window.open('','_blank','width=1100,height=850');if(!w)return alert('Please allow pop-ups to print the report.');w.document.write('<!doctype html><html><head><title>Feasterville Stores Comparison and Final Profit & Loss</title><style>@page{size:A4;margin:12mm}body{font-family:Arial}table{width:100%;border-collapse:collapse;margin-bottom:16px}th,td{border:1px solid #bbb;padding:7px}.inv-grid{display:flex;gap:8px;flex-wrap:wrap}.inv-card{border:1px solid #ccc;padding:8px;min-width:180px}</style></head><body><h2>Feasterville Stores Comparison & Final Profit / Loss</h2><p>'+esc(document.getElementById('scStatus')?.textContent||'')+'</p>'+a.innerHTML+'</body></html>');w.document.close();w.focus();setTimeout(()=>w.print(),300)}
+function print(){const a=document.getElementById('scPrintArea');if(!a)return;const w=window.open('','_blank','width=1100,height=850');if(!w)return alert('Please allow pop-ups to print the report.');w.document.write('<!doctype html><html><head><title>Feasterville Stores Comparison and Final Profit & Loss</title><style>@page{size:A4;margin:12mm}body{font-family:Arial}table{width:100%;border-collapse:collapse;margin-bottom:16px}th,td{border:1px solid #bbb;padding:7px}.inv-grid{display:flex;gap:8px;flex-wrap:wrap}.inv-card{border:1px solid #ccc;padding:8px;min-width:180px}</style></head><body><h2>Feasterville Stores Comparison & Final Profit / Loss</h2><p>'+esc(document.getElementById('scStatus')?.textContent||'')+'</p>'+a.innerHTML+'</body><!-- BUILD: V90_BIRCH_ACRES_ALL_STORE_COVERAGE_20260922 -->
+</html>');w.document.close();w.focus();setTimeout(()=>w.print(),300)}
 function install(){setDates();const r=document.getElementById('scRefreshBtn'),m=document.getElementById('scThisMonthBtn'),p=document.getElementById('scPrintBtn');if(r&&!r.dataset.v49){r.dataset.v49='1';r.onclick=load}if(m&&!m.dataset.v49){m.dataset.v49='1';m.onclick=()=>{document.getElementById('scFrom').value=monthStart();document.getElementById('scTo').value=day();load()}}if(p&&!p.dataset.v49){p.dataset.v49='1';p.onclick=print}}
 setTimeout(install,350);
 document.addEventListener('click',e=>{if((e.target?.dataset?.managerTarget||'')==='storesComparisonPanel')setTimeout(()=>{install();load()},100)},true);
@@ -7306,7 +7317,7 @@ async function load(){
   if(store!=='ALL')q+='&store_code=eq.'+encodeURIComponent(store);
   q+='&select=id,store_code,cashup_date,user_id,salesperson_name,opening_float,cash_sales,card_sales,mr_d_sales,uber_eats_sales,other_sales,total_sales,expected_cash,actual_cash,variance,sale_count,closed_at,notes,status&order=cashup_date.desc,closed_at.desc';
   const rows=await api(q),body=document.getElementById('fvHistoricalCashupBodyV59');
-  body.innerHTML=rows.map(r=>'<tr><td>'+E(r.cashup_date)+'</td><td>'+E(r.store_code==='SIVANA'?'Sivana':'Ndayeni')+'</td><td>'+E(r.salesperson_name)+'</td><td><b>'+M(r.total_sales)+'</b></td><td>'+M(r.cash_sales)+'</td><td>'+M(r.card_sales)+'</td><td>'+M(r.mr_d_sales)+'</td><td>'+M(r.uber_eats_sales)+'</td><td>'+M(r.other_sales)+'</td><td>'+M(r.opening_float)+'</td><td>'+M(r.expected_cash)+'</td><td>'+M(r.actual_cash)+'</td><td>'+M(r.variance??(N(r.actual_cash)-N(r.expected_cash)))+'</td><td>'+N(r.sale_count)+'</td><td>'+E(r.status)+'</td><td>'+E(closedAt(r.closed_at))+'</td><td style="white-space:normal;min-width:180px">'+E(r.notes||'')+'</td></tr>').join('')||'<tr><td colspan="17">No cash-ups found for this period.</td></tr>';
+  body.innerHTML=rows.map(r=>'<tr><td>'+E(r.cashup_date)+'</td><td>'+E(r.store_code==='SIVANA'?'Sivana':r.store_code==='BIRCH_ACRES'?'Birch Acres':'Ndayeni')+'</td><td>'+E(r.salesperson_name)+'</td><td><b>'+M(r.total_sales)+'</b></td><td>'+M(r.cash_sales)+'</td><td>'+M(r.card_sales)+'</td><td>'+M(r.mr_d_sales)+'</td><td>'+M(r.uber_eats_sales)+'</td><td>'+M(r.other_sales)+'</td><td>'+M(r.opening_float)+'</td><td>'+M(r.expected_cash)+'</td><td>'+M(r.actual_cash)+'</td><td>'+M(r.variance??(N(r.actual_cash)-N(r.expected_cash)))+'</td><td>'+N(r.sale_count)+'</td><td>'+E(r.status)+'</td><td>'+E(closedAt(r.closed_at))+'</td><td style="white-space:normal;min-width:180px">'+E(r.notes||'')+'</td></tr>').join('')||'<tr><td colspan="17">No cash-ups found for this period.</td></tr>';
   summary(rows);status(rows.length+' historical cash-up record'+(rows.length===1?'':'s')+' loaded.');
  }catch(e){status('Could not load historical cash-ups: '+e.message,true)}
 }
@@ -7504,7 +7515,8 @@ window.openHistoricalCashupV59=open;window.loadHistoricalCashupV59=load;
      'thead{display:table-header-group}tr{page-break-inside:avoid}'+
      '.inv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}.inv-card{border:1px solid #bbb;padding:6px}'+
      'button,input,select{display:none!important}'+
-     '</style></head><body>'+content.innerHTML+'</body></html>');
+     '</style></head><body>'+content.innerHTML+'</body><!-- BUILD: V90_BIRCH_ACRES_ALL_STORE_COVERAGE_20260922 -->
+</html>');
    popup.document.close();
    popup.focus();
    setTimeout(function(){popup.print();},500);
@@ -7550,7 +7562,8 @@ window.openHistoricalCashupV59=open;window.loadHistoricalCashupV59=load;
      '.inv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}.inv-card{border:1px solid #bbb;padding:6px}'+
      '.sheet button,.sheet input,.sheet select{display:none!important}'+
      '@media print{html,body{background:#fff}.toolbar{display:none!important}.sheet{width:100%;margin:0;padding:0;box-shadow:none}body{font-size:9pt}}'+
-     '</style></head><body><div class="toolbar"><b>Report preview — check the report, then save it as PDF</b><button type="button" onclick="window.print()">SAVE / PRINT PDF</button></div><main class="sheet">'+body+'</main></body></html>');
+     '</style></head><body><div class="toolbar"><b>Report preview — check the report, then save it as PDF</b><button type="button" onclick="window.print()">SAVE / PRINT PDF</button></div><main class="sheet">'+body+'</main></body><!-- BUILD: V90_BIRCH_ACRES_ALL_STORE_COVERAGE_20260922 -->
+</html>');
    popup.document.close();
    popup.focus();
  }
@@ -7629,7 +7642,7 @@ window.openHistoricalCashupV59=open;window.loadHistoricalCashupV59=load;
       const map=Object.fromEntries((counts||[]).map(x=>[x[key],x]));
       body.innerHTML=(items||[]).map(x=>{const v=Number(map[x.code]?.opening_qty||0);return '<tr><td><b>'+esc(x.code)+'</b></td><td>'+esc(x.name)+'</td><td>'+esc(unit(x))+'</td><td>'+v.toFixed(3)+'</td><td><input class="stock-input fvOpeningValue" type="number" min="0" step="0.001" value="'+v+'" data-code="'+esc(x.code)+'"></td><td><button type="button" class="primary fvOpeningSave" data-code="'+esc(x.code)+'">SAVE</button></td></tr>';}).join('')||'<tr><td colspan="6">No active items for this store.</td></tr>';
       body.querySelectorAll('.fvOpeningSave').forEach(b=>b.addEventListener('click',()=>save(b.dataset.code)));
-      message('Opening balances loaded for '+(s==='SIVANA'?'Sivana':'Ndayini')+'.');
+      message('Opening balances loaded for '+(s==='SIVANA'?'Sivana':s==='BIRCH_ACRES'?'Birch Acres':'Ndayini')+'.');
     }catch(e){body.innerHTML='<tr><td colspan="6">Could not load opening balances.</td></tr>';message('Could not load: '+e.message,true);}
   }
   async function save(code){
@@ -7644,7 +7657,7 @@ window.openHistoricalCashupV59=open;window.loadHistoricalCashupV59=load;
       }else{
         await api('pos_store_product_counts?on_conflict=store_code,product_code,count_date',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({store_code:s,product_code:code,count_date:today(),opening_qty:opening})});
       }
-      message(code+' opening balance saved for '+(s==='SIVANA'?'Sivana':'Ndayini')+'.');
+      message(code+' opening balance saved for '+(s==='SIVANA'?'Sivana':s==='BIRCH_ACRES'?'Birch Acres':'Ndayini')+'.');
       if(type==='raw'&&window.refreshStoreProductionData)window.refreshStoreProductionData().catch(()=>{});
     }catch(e){message('Could not save '+code+': '+e.message,true);}
   }
@@ -7840,13 +7853,13 @@ function configureAccess(){
  const r=role(),sel=document.getElementById('fvUnclosedStoreV80');
  if(!sel)return;
  if(r==='salesperson'){
-   const st=assignedStore();sel.innerHTML='<option value="'+E(st)+'">'+(st==='SIVANA'?'Sivana':'Ndayeni')+'</option>';sel.value=st;sel.disabled=true;sel.title='Salesperson access is locked to your assigned store';
+   const st=assignedStore();sel.innerHTML='<option value="'+E(st)+'">'+(st==='SIVANA'?'Sivana':st==='BIRCH_ACRES'?'Birch Acres':'Ndayeni')+'</option>';sel.value=st;sel.disabled=true;sel.title='Salesperson access is locked to your assigned store';
  }else{
    if(!sel.querySelector('option[value="ALL"]'))sel.innerHTML='<option value="ALL">All Stores</option><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option><option value="BIRCH_ACRES">Birch Acres</option>';
    sel.disabled=false;sel.title='';
  }
  const sub=document.querySelector('#fvUnclosedCashupCardV80 h2 + .small');
- if(sub)sub.textContent=r==='salesperson'?'Your unclosed cash-ups only — assigned store '+(assignedStore()==='SIVANA'?'Sivana':'Ndayeni')+'.':'Manager view — outstanding store cash-ups can be revisited and completed.';
+ if(sub)sub.textContent=r==='salesperson'?'Your unclosed cash-ups only — assigned store '+(assignedStore()==='SIVANA'?'Sivana':assignedStore()==='BIRCH_ACRES'?'Birch Acres':'Ndayeni')+'.':'Manager view — outstanding store cash-ups can be revisited and completed.';
 }
 function summary(rows){
  const box=document.getElementById('fvUnclosedCashupSummaryV80');
@@ -7878,7 +7891,7 @@ async function load(){
   (sales||[]).forEach(x=>{const key=String(x.store_code)+'|'+String(x.sale_date);if(!map.has(key))map.set(key,{store_code:x.store_code,date:x.sale_date,cash:0,card:0,mrd:0,uber:0,other:0,total:0,count:0});const y=map.get(key),v=N(x.total),b=payBucket(x.payment);y[b]+=v;y.total+=v;y.count++});
   const rows=[...map.values()].filter(x=>!closed.has(String(x.store_code)+'|'+String(x.date))).sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(a.store_code).localeCompare(String(b.store_code)));
   const body=document.getElementById('fvUnclosedCashupBodyV80');
-  body.innerHTML=rows.map(x=>'<tr><td>'+E(x.date)+'</td><td>'+E(x.store_code==='SIVANA'?'Sivana':'Ndayeni')+'</td><td class="num"><b>'+M(x.total)+'</b></td><td class="num">'+M(x.cash)+'</td><td class="num">'+M(x.card)+'</td><td class="num">'+M(x.mrd)+'</td><td class="num">'+M(x.uber)+'</td><td class="num">'+M(x.other)+'</td><td class="num">'+x.count+'</td><td><button type="button" data-date="'+E(x.date)+'" data-store="'+E(x.store_code)+'">CASH-UP</button></td></tr>').join('')||'<tr><td colspan="10">No unclosed cash-ups found for this period.</td></tr>';
+  body.innerHTML=rows.map(x=>'<tr><td>'+E(x.date)+'</td><td>'+E(x.store_code==='SIVANA'?'Sivana':x.store_code==='BIRCH_ACRES'?'Birch Acres':'Ndayeni')+'</td><td class="num"><b>'+M(x.total)+'</b></td><td class="num">'+M(x.cash)+'</td><td class="num">'+M(x.card)+'</td><td class="num">'+M(x.mrd)+'</td><td class="num">'+M(x.uber)+'</td><td class="num">'+M(x.other)+'</td><td class="num">'+x.count+'</td><td><button type="button" data-date="'+E(x.date)+'" data-store="'+E(x.store_code)+'">CASH-UP</button></td></tr>').join('')||'<tr><td colspan="10">No unclosed cash-ups found for this period.</td></tr>';
   body.querySelectorAll('button[data-date]').forEach(btn=>btn.onclick=function(){revisit(this.dataset.date,this.dataset.store)});
   summary(rows);status(rows.length+' unclosed cash-up'+(rows.length===1?'':'s')+' found'+(r==='salesperson'?' for your account.':'.'));
  }catch(e){status('Could not check unclosed cash-ups: '+e.message,true)}
@@ -8088,6 +8101,7 @@ window.openUnclosedCashupsV80=open;window.loadUnclosedCashupsV80=load;window.fvU
 </script>
 <!-- BUILD: V82_CATEGORISED_DIRECT_ACCESS_NAV_20260921 -->
 
+<!-- BUILD: V90_BIRCH_ACRES_ALL_STORE_COVERAGE_20260922 -->
 </html>
 
 <script>
