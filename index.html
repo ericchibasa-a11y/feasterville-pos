@@ -928,39 +928,7 @@ function printReceipt(){
     '.receipt-item-values{display:flex!important;justify-content:space-between!important;gap:8px!important}'+
     'hr{border:0;border-top:1px dashed #000;margin:5px 0}'+
     'button{display:none!important}'+
-    '</style></head><body><div class="receipt-wrap">'+receiptHtml+'</div>
-<script id="fvBirchAcresCoverageV91">
-/* V91 — Birch Acres full store-selector compatibility */
-(function(){
-  'use strict';
-  if(window.__fvBirchAcresCoverageV91)return;
-  window.__fvBirchAcresCoverageV91=true;
-  const CODE='BIRCH_ACRES', NAME='Birch Acres';
-  function ensureSelect(sel){
-    if(!sel || sel.tagName!=='SELECT') return;
-    const vals=Array.from(sel.options||[]).map(o=>String(o.value||'').toUpperCase());
-    if(vals.includes('NDAYENI') && vals.includes('SIVANA') && !vals.includes(CODE)){
-      const o=document.createElement('option');o.value=CODE;o.textContent=NAME;
-      const siv=Array.from(sel.options).find(x=>String(x.value||'').toUpperCase()==='SIVANA');
-      if(siv && siv.nextSibling) sel.insertBefore(o,siv.nextSibling); else sel.appendChild(o);
-    }
-  }
-  function apply(){document.querySelectorAll('select').forEach(ensureSelect);}
-  document.addEventListener('DOMContentLoaded',apply);
-  [50,250,750,1500,3000].forEach(ms=>setTimeout(apply,ms));
-  const obs=new MutationObserver(()=>apply());
-  obs.observe(document.documentElement,{childList:true,subtree:true});
-  document.addEventListener('change',function(e){
-    if(e.target && e.target.tagName==='SELECT' && String(e.target.value||'').toUpperCase()===CODE){
-      try{localStorage.setItem('feastervilleStoreCode',CODE)}catch(_){ }
-    }
-  },true);
-  window.ensureBirchAcresCoverageV91=apply;
-})();
-</script>
-
-</body><!-- BUILD: V90_BIRCH_ACRES_ALL_STORE_COVERAGE_20260922 -->
-</html>';
+    '</style></head><body><div class="receipt-wrap">'+receiptHtml+'</div></body></html>';
 
   w.document.open();
   w.document.write(doc);
@@ -1922,8 +1890,7 @@ document.addEventListener('DOMContentLoaded',function(){
     if(!w){alert('Please allow pop-ups to print the receipt.');return;}
     const html='<!doctype html><html><head><meta charset="utf-8"><title>Receipt</title>'+
       '<style>@page{size:80mm auto;margin:0}body{width:80mm;margin:0;padding:4mm;box-sizing:border-box;font:11px monospace}hr{border:0;border-top:1px dashed #000}</style>'+
-      '</head><body>'+receipt.innerHTML+'</body><!-- BUILD: V90_BIRCH_ACRES_ALL_STORE_COVERAGE_20260922 -->
-</html>';
+      '</head><body>'+receipt.innerHTML+'</body></html>';
     w.document.open();w.document.write(html);w.document.close();w.focus();
     setTimeout(function(){w.print();},200);
   };
@@ -3047,7 +3014,7 @@ document.addEventListener('DOMContentLoaded',function(){
   function selectorHtml(){
     if(!window.currentUser || window.currentUser.role!=='manager') {
       return `<div style="margin:10px 0;padding:10px;background:#f2f2f2;border-radius:8px">
-        <b>Store:</b> ${currentStore()==='SIVANA'?'Sivana':currentStore()==='BIRCH_ACRES'?'Birch Acres':'Ndayini'}
+        <b>Store:</b> ${currentStore()==='SIVANA'?'Sivana':'Ndayini'}
       </div>`;
     }
     const s=currentStore();
@@ -3137,7 +3104,7 @@ document.addEventListener('DOMContentLoaded',function(){
 <script>
 /* STORE SELECTORS FOR ALL PRODUCTION MANAGEMENT SECTIONS */
 (function(){
- const LABELS={NDAYENI:'Ndayini',SIVANA:'Sivana',BIRCH_ACRES:'Birch Acres'};
+ const LABELS={NDAYENI:'Ndayini',SIVANA:'Sivana'};
  function store(){
    const u=window.currentUser||{};
    return u.role==='manager'
@@ -3402,7 +3369,7 @@ document.addEventListener('DOMContentLoaded',function(){
       if(typeof window.refreshStoreProductionData==='function')await window.refreshStoreProductionData();
       if(typeof window.refreshProductionInputs==='function')window.refreshProductionInputs();
       if(typeof window.showProductionInputs==='function')window.showProductionInputs();
-      alert(`Stock received successfully for ${store==='SIVANA'?'Sivana':store==='BIRCH_ACRES'?'Birch Acres':'Ndayini'} and the Production Input Stock Ledger has been updated.`);
+      alert(`Stock received successfully for ${store==='SIVANA'?'Sivana':'Ndayini'} and the Production Input Stock Ledger has been updated.`);
     }catch(e){
       console.error(e);
       alert('Could not receive stock: '+e.message);
@@ -3480,7 +3447,7 @@ document.addEventListener('DOMContentLoaded',function(){
      if(qtyEl)qtyEl.value='';
      await window.refreshStoreProductionData?.();
      await window.refreshLiveProductionLedger?.();
-     alert('Stock received and ledger updated for '+(store()==='SIVANA'?'Sivana':store()==='BIRCH_ACRES'?'Birch Acres':'Ndayini')+'.');
+     alert('Stock received and ledger updated for '+(store()==='SIVANA'?'Sivana':'Ndayini')+'.');
    }catch(e){console.error('receiveProductionStock',e);alert('Receive stock failed: '+e.message)}
  };
 
@@ -3812,7 +3779,7 @@ document.addEventListener('DOMContentLoaded',function(){
       e.target.classList?.contains('production-section-store')
     )){
       const val=e.target.value;
-      if(val==='NDAYENI'||val==='SIVANA'||val==='BIRCH_ACRES') localStorage.setItem('feastervilleStoreCode',val);
+      if(val==='NDAYENI'||val==='SIVANA') localStorage.setItem('feastervilleStoreCode',val);
       setTimeout(()=>refreshLedger().catch(console.error),150);
     }
   },true);
@@ -4064,7 +4031,7 @@ document.addEventListener('DOMContentLoaded',function(){
       e.target.classList?.contains('production-section-store')
     ){
       const v=e.target.value;
-      if(v==='NDAYENI'||v==='SIVANA'||v==='BIRCH_ACRES') localStorage.setItem('feastervilleStoreCode',v);
+      if(v==='NDAYENI'||v==='SIVANA') localStorage.setItem('feastervilleStoreCode',v);
       setTimeout(()=>syncLiveData(true),120);
     }
   },true);
@@ -4225,7 +4192,7 @@ document.addEventListener('DOMContentLoaded',function(){
       }
     }
     let ex=await existing();if(ex.length){alert((me.role==='manager'?'This store':'Your sales')+' for '+day()+' have already been closed.');return}
-    document.getElementById('fvCashupModal').style.display='flex';document.getElementById('fvCashupIdentity').textContent=(me.role==='manager'?'Manager — All store sales':(me.name||me.display_name||me.email))+' — '+(store()==='SIVANA'?'Sivana':store()==='BIRCH_ACRES'?'Birch Acres':'Ndayini')+' — '+day();
+    document.getElementById('fvCashupModal').style.display='flex';document.getElementById('fvCashupIdentity').textContent=(me.role==='manager'?'Manager — All store sales':(me.name||me.display_name||me.email))+' — '+(store()==='SIVANA'?'Sivana':'Ndayini')+' — '+day();
     cashExpenses=[];clearPendingExpense();renderExpenseList();document.getElementById('fvCashupNotes').value='';document.getElementById('fvActualCash').value='';
     totals=await calc();renderCashupSummary();variance();
    }catch(e){console.error(e);alert('Could not prepare cash-up: '+e.message)}
@@ -4244,7 +4211,7 @@ document.addEventListener('DOMContentLoaded',function(){
     let a=Number(actualRaw),expected=totals.cash+f-e;
     const expenseNote=cashExpenses.length?'Cash expenses: '+cashExpenses.map(x=>x.type+' — '+money(x.amount)+(x.detail?' ('+x.detail+')':'')).join(' | ')+' | Total Expenses — '+money(e):'';
     const revisitNote=window.fvCashupTargetDate?('Revisited unclosed cash-up for '+day()):'';let notes=[revisitNote,expenseNote,cashupNotes].filter(Boolean).join(' | ')||null;
-    let payload={store_code:store(),cashup_date:day(),user_id:me.id,salesperson_name:me.role==='manager'?('Manager — '+(store()==='SIVANA'?'Sivana':store()==='BIRCH_ACRES'?'Birch Acres':'Ndayini')):(me.name||me.display_name||me.email||'Salesperson'),opening_float:f,cash_sales:totals.cash,card_sales:totals.card,mr_d_sales:totals.mrd,uber_eats_sales:totals.uber,other_sales:totals.other,total_sales:totals.total,expected_cash:expected,actual_cash:a,sale_count:totals.count,notes:notes,status:'CLOSED'};
+    let payload={store_code:store(),cashup_date:day(),user_id:me.id,salesperson_name:me.role==='manager'?('Manager — '+(store()==='SIVANA'?'Sivana':'Ndayini')):(me.name||me.display_name||me.email||'Salesperson'),opening_float:f,cash_sales:totals.cash,card_sales:totals.card,mr_d_sales:totals.mrd,uber_eats_sales:totals.uber,other_sales:totals.other,total_sales:totals.total,expected_cash:expected,actual_cash:a,sale_count:totals.count,notes:notes,status:'CLOSED'};
     await api('pos_daily_cashups',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify(payload)});
     for(const x of cashExpenses){await api('pos_store_expenses',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({store_code:store(),expense_date:day(),category:x.type,supplier:null,description:x.detail||('Cash paid from till — '+x.type),payment_method:'Cash',amount:x.amount,reference:'Cash-Up '+day()})});}
     cashExpenses=[];clearPendingExpense();renderExpenseList();closeFvCashupModal();if(typeof window.loadUnclosedCashupsV80==='function')setTimeout(()=>window.loadUnclosedCashupsV80(),150);alert('Day closed successfully. Total expenses '+money(e)+' | Expected cash '+money(expected)+' | Actual cash '+money(a)+' | Difference '+money(a-expected));
@@ -4997,7 +4964,7 @@ async function receiveStockV42(){
     // those legacy functions contain DOM writes to elements that may not exist.
     await safeRefreshLedger();
 
-    alert('Stock received successfully for '+(store()==='SIVANA'?'Sivana':store()==='BIRCH_ACRES'?'Birch Acres':'Ndayini')+'. The live stock ledger has been updated.');
+    alert('Stock received successfully for '+(store()==='SIVANA'?'Sivana':'Ndayini')+'. The live stock ledger has been updated.');
   }catch(e){
     console.error('V42 receive stock',e);
     alert('Could not receive stock: '+(e.message||e));
@@ -5029,7 +4996,7 @@ c.innerHTML='<h3>Sales Report</h3><div class="small">Loading live sales...</div>
 try{let q='pos_sales?store_code=eq.'+encodeURIComponent(st())+'&sale_date=gte.'+f+'&sale_date=lte.'+t+'&select=id,order_no,sale_date,sale_time,cashier,payment,total,pos_sale_items(code,name,qty,price)&order=sale_date.desc,sale_time.desc&limit=10000';
 let r=await fetch(B+'/'+q,{headers:{apikey:K,Authorization:'Bearer '+tok()}}),z=await r.text();if(!r.ok)throw Error(z);let a=z?JSON.parse(z):[],tot=a.reduce((s,v)=>s+Number(v.total||0),0),units=0,pay={},prod={};
 a.forEach(s=>{let p=s.payment||'Other';pay[p]=(pay[p]||0)+Number(s.total||0);(s.pos_sale_items||[]).forEach(i=>{let q=Number(i.qty||0),v=q*Number(i.price||0),k=i.code||i.name;units+=q;if(!prod[k])prod[k]={n:i.name||k,q:0,v:0};prod[k].q+=q;prod[k].v+=v})});
-let label=f===t?f:f+' to '+t;c.innerHTML='<h3>Daily Sales Report — '+x(label)+'</h3><div class="small">Store: <b>'+x(st()==='SIVANA'?'Sivana':st()==='BIRCH_ACRES'?'Birch Acres':'Ndayini')+'</b></div>'+
+let label=f===t?f:f+' to '+t;c.innerHTML='<h3>Daily Sales Report — '+x(label)+'</h3><div class="small">Store: <b>'+x(st()==='SIVANA'?'Sivana':'Ndayini')+'</b></div>'+
 '<div class="inv-grid"><div class="inv-card">Orders<br><b>'+a.length+'</b></div><div class="inv-card">Total Sales<br><b>'+m(tot)+'</b></div><div class="inv-card">Units Sold<br><b>'+units+'</b></div><div class="inv-card">Average Order<br><b>'+m(a.length?tot/a.length:0)+'</b></div></div>'+
 '<h3>Payment Breakdown</h3><table class="inv-table"><tr><th>Payment</th><th>Sales</th></tr>'+Object.entries(pay).map(([p,v])=>'<tr><td>'+x(p)+'</td><td>'+m(v)+'</td></tr>').join('')+'</table>'+
 '<h3>Product Sales</h3><table class="inv-table"><tr><th>Code</th><th>Product</th><th>Qty</th><th>Sales Value</th></tr>'+Object.entries(prod).sort((a,b)=>b[1].v-a[1].v).map(([k,v])=>'<tr><td>'+x(k)+'</td><td>'+x(v.n)+'</td><td>'+v.q+'</td><td>'+m(v.v)+'</td></tr>').join('')+'</table>'+
@@ -5152,7 +5119,7 @@ async function renderSelectedSalesV44(force){
       '<div id="fvPrintableSalesV44">'+
       '<h3>Daily Sales Report — '+esc44(period)+'</h3>'+
       '<div class="small" style="margin-bottom:10px">Store: <b>'+
-        esc44(currentStore()==='SIVANA'?'Sivana':currentStore()==='BIRCH_ACRES'?'Birch Acres':'Ndayini')+'</b></div>'+
+        esc44(currentStore()==='SIVANA'?'Sivana':'Ndayini')+'</b></div>'+
       '<div class="inv-grid">'+
         '<div class="inv-card">Orders<br><b>'+rows.length+'</b></div>'+
         '<div class="inv-card">Total Sales<br><b>'+money44(total)+'</b></div>'+
@@ -5227,8 +5194,7 @@ function printOnlyV44(title,node){
       'th,td{border:1px solid #999;padding:3px 4px;text-align:left;vertical-align:top}'+
       'th{background:#eee}tr{page-break-inside:avoid}thead{display:table-header-group}'+
       'button,input,select{display:none!important}'+
-    '</style></head><body><h2>'+esc44(title)+'</h2>'+node.innerHTML+'</body><!-- BUILD: V90_BIRCH_ACRES_ALL_STORE_COVERAGE_20260922 -->
-</html>');
+    '</style></head><body><h2>'+esc44(title)+'</h2>'+node.innerHTML+'</body></html>');
   doc.close();
   setTimeout(()=>{
     frame.contentWindow.focus();
@@ -5329,7 +5295,7 @@ async function load(){
     const period=from===to?from:from+' to '+to;
     box.innerHTML='<div id="fvSelectedSalesPrintV45">'+
       '<h2>Feasterville Food — Daily Sales Report</h2>'+
-      '<p><b>Store:</b> '+esc(st()==='SIVANA'?'Sivana':st()==='BIRCH_ACRES'?'Birch Acres':'Ndayini')+' &nbsp; <b>Period:</b> '+esc(period)+'</p>'+
+      '<p><b>Store:</b> '+esc(st()==='SIVANA'?'Sivana':'Ndayini')+' &nbsp; <b>Period:</b> '+esc(period)+'</p>'+
       '<div class="inv-grid">'+
        '<div class="inv-card">Orders<br><b>'+rows.length+'</b></div>'+
        '<div class="inv-card">Total Sales<br><b>'+money(total)+'</b></div>'+
@@ -5368,8 +5334,7 @@ function printNode(title,node){
    'table,.inv-table{width:100%;border-collapse:collapse;table-layout:auto}th,td,.inv-table th,.inv-table td{border:1px solid #999;padding:3px 4px;text-align:left;vertical-align:top}'+
    'th,.inv-table th{background:#eee!important;color:#111!important}thead{display:table-header-group}tr{page-break-inside:avoid}'+
    'button,input,select{display:none!important}'+
-   '</style></head><body>'+node.innerHTML+'</body><!-- BUILD: V90_BIRCH_ACRES_ALL_STORE_COVERAGE_20260922 -->
-</html>');
+   '</style></head><body>'+node.innerHTML+'</body></html>');
   d.close();
   setTimeout(()=>{
     frame.contentWindow.focus();
@@ -5563,8 +5528,7 @@ function printRecon(){
  if(!node||!node.innerHTML.trim())return alert('Open Production Inputs reconciliation first.');
  const w=window.open('','_blank','width=1200,height=800');
  if(!w)return alert('Please allow pop-ups to print the reconciliation.');
- w.document.write('<!doctype html><html><head><title>Production Inputs Reconciliation</title><style>@page{size:A4 landscape;margin:8mm}body{font-family:Arial;font-size:9pt}table{width:100%;border-collapse:collapse}th,td{border:1px solid #999;padding:4px;text-align:left}th{background:#eee}tr{page-break-inside:avoid}thead{display:table-header-group}</style></head><body>'+node.innerHTML+'</body><!-- BUILD: V90_BIRCH_ACRES_ALL_STORE_COVERAGE_20260922 -->
-</html>');
+ w.document.write('<!doctype html><html><head><title>Production Inputs Reconciliation</title><style>@page{size:A4 landscape;margin:8mm}body{font-family:Arial;font-size:9pt}table{width:100%;border-collapse:collapse}th,td{border:1px solid #999;padding:4px;text-align:left}th{background:#eee}tr{page-break-inside:avoid}thead{display:table-header-group}</style></head><body>'+node.innerHTML+'</body></html>');
  w.document.close();w.focus();setTimeout(()=>w.print(),300);
 }
 window.printRecon=printRecon;try{printRecon=window.printRecon}catch(e){}
@@ -5866,7 +5830,7 @@ async function renderLiveRecon(btn){
    const nextHtml=
      '<div id="fvLiveReconV52">'+
      '<h3>Production Input Reconciliation — '+today()+'</h3>'+
-     '<p class="small"><b>Store:</b> '+esc(store()==='SIVANA'?'Sivana':store()==='BIRCH_ACRES'?'Birch Acres':'Ndayini')+
+     '<p class="small"><b>Store:</b> '+esc(store()==='SIVANA'?'Sivana':'Ndayini')+
      ' &nbsp; <b>Source:</b> LIVE DATABASE &nbsp; <b>Updated:</b> '+
      new Date().toLocaleTimeString('en-ZA',{timeZone:'Africa/Johannesburg'})+'</p>'+
      '<div class="inv-grid"><div class="inv-card">Items Checked<br><b>'+rr.length+'</b></div>'+
@@ -6911,8 +6875,7 @@ window.printSelectedSalesV45=function(){
  const body='<h1>Feasterville Food — Daily Sales Report</h1><p><b>Store:</b> '+E(s)+' &nbsp; <b>Period:</b> '+E(f)+(t!==f?' to '+E(t):'')+'</p><p><b>Number of Sales:</b> '+rows.length+' &nbsp;&nbsp; <b>Total Sales:</b> '+M(total)+'</p><h2>Payment Summary</h2><table><tr><th>Payment Method</th><th>Amount</th></tr>'+ph+'</table><h2>Sales Transactions</h2><table><tr><th>Date</th><th>Time</th><th>Cashier</th><th>Payment</th><th>Total</th></tr>'+rh+'</table>';
  const w=window.open('','_blank','width=1000,height=800');
  if(!w){alert('Please allow pop-ups for this POS, then try again.');return;}
- w.document.write('<!doctype html><html><head><title>Daily Sales Report</title><style>@page{size:A4;margin:12mm}body{font:11px Arial;color:#111}h1{font-size:20px}h2{font-size:14px;margin-top:18px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #bbb;padding:5px}th{background:#eee}tr{page-break-inside:avoid}</style></head><body>'+body+'</body><!-- BUILD: V90_BIRCH_ACRES_ALL_STORE_COVERAGE_20260922 -->
-</html>');
+ w.document.write('<!doctype html><html><head><title>Daily Sales Report</title><style>@page{size:A4;margin:12mm}body{font:11px Arial;color:#111}h1{font-size:20px}h2{font-size:14px;margin-top:18px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #bbb;padding:5px}th{background:#eee}tr{page-break-inside:avoid}</style></head><body>'+body+'</body></html>');
  w.document.close();w.focus();setTimeout(()=>w.print(),500);
 };
 })();
@@ -7043,8 +7006,7 @@ async function load(){
  }catch(e){console.error(e);if(status)status.textContent='Could not load Profit & Loss: '+e.message}
 }
 window.loadProfitLossV48=load;
-function install(){setDates();const r=document.getElementById('plRefreshBtn'),m=document.getElementById('plThisMonthBtn'),p=document.getElementById('plPrintBtn');if(r&&!r.dataset.v48){r.dataset.v48='1';r.onclick=load}if(m&&!m.dataset.v48){m.dataset.v48='1';m.onclick=()=>{document.getElementById('plFrom').value=monthStart();document.getElementById('plTo').value=day();load()}}if(p&&!p.dataset.v48){p.dataset.v48='1';p.onclick=()=>{const a=document.getElementById('plPrintArea');if(!a)return;const w=window.open('','_blank','width=1000,height=800');if(!w)return alert('Please allow pop-ups to print the Profit & Loss.');w.document.write('<!doctype html><html><head><title>Feasterville Profit & Loss</title><style>@page{size:A4;margin:12mm}body{font-family:Arial}table{width:100%;border-collapse:collapse}th,td{border:1px solid #bbb;padding:7px}.inv-grid{display:flex;gap:8px;flex-wrap:wrap}.inv-card{border:1px solid #ccc;padding:8px;min-width:150px}</style></head><body><h2>Feasterville Store Profit & Loss</h2><p>'+esc(document.getElementById('plStatus')?.textContent||'')+'</p>'+a.innerHTML+'</body><!-- BUILD: V90_BIRCH_ACRES_ALL_STORE_COVERAGE_20260922 -->
-</html>');w.document.close();w.focus();setTimeout(()=>w.print(),300)}}}
+function install(){setDates();const r=document.getElementById('plRefreshBtn'),m=document.getElementById('plThisMonthBtn'),p=document.getElementById('plPrintBtn');if(r&&!r.dataset.v48){r.dataset.v48='1';r.onclick=load}if(m&&!m.dataset.v48){m.dataset.v48='1';m.onclick=()=>{document.getElementById('plFrom').value=monthStart();document.getElementById('plTo').value=day();load()}}if(p&&!p.dataset.v48){p.dataset.v48='1';p.onclick=()=>{const a=document.getElementById('plPrintArea');if(!a)return;const w=window.open('','_blank','width=1000,height=800');if(!w)return alert('Please allow pop-ups to print the Profit & Loss.');w.document.write('<!doctype html><html><head><title>Feasterville Profit & Loss</title><style>@page{size:A4;margin:12mm}body{font-family:Arial}table{width:100%;border-collapse:collapse}th,td{border:1px solid #bbb;padding:7px}.inv-grid{display:flex;gap:8px;flex-wrap:wrap}.inv-card{border:1px solid #ccc;padding:8px;min-width:150px}</style></head><body><h2>Feasterville Store Profit & Loss</h2><p>'+esc(document.getElementById('plStatus')?.textContent||'')+'</p>'+a.innerHTML+'</body></html>');w.document.close();w.focus();setTimeout(()=>w.print(),300)}}}
 setTimeout(install,300);
 document.addEventListener('click',e=>{if((e.target?.dataset?.managerTarget||'')==='profitLossPanel')setTimeout(()=>{install();load()},100)},true);
 })();
@@ -7127,8 +7089,7 @@ async function load(){
  }catch(e){console.error(e);if(status)status.textContent='Could not load store comparison: '+e.message}
 }
 window.loadStoresComparisonV49=load;
-function print(){const a=document.getElementById('scPrintArea');if(!a)return;const w=window.open('','_blank','width=1100,height=850');if(!w)return alert('Please allow pop-ups to print the report.');w.document.write('<!doctype html><html><head><title>Feasterville Stores Comparison and Final Profit & Loss</title><style>@page{size:A4;margin:12mm}body{font-family:Arial}table{width:100%;border-collapse:collapse;margin-bottom:16px}th,td{border:1px solid #bbb;padding:7px}.inv-grid{display:flex;gap:8px;flex-wrap:wrap}.inv-card{border:1px solid #ccc;padding:8px;min-width:180px}</style></head><body><h2>Feasterville Stores Comparison & Final Profit / Loss</h2><p>'+esc(document.getElementById('scStatus')?.textContent||'')+'</p>'+a.innerHTML+'</body><!-- BUILD: V90_BIRCH_ACRES_ALL_STORE_COVERAGE_20260922 -->
-</html>');w.document.close();w.focus();setTimeout(()=>w.print(),300)}
+function print(){const a=document.getElementById('scPrintArea');if(!a)return;const w=window.open('','_blank','width=1100,height=850');if(!w)return alert('Please allow pop-ups to print the report.');w.document.write('<!doctype html><html><head><title>Feasterville Stores Comparison and Final Profit & Loss</title><style>@page{size:A4;margin:12mm}body{font-family:Arial}table{width:100%;border-collapse:collapse;margin-bottom:16px}th,td{border:1px solid #bbb;padding:7px}.inv-grid{display:flex;gap:8px;flex-wrap:wrap}.inv-card{border:1px solid #ccc;padding:8px;min-width:180px}</style></head><body><h2>Feasterville Stores Comparison & Final Profit / Loss</h2><p>'+esc(document.getElementById('scStatus')?.textContent||'')+'</p>'+a.innerHTML+'</body></html>');w.document.close();w.focus();setTimeout(()=>w.print(),300)}
 function install(){setDates();const r=document.getElementById('scRefreshBtn'),m=document.getElementById('scThisMonthBtn'),p=document.getElementById('scPrintBtn');if(r&&!r.dataset.v49){r.dataset.v49='1';r.onclick=load}if(m&&!m.dataset.v49){m.dataset.v49='1';m.onclick=()=>{document.getElementById('scFrom').value=monthStart();document.getElementById('scTo').value=day();load()}}if(p&&!p.dataset.v49){p.dataset.v49='1';p.onclick=print}}
 setTimeout(install,350);
 document.addEventListener('click',e=>{if((e.target?.dataset?.managerTarget||'')==='storesComparisonPanel')setTimeout(()=>{install();load()},100)},true);
@@ -7546,8 +7507,7 @@ window.openHistoricalCashupV59=open;window.loadHistoricalCashupV59=load;
      'thead{display:table-header-group}tr{page-break-inside:avoid}'+
      '.inv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}.inv-card{border:1px solid #bbb;padding:6px}'+
      'button,input,select{display:none!important}'+
-     '</style></head><body>'+content.innerHTML+'</body><!-- BUILD: V90_BIRCH_ACRES_ALL_STORE_COVERAGE_20260922 -->
-</html>');
+     '</style></head><body>'+content.innerHTML+'</body></html>');
    popup.document.close();
    popup.focus();
    setTimeout(function(){popup.print();},500);
@@ -7593,8 +7553,7 @@ window.openHistoricalCashupV59=open;window.loadHistoricalCashupV59=load;
      '.inv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}.inv-card{border:1px solid #bbb;padding:6px}'+
      '.sheet button,.sheet input,.sheet select{display:none!important}'+
      '@media print{html,body{background:#fff}.toolbar{display:none!important}.sheet{width:100%;margin:0;padding:0;box-shadow:none}body{font-size:9pt}}'+
-     '</style></head><body><div class="toolbar"><b>Report preview — check the report, then save it as PDF</b><button type="button" onclick="window.print()">SAVE / PRINT PDF</button></div><main class="sheet">'+body+'</main></body><!-- BUILD: V90_BIRCH_ACRES_ALL_STORE_COVERAGE_20260922 -->
-</html>');
+     '</style></head><body><div class="toolbar"><b>Report preview — check the report, then save it as PDF</b><button type="button" onclick="window.print()">SAVE / PRINT PDF</button></div><main class="sheet">'+body+'</main></body></html>');
    popup.document.close();
    popup.focus();
  }
@@ -7722,6 +7681,39 @@ window.openHistoricalCashupV59=open;window.loadHistoricalCashupV59=load;
 })();
 </script>
 <!-- BUILD: V84_HIDE_NAV_UNTIL_AUTHENTICATED_20260921 -->
+
+<script id="fvBirchAcresCoverageV92">
+/* V92 — Birch Acres store-selector compatibility, safely placed at page level. */
+(function(){
+  'use strict';
+  if(window.__fvBirchAcresCoverageV92)return;
+  window.__fvBirchAcresCoverageV92=true;
+  const CODE='BIRCH_ACRES', NAME='Birch Acres';
+  function ensureSelect(sel){
+    if(!sel || sel.tagName!=='SELECT') return;
+    const opts=Array.from(sel.options||[]);
+    const vals=opts.map(o=>String(o.value||'').toUpperCase());
+    if(vals.includes('NDAYENI') && vals.includes('SIVANA')){
+      if(!vals.includes(CODE)){
+        const o=document.createElement('option');o.value=CODE;o.textContent=NAME;sel.appendChild(o);
+      }
+      try{if((localStorage.getItem('feastervilleStoreCode')||'').toUpperCase()===CODE)sel.value=CODE;}catch(_){ }
+    }
+  }
+  function apply(){document.querySelectorAll('select').forEach(ensureSelect);}
+  document.addEventListener('DOMContentLoaded',apply);
+  [50,250,750,1500,3000].forEach(ms=>setTimeout(apply,ms));
+  const obs=new MutationObserver(()=>apply());
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+  document.addEventListener('change',function(e){
+    if(e.target && e.target.tagName==='SELECT' && String(e.target.value||'').toUpperCase()===CODE){
+      try{localStorage.setItem('feastervilleStoreCode',CODE)}catch(_){ }
+      setTimeout(apply,0);
+    }
+  },true);
+  window.ensureBirchAcresCoverageV92=apply;
+})();
+</script>
 </body>
 
 
@@ -8132,7 +8124,7 @@ window.openUnclosedCashupsV80=open;window.loadUnclosedCashupsV80=load;window.fvU
 </script>
 <!-- BUILD: V82_CATEGORISED_DIRECT_ACCESS_NAV_20260921 -->
 
-<!-- BUILD: V90_BIRCH_ACRES_ALL_STORE_COVERAGE_20260922 -->
+
 </html>
 
 <script>
