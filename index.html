@@ -4150,7 +4150,9 @@ document.addEventListener('DOMContentLoaded',function(){
    let x={cash:0,card:0,mrd:0,uber:0,other:0,total:0,count:rows.length};
    rows.forEach(r=>{let v=Number(r.total||0),b=payBucket(r.payment);x[b]+=v;x.total+=v});return x;
  }
- async function existing(){const me=u();if(!me||!me.id)return[];if(me.role==='manager'){const rows=await api('pos_daily_cashups?store_code=eq.'+encodeURIComponent(store())+'&cashup_date=eq.'+day()+'&select=*');return (rows||[]).filter(r=>String(r.status||'').toUpperCase()==='CLOSED'&&/^manager\b/i.test(String(r.salesperson_name||'')));}return api('pos_daily_cashups?store_code=eq.'+encodeURIComponent(store())+'&cashup_date=eq.'+day()+'&user_id=eq.'+encodeURIComponent(me.id)+'&select=*')}
+ // Cash-up is a store-day control. A completed cash-up must be recognised whether
+ // the manager or the store salesperson completed it, avoiding duplicate cash-ups.
+ async function existing(){const me=u();if(!me||!me.id)return[];if(me.role==='manager'){const rows=await api('pos_daily_cashups?store_code=eq.'+encodeURIComponent(store())+'&cashup_date=eq.'+day()+'&select=*');return (rows||[]).filter(r=>String(r.status||'').toUpperCase()==='CLOSED');}return api('pos_daily_cashups?store_code=eq.'+encodeURIComponent(store())+'&cashup_date=eq.'+day()+'&user_id=eq.'+encodeURIComponent(me.id)+'&select=*')}
  function expenseTotal(){return cashExpenses.reduce((a,x)=>a+Number(x.amount||0),0)}
  function renderExpenseList(){
    const box=document.getElementById('fvCashExpenseList');if(!box)return;
@@ -7909,7 +7911,9 @@ async function load(){
   if(r==='salesperson'&&user()?.id)closePath+='&user_id=eq.'+encodeURIComponent(user().id);
   let [sales,closes]=await Promise.all([apiAll(salesPath),apiAll(closePath)]);
   if(r==='salesperson')sales=(sales||[]).filter(isOwnSale);
-  const closed=new Set((closes||[]).filter(x=>String(x.status||'').toUpperCase()==='CLOSED'&&(r==='manager'?/^manager\b/i.test(String(x.salesperson_name||'')):String(x.user_id||'')===String(user()?.id||''))).map(x=>String(x.store_code)+'|'+String(x.cashup_date)));
+  // For a manager, any CLOSED record closes that store/date. The earlier
+  // manager-name check ignored valid salesperson cash-ups.
+  const closed=new Set((closes||[]).filter(x=>String(x.status||'').toUpperCase()==='CLOSED'&&(r==='manager'?true:String(x.user_id||'')===String(user()?.id||''))).map(x=>String(x.store_code)+'|'+String(x.cashup_date)));
   const map=new Map();
   (sales||[]).forEach(x=>{const key=String(x.store_code)+'|'+String(x.sale_date);if(!map.has(key))map.set(key,{store_code:x.store_code,date:x.sale_date,cash:0,card:0,mrd:0,uber:0,other:0,total:0,count:0});const y=map.get(key),v=N(x.total),b=payBucket(x.payment);y[b]+=v;y.total+=v;y.count++});
   const rows=[...map.values()].filter(x=>!closed.has(String(x.store_code)+'|'+String(x.date))).sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(a.store_code).localeCompare(String(b.store_code)));
