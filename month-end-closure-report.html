@@ -125,10 +125,11 @@ async function apiWithToken(path,t){
   // report can exceed that through the combined sales and count history, which
   // previously caused it to omit later rows while the individual store reports
   // still showed them.  Fetch every page before calculating any totals.
-  const pageSize=500,all=[];
+  const pageSize=1000,all=[];
   for(let offset=0;;offset+=pageSize){
-    const joiner=path.includes('?')?'&':'?';
-    const r=await fetch(BASE+'/'+path+joiner+'limit='+pageSize+'&offset='+offset,{headers:{apikey:KEY,Authorization:'Bearer '+t}});
+    // Use PostgREST's Range header rather than URL limit/offset parameters.
+    // This continues after Supabase's server-side 1,000-row cap.
+    const r=await fetch(BASE+'/'+path,{headers:{apikey:KEY,Authorization:'Bearer '+t,Range:offset+'-'+(offset+pageSize-1),'Range-Unit':'items'}});
     const body=await r.text();
     if(!r.ok)throw Error(body||('HTTP '+r.status));
     const page=body?JSON.parse(body):[];
