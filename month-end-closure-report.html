@@ -121,10 +121,21 @@ function showLogin(show=true){
   const b=$('managerLogin');if(b)b.classList.toggle('hidden',!show);
 }
 async function apiWithToken(path,t){
-  const r=await fetch(BASE+'/'+path,{headers:{apikey:KEY,Authorization:'Bearer '+t}});
-  const body=await r.text();
-  if(!r.ok)throw Error(body||('HTTP '+r.status));
-  return body?JSON.parse(body):[];
+  // Supabase REST returns a maximum of 1,000 rows per request.  The All Stores
+  // report can exceed that through the combined sales and count history, which
+  // previously caused it to omit later rows while the individual store reports
+  // still showed them.  Fetch every page before calculating any totals.
+  const pageSize=500,all=[];
+  for(let offset=0;;offset+=pageSize){
+    const joiner=path.includes('?')?'&':'?';
+    const r=await fetch(BASE+'/'+path+joiner+'limit='+pageSize+'&offset='+offset,{headers:{apikey:KEY,Authorization:'Bearer '+t}});
+    const body=await r.text();
+    if(!r.ok)throw Error(body||('HTTP '+r.status));
+    const page=body?JSON.parse(body):[];
+    if(!Array.isArray(page))throw Error('Unexpected response while loading report data.');
+    all.push(...page);
+    if(page.length<pageSize)return all;
+  }
 }
 async function api(path){
   const t=token();
@@ -190,10 +201,10 @@ async function load(){
       api('pos_store_production_inputs?select=store_code,code,name,unit,category,active,preferred_unit_cost&store_code=in.('+stores.join(',')+')&order=store_code.asc,name.asc'),
       api('pos_store_input_counts?select=store_code,input_code,count_date,opening_qty,received_qty,used_qty,physical_count,variance_qty,notes,counted_by&store_code=in.('+stores.join(',')+')&count_date=lte.'+end+'&order=count_date.asc'),
       api('pos_stock_receipts?select=store_code,input_code,input_name,unit,qty,unit_cost,receipt_date&store_code=in.('+stores.join(',')+')&receipt_date=lte.'+end+'&order=receipt_date.asc'),
-      api('pos_sales?select=store_code,total,payment,sale_date&store_code=in.('+stores.join(',')+')&sale_date=gte.'+start+'&sale_date=lte.'+end),
-      api('pos_other_income?select=store_code,amount,category,transaction_date&store_code=in.('+stores.join(',')+')&transaction_date=gte.'+start+'&transaction_date=lte.'+end),
-      api('pos_store_expenses?select=store_code,amount,category,description,expense_date&store_code=in.('+stores.join(',')+')&expense_date=gte.'+start+'&expense_date=lte.'+end),
-      api('pos_daily_cashups?select=store_code,cashup_date,expected_cash,actual_cash,variance,status&store_code=in.('+stores.join(',')+')&cashup_date=gte.'+start+'&cashup_date=lte.'+end)
+      api('pos_sales?select=store_code,total,payment,sale_date&store_code=in.('+stores.join(',')+')&sale_date=gte.'+start+'&sale_date=lte.'+end+'&order=sale_date.asc'),
+      api('pos_other_income?select=store_code,amount,category,transaction_date&store_code=in.('+stores.join(',')+')&transaction_date=gte.'+start+'&transaction_date=lte.'+end+'&order=transaction_date.asc'),
+      api('pos_store_expenses?select=store_code,amount,category,description,expense_date&store_code=in.('+stores.join(',')+')&expense_date=gte.'+start+'&expense_date=lte.'+end+'&order=expense_date.asc'),
+      api('pos_daily_cashups?select=store_code,cashup_date,expected_cash,actual_cash,variance,status&store_code=in.('+stores.join(',')+')&cashup_date=gte.'+start+'&cashup_date=lte.'+end+'&order=cashup_date.asc')
     ]);
 
     const byInput={};for(const x of inputs){byInput[x.store_code+'|'+x.code]=x}
