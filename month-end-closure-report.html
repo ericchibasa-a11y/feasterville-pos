@@ -175,6 +175,10 @@ function isInventoryPurchaseExpense(e){
 function intendedCount(row){return !!row && (row.counted_by || n(row.physical_count)!==0 || (row.notes&&/count|physical|stocktake/i.test(row.notes)))}
 function closeOf(row){if(!row)return 0;return intendedCount(row)?n(row.physical_count):(n(row.opening_qty)+n(row.received_qty)-n(row.used_qty))}
 function weightedAvg(receipts,code,cutoff,store){let q=0,c=0;for(const r of receipts){if(r.store_code!==store||r.input_code!==code||r.receipt_date>cutoff)continue;const rq=n(r.qty),uc=n(r.unit_cost);if(rq>0&&uc>0){q+=rq;c+=rq*uc}}return q>0?c/q:0}
+function firstValidCost(receipts,code,start,end,store){
+  const r=receipts.filter(x=>x.store_code===store&&x.input_code===code&&x.receipt_date>=start&&x.receipt_date<=end&&n(x.qty)>0&&n(x.unit_cost)>0).sort((a,b)=>String(a.receipt_date).localeCompare(String(b.receipt_date)))[0];
+  return r?n(r.unit_cost):0;
+}
 function uniqueCount(a){return new Set(a).size}
 function addBy(obj,key,val){obj[key]=(obj[key]||0)+n(val)}
 let lastInventory=[];
@@ -202,7 +206,12 @@ async function load(){
       const monthCs=cs.filter(x=>x.count_date>=start&&x.count_date<=end);
       const startRow=cs.find(x=>x.count_date===start);
       const prior=[...cs].filter(x=>x.count_date<start).pop();
-      const openingQty=startRow?n(startRow.opening_qty):closeOf(prior);
+      // Opening balances are sometimes captured after the first day of a month.
+      // When there is no 1st-day record or prior closing balance, use the first
+      // non-zero opening balance saved within that month. This keeps the saved
+      // Ndayini/Sivana opening balance visible without mixing store records.
+      const savedMonthOpening=monthCs.find(x=>n(x.opening_qty)!==0);
+      const openingQty=startRow?n(startRow.opening_qty):(prior?closeOf(prior):n(savedMonthOpening?.opening_qty));
       const monthReceipts=receipts.filter(r=>r.store_code===item.store_code&&r.input_code===item.code&&r.receipt_date>=start&&r.receipt_date<=end);
       const receivedQty=monthReceipts.reduce((a,r)=>a+n(r.qty),0);
       const purchaseCost=monthReceipts.reduce((a,r)=>a+n(r.qty)*n(r.unit_cost),0);
@@ -214,7 +223,10 @@ async function load(){
       const variance=endCount?physicalClose-expectedClose:null;
       const closeQty=endCount?physicalClose:expectedClose;
       const dayBefore=new Date(start+'T00:00:00');dayBefore.setDate(dayBefore.getDate()-1);const prevDate=dayBefore.toISOString().slice(0,10);
-      const openAvg=weightedAvg(receipts,item.code,prevDate,item.store_code)||n(item.preferred_unit_cost);
+      // Opening quantities can be loaded without a separate opening-cost entry. In that
+      // case, value them from the first priced receipt for the same store in the month;
+      // this prevents a false R0,00 opening value while keeping stores fully separate.
+      const openAvg=weightedAvg(receipts,item.code,prevDate,item.store_code)||firstValidCost(receipts,item.code,start,end,item.store_code)||n(item.preferred_unit_cost);
       const endAvg=weightedAvg(receipts,item.code,end,item.store_code)||openAvg||n(item.preferred_unit_cost);
       const openingValue=openingQty*openAvg;
       const consumptionCost=usedQty*endAvg;
