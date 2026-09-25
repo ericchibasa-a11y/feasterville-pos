@@ -1,0 +1,26 @@
+FEASTERVILLE POS V102 — PRODUCT & INPUT PERFORMANCE
+Date: 25 September 2026
+Base: V101 CASHUP CLOSED STATUS FIX
+
+Added under Sales & Inventory Reports:
+1. Product Performance
+   - Top selling products by quantity sold
+   - Least selling products excluding zero sales
+   - Zero-sales active products
+   - Sales value, average selling price, % units and % sales
+   - Store, date, category and Top/Bottom 10/20/All filters
+   - Ndayeni, Sivana, Birch Acres and All Stores
+   - Print / Save PDF
+
+2. Input Consumption
+   - Top consumed production inputs
+   - Least consumed production inputs excluding zero consumption
+   - Zero-consumption active inputs
+   - Uses live Production Input used_qty history for the selected period
+   - Usage days, weighted average unit cost and estimated consumption value
+   - Store, date, category, unit and Top/Bottom 10/20/All filters
+   - When All Units is selected, rankings are grouped by unit (kg/each/ml/etc.)
+   - Print / Save PDF
+
+No database schema changes required.
+Existing V101 cash-up closed-status fix retained.
