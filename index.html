@@ -7856,6 +7856,46 @@ if(typeof oldShow==='function')window.showReport=function(type,btn){activeMode=n
 })();
 </script>
 <!-- BUILD: V78_OPENING_BALANCES_DEDICATED_ADMIN_20260920 -->
+
+<style id="fvManagementDashboardTopNavStyleV1042">
+#fvManagementDashboardTopNav{background:#7c3aed;color:#fff;font-weight:800}
+</style>
+<script>
+/* V104.2 — Manager Management Dashboard shortcut next to Opening Balances */
+(function(){
+ 'use strict';
+ if(window.__fvManagementDashboardTopNavV1042)return;window.__fvManagementDashboardTopNavV1042=true;
+ function role(){
+   const cu=window.currentUser||window.salesSessionUser||{};
+   return String(cu.role||'').toLowerCase();
+ }
+ function mount(){
+   const bar=document.getElementById('liveTopBar');
+   if(!bar)return;
+   if(typeof window.fvOpeningBalancesAdminMountV78==='function')window.fvOpeningBalancesAdminMountV78();
+   let b=document.getElementById('fvManagementDashboardTopNav');
+   if(!b){
+     b=document.createElement('button');
+     b.id='fvManagementDashboardTopNav';
+     b.type='button';
+     b.textContent='MANAGEMENT DASHBOARD';
+     b.onclick=function(){window.location.href='management-dashboard.html';};
+   }
+   const opening=document.getElementById('fvOpeningBalancesAdminNav');
+   if(opening&&opening.parentNode===bar){
+     if(opening.nextSibling!==b)bar.insertBefore(b,opening.nextSibling);
+   }else if(b.parentNode!==bar){
+     bar.appendChild(b);
+   }
+   b.style.display=role()==='manager'?'inline-block':'none';
+ }
+ [75,350,850,1600,3100].forEach(ms=>setTimeout(mount,ms));
+ document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')mount();});
+ window.fvManagementDashboardTopNavMountV1042=mount;
+})();
+</script>
+<!-- BUILD: V104_2_MANAGEMENT_DASHBOARD_TOP_NAV_20260925 -->
+
 <!-- BUILD: STABLE_SALESPERSON_FIX_V2_20260920 -->
 <style id="fvUnclosedCashupStyleV80">
 #fvUnclosedCashupBtnV80{background:#f59e0b;color:#111;border:0;border-radius:8px;padding:9px 12px;font-weight:800;cursor:pointer;margin-right:8px}
