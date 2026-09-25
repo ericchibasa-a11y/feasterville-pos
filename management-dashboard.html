@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Feasterville Management Dashboard</title>
+<style>
+:root{--green:#0f6b3d;--green2:#188a4f;--ink:#17212b;--muted:#64748b;--line:#dbe5de;--bg:#eef4f0;--warn:#a16207;--bad:#b42318;--good:#176b2c;--blue:#1d4ed8}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink)}
+.wrap{max-width:1580px;margin:auto;padding:18px}.hero{background:linear-gradient(135deg,#0f5d36,#15834a);color:#fff;padding:20px;border-radius:16px;box-shadow:0 7px 20px #0002}.hero h1{margin:0 0 6px;font-size:28px}.hero p{margin:0;opacity:.94}.nav,.filters,.actions,.cards{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.nav{margin-top:14px}
+button,.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:800;cursor:pointer}.primary{background:#84cc16;color:#111}.secondary{background:#fff;color:#17432b;border:1px solid #b9cfbf}.dark{background:#111827;color:#fff}.danger{background:#ef4444;color:#fff}
+.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:14px;box-shadow:0 3px 10px #0000000d}.filters label{font-size:13px;font-weight:800}select,input{margin-top:5px;padding:9px 10px;border:1px solid #b7c9bd;border-radius:8px;background:#fff;min-width:150px}.status{margin-top:10px;padding:10px 12px;border-radius:9px;background:#f5f7f6;border:1px solid #dbe4de;font-weight:700}.status.good{background:#edf8f0;color:var(--good);border-color:#b9dec3}.status.warn{background:#fff8e8;color:#7a5100;border-color:#f0d69a}.status.bad{background:#fff1f0;color:var(--bad);border-color:#f0bbb6}
+.cards{align-items:stretch}.card{flex:1;min-width:165px;background:#f8fbf9;border:1px solid var(--line);border-radius:12px;padding:13px}.card .label{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#5c6d62}.card .value{font-size:23px;font-weight:900;margin-top:6px}.card .sub{font-size:11px;color:#6b7d71;margin-top:5px}.goodtext{color:var(--good)}.badtext{color:var(--bad)}.warntext{color:var(--warn)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.section-title{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px}.section-title h2{margin:0;font-size:20px}.small{font-size:12px;color:var(--muted)}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px}table{width:100%;border-collapse:collapse;font-size:12.5px}th,td{padding:8px 9px;border-bottom:1px solid #e2e9e4;text-align:left;white-space:nowrap}th{background:#edf5ef;position:sticky;top:0;z-index:1}td.num,th.num{text-align:right}.total td{font-weight:900;background:#f5faf6}.pill{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:900}.pill.good{background:#e5f5ea;color:#176b2c}.pill.warn{background:#fff3d6;color:#835800}.pill.bad{background:#ffe8e6;color:#a4281f}.pill.info{background:#e8f0ff;color:#1d4ed8}.action{padding:10px 12px;border-left:4px solid #94a3b8;background:#f8fafc;margin:8px 0;border-radius:8px}.action.high{border-left-color:#dc2626}.action.med{border-left-color:#d97706}.action.opp{border-left-color:#2563eb}.action b{display:inline-block;min-width:90px}.loginbox{padding:14px;border:1px solid #b9cfbf;border-radius:10px;background:#f8fbf9}.hidden{display:none!important}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}.card{min-width:145px}.hero h1{font-size:23px}}@media print{body{background:#fff}.wrap{max-width:none;padding:0}.hero{box-shadow:none;border-radius:0}.nav,.filters,.no-print,.loginbox{display:none!important}.panel{box-shadow:none;break-inside:avoid}.table-wrap{overflow:visible}th{position:static}table{font-size:9px}th,td{padding:4px}.grid2{grid-template-columns:1fr 1fr}.card{min-width:130px}.action{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>FEASTERVILLE FOOD — MANAGEMENT DASHBOARD</h1>
+    <p>Live sales, product performance, input consumption, stock controls, cash-up status, margin and provisional profit for Ndayini, Sivana and Birch Acres.</p>
+    <div class="nav no-print">
+      <button class="secondary" onclick="location.href='index.html'">POS HOME</button>
+      <button class="secondary" onclick="location.href='month-end-closure-report.html'">MONTH-END CLOSURE</button>
+      <button class="secondary" onclick="location.href='production-input-consumption-report.html'">INPUT CONSUMPTION</button>
+      <button class="secondary" onclick="window.print()">PRINT / SAVE PDF</button>
+    </div>
+  </div>
+
+  <div class="panel no-print">
+    <div id="managerLogin" class="loginbox hidden">
+      <h3 style="margin-top:0">Manager Sign In</h3>
+      <div class="filters">
+        <label>Email<br><input id="mgrEmail" type="email" autocomplete="username"></label>
+        <label>Password<br><input id="mgrPassword" type="password" autocomplete="current-password"></label>
+        <button id="mgrSignInBtn" class="primary">SIGN IN</button>
+      </div>
+      <div id="mgrLoginMsg" class="small" style="margin-top:8px"></div>
+    </div>
+    <div id="dashFilters" class="filters">
+      <label>Store<br><select id="store"><option value="ALL">All Stores</option><option value="NDAYENI">Ndayini</option><option value="SIVANA">Sivana</option><option value="BIRCH_ACRES">Birch Acres</option></select></label>
+      <label>From Date<br><input id="from" type="date"></label>
+      <label>To Date<br><input id="to" type="date"></label>
+      <button id="runBtn" class="primary">RUN DASHBOARD</button>
+      <button id="todayBtn" class="secondary">TODAY</button>
+      <button id="monthBtn" class="secondary">THIS MONTH</button>
+      <button class="dark" onclick="window.print()">PRINT / SAVE PDF</button>
+    </div>
+    <div id="status" class="status">Checking manager session…</div>
+  </div>
+
+  <div id="dashboard" class="hidden">
+    <div class="panel">
+      <div class="section-title"><h2 id="dashTitle">Management Summary</h2><span id="qualityTag" class="pill warn">PROVISIONAL</span></div>
+      <div id="summaryCards" class="cards"></div>
+      <div id="qualityNote" class="status warn"></div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title"><h2>Management Actions</h2><span class="small">Generated from the selected period</span></div>
+      <div id="actionsList"></div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title"><h2>Store Performance Comparison</h2><span class="small">Profit is provisional while costs/counts are incomplete</span></div>
+      <div class="table-wrap"><table><thead><tr><th>Store</th><th class="num">Sales</th><th class="num">Transactions</th><th class="num">Avg Basket</th><th class="num">COGS</th><th class="num">Gross Profit</th><th class="num">Gross Margin</th><th class="num">Opex</th><th class="num">Est. Net Profit</th><th>Cash-Up</th><th class="num">Cash Variance</th></tr></thead><tbody id="storeRows"></tbody></table></div>
+    </div>
+
+    <div class="grid2">
+      <div class="panel">
+        <div class="section-title"><h2>Sales Channels</h2><span class="small">Completed POS sales</span></div>
+        <div class="table-wrap"><table><thead><tr><th>Channel</th><th class="num">Sales</th><th class="num">Share</th></tr></thead><tbody id="channelRows"></tbody></table></div>
+      </div>
+      <div class="panel">
+        <div class="section-title"><h2>Control Status</h2><span class="small">Selected period / end date</span></div>
+        <div class="table-wrap"><table><thead><tr><th>Control</th><th>Status</th><th class="num">Result</th></tr></thead><tbody id="controlRows"></tbody></table></div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="panel"><div class="section-title"><h2>Top 10 Selling Products</h2><span class="small">By quantity sold</span></div><div class="table-wrap"><table><thead><tr><th>#</th><th>Code</th><th>Product</th><th>Category</th><th class="num">Qty</th><th class="num">Sales</th><th class="num">% Sales</th></tr></thead><tbody id="topProductRows"></tbody></table></div></div>
+      <div class="panel"><div class="section-title"><h2>Least Selling Products</h2><span class="small">Positive sales only</span></div><div class="table-wrap"><table><thead><tr><th>#</th><th>Code</th><th>Product</th><th>Category</th><th class="num">Qty</th><th class="num">Sales</th><th class="num">% Sales</th></tr></thead><tbody id="bottomProductRows"></tbody></table></div></div>
+    </div>
+
+    <div class="grid2">
+      <div class="panel"><div class="section-title"><h2>Top Consumed Production Inputs</h2><span class="small">Ranked by estimated consumption value</span></div><div class="table-wrap"><table><thead><tr><th>#</th><th>Code</th><th>Input</th><th>Unit</th><th class="num">Qty Used</th><th class="num">Est. Value</th><th class="num">Usage Days</th></tr></thead><tbody id="topInputRows"></tbody></table></div></div>
+      <div class="panel"><div class="section-title"><h2>Least Consumed Production Inputs</h2><span class="small">Costed inputs with positive consumption</span></div><div class="table-wrap"><table><thead><tr><th>#</th><th>Code</th><th>Input</th><th>Unit</th><th class="num">Qty Used</th><th class="num">Est. Value</th><th class="num">Usage Days</th></tr></thead><tbody id="bottomInputRows"></tbody></table></div></div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title"><h2>Low Stock / Reorder Attention</h2><span class="small">Expected balance at selected end date</span></div>
+      <div class="table-wrap"><table><thead><tr><th>Store</th><th>Code</th><th>Input</th><th>Unit</th><th class="num">Expected Balance</th><th class="num">Reorder Level</th><th class="num">Safety Stock</th><th class="num">Target Stock</th><th>Preferred Supplier</th></tr></thead><tbody id="lowStockRows"></tbody></table></div>
+    </div>
+
+    <div class="grid2">
+      <div class="panel"><div class="section-title"><h2>Missing / Incomplete Costs</h2><span class="small">Fix before relying on final profit</span></div><div class="table-wrap"><table><thead><tr><th>Store</th><th>Code</th><th>Input</th><th>Issue</th></tr></thead><tbody id="missingCostRows"></tbody></table></div></div>
+      <div class="panel"><div class="section-title"><h2>Zero Activity Review</h2><span class="small">Potential menu / stock simplification</span></div><div class="table-wrap"><table><thead><tr><th>Type</th><th class="num">Count</th><th>Management Use</th></tr></thead><tbody id="zeroRows"></tbody></table></div></div>
+    </div>
+
+    <div class="panel small" id="generatedAt"></div>
+  </div>
+</div>
+<script>
+(function(){
+'use strict';
+const ROOT='https://sflyjcgbxbcwspfuzone.supabase.co';
+const BASE=ROOT+'/rest/v1';
+const KEY='sb_publishable_iASq-tni6KYrFK0R2S35zA_mpwt4MqM';
+const STORES=['NDAYENI','SIVANA','BIRCH_ACRES'];
+const $=id=>document.getElementById(id);
+const n=v=>{const x=Number(v);return Number.isFinite(x)?x:0};
+const money=v=>'R'+n(v).toLocaleString('en-ZA',{minimumFractionDigits:2,maximumFractionDigits:2});
+const qty=v=>{const x=n(v);return Math.abs(x-Math.round(x))<1e-9?String(Math.round(x)):x.toLocaleString('en-ZA',{minimumFractionDigits:0,maximumFractionDigits:3})};
+const pct=v=>n(v).toFixed(1)+'%';
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function today(){return new Date().toLocaleDateString('en-CA',{timeZone:'Africa/Johannesburg'})}
+function monthStart(){return today().slice(0,8)+'01'}
+function storeName(s){return s==='NDAYENI'?'Ndayini':s==='SIVANA'?'Sivana':s==='BIRCH_ACRES'?'Birch Acres':'All Stores'}
+function token(){return sessionStorage.getItem('feastervilleCloudAccessToken')||localStorage.getItem('feastervilleCloudAccessToken')||''}
+function refreshToken(){return sessionStorage.getItem('feastervilleCloudRefreshToken')||localStorage.getItem('feastervilleCloudRefreshToken')||''}
+function setStatus(t,type=''){const e=$('status');e.textContent=t;e.className='status'+(type?' '+type:'')}
+function showLogin(show){$('managerLogin').classList.toggle('hidden',!show);$('dashFilters').classList.toggle('hidden',show)}
+async function refreshAuth(){const rt=refreshToken();if(!rt)throw Error('Your login session has expired. Please sign in again.');const r=await fetch(ROOT+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:rt})});const text=await r.text();let d={};try{d=text?JSON.parse(text):{}}catch(_){d={}}if(!r.ok||!d.access_token)throw Error(d.message||d.error_description||'Could not renew the login session.');sessionStorage.setItem('feastervilleCloudAccessToken',d.access_token);localStorage.setItem('feastervilleCloudAccessToken',d.access_token);if(d.refresh_token){sessionStorage.setItem('feastervilleCloudRefreshToken',d.refresh_token);localStorage.setItem('feastervilleCloudRefreshToken',d.refresh_token)}return d.access_token}
+async function authUser(){let t=token();if(!t)throw Error('No active POS login.');let r=await fetch(ROOT+'/auth/v1/user',{headers:{apikey:KEY,Authorization:'Bearer '+t}});if(r.status===401&&refreshToken()){t=await refreshAuth();r=await fetch(ROOT+'/auth/v1/user',{headers:{apikey:KEY,Authorization:'Bearer '+t}})}const text=await r.text();if(!r.ok)throw Error(text||'Could not verify user.');return JSON.parse(text)}
+async function page(path,from,to,retry=true){let t=token();if(!t)throw Error('No active POS login.');let r=await fetch(BASE+'/'+path,{headers:{apikey:KEY,Authorization:'Bearer '+t,Range:from+'-'+to,'Range-Unit':'items'}});const text=await r.text();if(r.status===401&&retry&&refreshToken()){await refreshAuth();return page(path,from,to,false)}if(!r.ok)throw Error(text||('HTTP '+r.status));const d=text?JSON.parse(text):[];return Array.isArray(d)?d:[]}
+async function fetchAll(path,size=1000){let out=[];for(let from=0;;from+=size){const rows=await page(path,from,from+size-1);out.push(...rows);if(rows.length<size)break;if(from>100000)throw Error('Report is too large. Please use a shorter date range.')}return out}
+async function verifyManager(){try{const u=await authUser();const p=await fetchAll('pos_profiles?user_id=eq.'+encodeURIComponent(u.id)+'&select=user_id,display_name,role,store_code,active');const prof=p[0];if(!prof||String(prof.role||'').toLowerCase()!=='manager'||prof.active===false)throw Error('Manager access required.');showLogin(false);return prof}catch(e){showLogin(true);setStatus(e.message||String(e),'warn');return null}}
+async function managerSignIn(){const email=($('mgrEmail').value||'').trim(),password=$('mgrPassword').value,msg=$('mgrLoginMsg');try{if(!email||!password)throw Error('Enter Manager email and password.');msg.textContent='Signing in…';const r=await fetch(ROOT+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({email,password})});const text=await r.text();let d={};try{d=text?JSON.parse(text):{}}catch(_){}if(!r.ok||!d.access_token||!d.user)throw Error(d.message||d.error_description||'Sign in failed.');sessionStorage.setItem('feastervilleCloudAccessToken',d.access_token);localStorage.setItem('feastervilleCloudAccessToken',d.access_token);if(d.refresh_token){sessionStorage.setItem('feastervilleCloudRefreshToken',d.refresh_token);localStorage.setItem('feastervilleCloudRefreshToken',d.refresh_token)}const prof=await verifyManager();if(!prof)throw Error('Manager access required.');$('mgrPassword').value='';msg.textContent='Manager signed in.';setStatus('Manager signed in. Loading dashboard…','good');await load()}catch(e){showLogin(true);msg.textContent=e.message||String(e);msg.style.color='#b42318'}}
+function intendedCount(r){return !!r&&(r.counted_by||n(r.physical_count)!==0||(r.notes&&/count|physical|stocktake/i.test(r.notes)))}
+function closeOf(r){if(!r)return 0;return intendedCount(r)?n(r.physical_count):(n(r.opening_qty)+n(r.received_qty)-n(r.used_qty))}
+function isInventoryPurchaseExpense(e){const c=String(e?.category||'').toLowerCase(),d=String(e?.description||'').toLowerCase();return /stock|ingredient|inventory|production input|raw material/.test(c)||/stock purchase|ingredient purchase|production input|raw material/.test(d)}
+function normalizePayment(p){p=String(p||'').toLowerCase().replace(/[_-]/g,' ').trim();if(p.includes('cash'))return'Cash';if(p.includes('card'))return'Card';if(p.includes('mr')&&p.includes('d'))return'Mr D';if(p.includes('uber'))return'Uber Eats';return'Other'}
+function weightedCost(receipts,store,code,end,preferred){let q=0,v=0;for(const r of receipts){if(r.store_code!==store||r.input_code!==code||String(r.receipt_date)>end)continue;const rq=n(r.qty),uc=n(r.unit_cost);if(rq>0&&uc>0){q+=rq;v+=rq*uc}}return q>0?v/q:n(preferred)}
+function emptyRow(cols,text){return '<tr><td colspan="'+cols+'">'+esc(text)+'</td></tr>'}
+function badge(ok,labelGood,labelBad){return '<span class="pill '+(ok?'good':'bad')+'">'+esc(ok?labelGood:labelBad)+'</span>'}
+function cards(items){$('summaryCards').innerHTML=items.map(x=>'<div class="card"><div class="label">'+esc(x.label)+'</div><div class="value '+(x.cls||'')+'">'+x.value+'</div><div class="sub">'+esc(x.sub||'')+'</div></div>').join('')}
+async function load(){
+ const st=$('store').value,from=$('from').value,to=$('to').value;if(!from||!to)return alert('Select From Date and To Date.');if(from>to)return alert('From Date cannot be after To Date.');
+ const stores=st==='ALL'?STORES:[st],sf='&store_code=in.('+stores.join(',')+')';
+ setStatus('Loading live management data…');$('dashboard').classList.add('hidden');
+ try{
+  const [sales,products,inputs,counts,receipts,other,expenses,cashups]=await Promise.all([
+   fetchAll('pos_sales?select=id,store_code,sale_date,total,payment&sale_date=gte.'+encodeURIComponent(from)+'&sale_date=lte.'+encodeURIComponent(to)+sf+'&order=sale_date.asc,id.asc'),
+   fetchAll('pos_store_products?select=store_code,code,name,category,price,active&active=eq.true'+sf+'&order=category.asc,name.asc'),
+   fetchAll('pos_store_production_inputs?select=store_code,code,name,unit,category,reorder_level,safety_stock,target_stock,preferred_supplier,preferred_unit_cost,active&active=eq.true'+sf+'&order=store_code.asc,name.asc'),
+   fetchAll('pos_store_input_counts?select=store_code,input_code,count_date,opening_qty,received_qty,used_qty,physical_count,variance_qty,notes,counted_by&count_date=lte.'+encodeURIComponent(to)+sf+'&order=count_date.asc,input_code.asc'),
+   fetchAll('pos_stock_receipts?select=store_code,input_code,input_name,unit,qty,unit_cost,receipt_date&receipt_date=lte.'+encodeURIComponent(to)+sf+'&order=receipt_date.asc'),
+   fetchAll('pos_other_income?select=store_code,amount,category,transaction_date&transaction_date=gte.'+encodeURIComponent(from)+'&transaction_date=lte.'+encodeURIComponent(to)+sf+'&order=transaction_date.asc'),
+   fetchAll('pos_store_expenses?select=store_code,amount,category,description,expense_date&expense_date=gte.'+encodeURIComponent(from)+'&expense_date=lte.'+encodeURIComponent(to)+sf+'&order=expense_date.asc'),
+   fetchAll('pos_daily_cashups?select=store_code,cashup_date,expected_cash,actual_cash,variance,status&cashup_date=gte.'+encodeURIComponent(from)+'&cashup_date=lte.'+encodeURIComponent(to)+sf+'&order=cashup_date.asc')
+  ]);
+  const ids=sales.map(x=>x.id),saleItems=[];for(let i=0;i<ids.length;i+=180){const chunk=ids.slice(i,i+180);if(chunk.length)saleItems.push(...await fetchAll('pos_sale_items?select=sale_id,code,name,category,qty,price&sale_id=in.('+chunk.join(',')+')'))}
+  const saleStore=new Map(sales.map(x=>[String(x.id),x.store_code]));
+
+  const inputRows=[];let missingReceiptCosts=0;const missingIssues=[];
+  for(const m of inputs){const cs=counts.filter(c=>c.store_code===m.store_code&&c.input_code===m.code).sort((a,b)=>String(a.count_date).localeCompare(String(b.count_date)));const pc=cs.filter(c=>c.count_date>=from&&c.count_date<=to);const used=pc.reduce((a,c)=>a+n(c.used_qty),0);const days=new Set(pc.filter(c=>n(c.used_qty)>0).map(c=>c.count_date)).size;const latest=[...cs].filter(c=>c.count_date<=to).pop();const expected=closeOf(latest);const cost=weightedCost(receipts,m.store_code,m.code,to,m.preferred_unit_cost);const endCount=[...pc].filter(c=>c.count_date===to&&intendedCount(c)).pop();const endExpected=endCount?n(endCount.opening_qty)+n(endCount.received_qty)-n(endCount.used_qty):null;const endVarQty=endCount?(endCount.variance_qty!=null?n(endCount.variance_qty):n(endCount.physical_count)-endExpected):null;const endVarCost=endCount?(-endVarQty*cost):0;const periodReceipts=receipts.filter(r=>r.store_code===m.store_code&&r.input_code===m.code&&r.receipt_date>=from&&r.receipt_date<=to);const zeroCostReceipts=periodReceipts.filter(r=>n(r.qty)>0&&!(n(r.unit_cost)>0)).length;missingReceiptCosts+=zeroCostReceipts;const movement=Math.abs(used)+Math.abs(expected)+periodReceipts.reduce((a,r)=>a+Math.abs(n(r.qty)),0);const missingBasis=cost<=0&&movement>0;if(zeroCostReceipts)missingIssues.push({store:m.store_code,code:m.code,name:m.name,issue:zeroCostReceipts+' receipt(s) have quantity but no cost'});if(missingBasis)missingIssues.push({store:m.store_code,code:m.code,name:m.name,issue:'No usable cost basis for stock/usage'});inputRows.push({...m,used,days,expected,cost,consumptionCost:used*cost,endCount:!!endCount,endVarQty,endVarCost,zeroCostReceipts,missingBasis})}
+  const missingBasisCount=inputRows.filter(x=>x.missingBasis).length,missingCosts=missingReceiptCosts+missingBasisCount;
+  const cogs=Math.max(0,inputRows.reduce((a,x)=>a+x.consumptionCost+x.endVarCost,0));
+  const salesTotal=sales.reduce((a,x)=>a+n(x.total),0),txns=sales.length,avgBasket=txns?salesTotal/txns:0,otherTotal=other.reduce((a,x)=>a+n(x.amount),0);const operatingExpenses=expenses.filter(e=>!isInventoryPurchaseExpense(e)),opex=operatingExpenses.reduce((a,x)=>a+n(x.amount),0),gross=salesTotal-cogs,grossMargin=salesTotal?gross/salesTotal*100:0,net=gross+otherTotal-opex;
+  const endCounted=inputRows.filter(x=>x.endCount).length,activeInputs=inputRows.length,countCoverage=activeInputs?endCounted/activeInputs*100:0;
+  const lowStock=inputRows.filter(x=>n(x.reorder_level)>0&&x.expected<=n(x.reorder_level)).sort((a,b)=>(a.expected-a.reorder_level)-(b.expected-b.reorder_level));
+  const salesStoreDays=new Set(sales.map(x=>x.store_code+'|'+x.sale_date)),closedCashups=cashups.filter(c=>String(c.status||'').toUpperCase()==='CLOSED'),closedStoreDays=new Set(closedCashups.map(x=>x.store_code+'|'+x.cashup_date));const cashVariance=closedCashups.reduce((a,c)=>a+(c.variance!=null?n(c.variance):(n(c.actual_cash)-n(c.expected_cash))),0),cashComplete=[...salesStoreDays].filter(k=>closedStoreDays.has(k)).length;
+  const channel={Cash:0,Card:0,'Mr D':0,'Uber Eats':0,Other:0};sales.forEach(s=>channel[normalizePayment(s.payment)]+=n(s.total));const delivery=channel['Mr D']+channel['Uber Eats'],deliveryShare=salesTotal?delivery/salesTotal*100:0;
+
+  const pmap=new Map();for(const p of products){if(!pmap.has(p.code))pmap.set(p.code,{code:p.code,name:p.name||p.code,category:p.category||'',qty:0,sales:0})}for(const it of saleItems){const r=pmap.get(it.code)||{code:it.code,name:it.name||it.code,category:it.category||'',qty:0,sales:0};r.qty+=n(it.qty);r.sales+=n(it.qty)*n(it.price);if(!r.name)r.name=it.name||it.code;if(!r.category)r.category=it.category||'';pmap.set(it.code,r)}const productsAll=[...pmap.values()],sold=productsAll.filter(x=>x.qty>0),zeroProducts=productsAll.filter(x=>x.qty<=0),topProducts=[...sold].sort((a,b)=>b.qty-a.qty||b.sales-a.sales).slice(0,10),bottomProducts=[...sold].sort((a,b)=>a.qty-b.qty||a.sales-b.sales).slice(0,10);const totalUnits=sold.reduce((a,x)=>a+x.qty,0),top10Sales=topProducts.reduce((a,x)=>a+x.sales,0),top10Share=salesTotal?top10Sales/salesTotal*100:0;
+  const costedUsed=inputRows.filter(x=>x.used>0&&x.cost>0),topInputs=[...costedUsed].sort((a,b)=>b.consumptionCost-a.consumptionCost).slice(0,10),bottomInputs=[...costedUsed].sort((a,b)=>a.consumptionCost-b.consumptionCost).slice(0,10),zeroInputs=inputRows.filter(x=>x.used<=0);
+
+  const storeMetrics=stores.map(s=>{const ss=sales.filter(x=>x.store_code===s),si=inputRows.filter(x=>x.store_code===s),so=other.filter(x=>x.store_code===s),se=operatingExpenses.filter(x=>x.store_code===s),sc=closedCashups.filter(x=>x.store_code===s),sv=ss.reduce((a,x)=>a+n(x.total),0),cc=Math.max(0,si.reduce((a,x)=>a+x.consumptionCost+x.endVarCost,0)),gp=sv-cc,gm=sv?gp/sv*100:0,oo=so.reduce((a,x)=>a+n(x.amount),0),oe=se.reduce((a,x)=>a+n(x.amount),0),np=gp+oo-oe,ssd=new Set(ss.map(x=>x.sale_date)),csd=new Set(sc.map(x=>x.cashup_date)),cv=sc.reduce((a,x)=>a+(x.variance!=null?n(x.variance):(n(x.actual_cash)-n(x.expected_cash))),0);return{store:s,sales:sv,txns:ss.length,avg:ss.length?sv/ss.length:0,cogs:cc,gross:gp,margin:gm,opex:oe,net:np,salesDays:ssd.size,closedDays:[...ssd].filter(d=>csd.has(d)).length,cashVariance:cv}});
+
+  cards([
+   {label:'POS Sales',value:money(salesTotal),sub:txns+' completed transaction(s)'},
+   {label:'Average Basket',value:money(avgBasket),sub:'Sales ÷ transactions'},
+   {label:'Gross Profit',value:money(gross),sub:money(cogs)+' estimated cost of sales'},
+   {label:'Gross Margin',value:pct(grossMargin),sub:'Provisional while costs/counts incomplete',cls:grossMargin>=50?'goodtext':''},
+   {label:'Estimated Net Profit',value:money(net),sub:'After other income and operating expenses',cls:net<0?'badtext':'goodtext'},
+   {label:'Low Stock Items',value:String(lowStock.length),sub:'At/below reorder level',cls:lowStock.length?'warntext':'goodtext'},
+   {label:'Missing Costs',value:String(missingCosts),sub:missingReceiptCosts+' receipt + '+missingBasisCount+' cost-basis issue(s)',cls:missingCosts?'badtext':'goodtext'},
+   {label:'End-Date Count Coverage',value:endCounted+' / '+activeInputs,sub:pct(countCoverage)+' of active inputs',cls:countCoverage<100?'warntext':'goodtext'},
+   {label:'Cash-Up Store Days',value:cashComplete+' / '+salesStoreDays.size,sub:'Closed store-days with sales',cls:cashComplete<salesStoreDays.size?'badtext':'goodtext'},
+   {label:'Cash Variance',value:money(cashVariance),sub:'Closed cash-ups only',cls:Math.abs(cashVariance)>1?'warntext':'goodtext'},
+   {label:'Delivery Sales',value:money(delivery),sub:pct(deliveryShare)+' of POS sales'},
+   {label:'Units Sold',value:qty(totalUnits),sub:zeroProducts.length+' active product(s) with zero sales'}
+  ]);
+
+  const qualityOk=missingCosts===0&&endCounted===activeInputs&&cashComplete===salesStoreDays.size;const qt=$('qualityTag');qt.textContent=qualityOk?'CONTROL CHECKS PASSED':'PROVISIONAL';qt.className='pill '+(qualityOk?'good':'warn');$('qualityNote').className='status '+(qualityOk?'good':'warn');$('qualityNote').innerHTML=qualityOk?'Key cost, count and cash-up checks passed for the selected period.':'Treat profit and margin as provisional: '+missingCosts+' missing cost issue(s), '+(activeInputs-endCounted)+' active input(s) without an end-date physical count, and '+(salesStoreDays.size-cashComplete)+' sales store-day(s) without a closed cash-up.';
+  $('dashTitle').textContent=storeName(st)+' — '+from+' to '+to;
+
+  const action=[];if(missingCosts)action.push(['high','HIGH','Complete '+missingCosts+' missing cost issue(s) before relying on final margin/profit.']);if(salesStoreDays.size>cashComplete)action.push(['high','HIGH','Close '+(salesStoreDays.size-cashComplete)+' outstanding sales store-day cash-up(s).']);if(activeInputs>endCounted)action.push(['med','CONTROL','Complete the selected end-date physical count for '+(activeInputs-endCounted)+' active production input(s).']);if(lowStock.length)action.push(['med','STOCK','Review/reorder '+lowStock.length+' production input(s) at or below reorder level.']);if(zeroProducts.length)action.push(['opp','SALES','Review '+zeroProducts.length+' active zero-sales product(s) for promotion, repricing or menu simplification.']);if(zeroInputs.length)action.push(['opp','STOCK','Review '+zeroInputs.length+' active input(s) with zero consumption in the selected period before replenishing.']);action.push(['opp','SALES','Use add-ons and combos to lift the current average basket of '+money(avgBasket)+'.']);if(deliveryShare<10)action.push(['opp','GROWTH','Delivery channels contribute '+pct(deliveryShare)+' of sales; promote profitable Mr D/Uber items without sacrificing margin.']);action.push(['opp','FOCUS','Top 10 products contribute '+pct(top10Share)+' of sales value; keep these items available and visible.']);$('actionsList').innerHTML=action.map(a=>'<div class="action '+a[0]+'"><b>'+esc(a[1])+'</b> '+esc(a[2])+'</div>').join('');
+
+  $('storeRows').innerHTML=storeMetrics.map(r=>'<tr><td><b>'+esc(storeName(r.store))+'</b></td><td class="num">'+money(r.sales)+'</td><td class="num">'+r.txns+'</td><td class="num">'+money(r.avg)+'</td><td class="num">'+money(r.cogs)+'</td><td class="num">'+money(r.gross)+'</td><td class="num">'+pct(r.margin)+'</td><td class="num">'+money(r.opex)+'</td><td class="num"><b>'+money(r.net)+'</b></td><td>'+badge(r.closedDays===r.salesDays,r.closedDays+'/'+r.salesDays,'INCOMPLETE '+r.closedDays+'/'+r.salesDays)+'</td><td class="num">'+money(r.cashVariance)+'</td></tr>').join('')||emptyRow(11,'No store data for the selected period.');
+  $('channelRows').innerHTML=Object.entries(channel).map(([k,v])=>'<tr><td>'+esc(k)+'</td><td class="num">'+money(v)+'</td><td class="num">'+pct(salesTotal?v/salesTotal*100:0)+'</td></tr>').join('')+'<tr class="total"><td>Total POS Sales</td><td class="num">'+money(salesTotal)+'</td><td class="num">100.0%</td></tr>';
+  $('controlRows').innerHTML=[['Purchase cost completeness',missingCosts===0,missingCosts+' issue(s)'],['End-date physical counts',endCounted===activeInputs,endCounted+' / '+activeInputs],['Daily cash-up closure',cashComplete===salesStoreDays.size,cashComplete+' / '+salesStoreDays.size+' store-days'],['Cash variance',Math.abs(cashVariance)<1,money(cashVariance)],['Low stock attention',lowStock.length===0,lowStock.length+' item(s)']].map(r=>'<tr><td>'+esc(r[0])+'</td><td>'+badge(r[1],'OK','REVIEW')+'</td><td class="num">'+esc(r[2])+'</td></tr>').join('');
+  function productRows(rows){return rows.map((r,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.category||'')+'</td><td class="num">'+qty(r.qty)+'</td><td class="num">'+money(r.sales)+'</td><td class="num">'+pct(salesTotal?r.sales/salesTotal*100:0)+'</td></tr>').join('')||emptyRow(7,'No products sold in the selected period.')}
+  $('topProductRows').innerHTML=productRows(topProducts);$('bottomProductRows').innerHTML=productRows(bottomProducts);
+  function inputTableRows(rows){return rows.map((r,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.unit||'')+'</td><td class="num">'+qty(r.used)+'</td><td class="num">'+money(r.consumptionCost)+'</td><td class="num">'+r.days+'</td></tr>').join('')||emptyRow(7,'No costed production-input consumption in the selected period.')}
+  $('topInputRows').innerHTML=inputTableRows(topInputs);$('bottomInputRows').innerHTML=inputTableRows(bottomInputs);
+  $('lowStockRows').innerHTML=lowStock.slice(0,50).map(r=>'<tr><td>'+esc(storeName(r.store_code))+'</td><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.unit||'')+'</td><td class="num"><b>'+qty(r.expected)+'</b></td><td class="num">'+qty(r.reorder_level)+'</td><td class="num">'+qty(r.safety_stock)+'</td><td class="num">'+qty(r.target_stock)+'</td><td>'+esc(r.preferred_supplier||'—')+'</td></tr>').join('')||emptyRow(9,'No items are currently at or below a configured reorder level.');
+  $('missingCostRows').innerHTML=missingIssues.slice(0,100).map(r=>'<tr><td>'+esc(storeName(r.store))+'</td><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.issue)+'</td></tr>').join('')||emptyRow(4,'No missing cost issues were found for the selected scope.');
+  $('zeroRows').innerHTML='<tr><td>Active sellable products with zero sales</td><td class="num">'+zeroProducts.length+'</td><td>Review promotion, pricing and menu necessity.</td></tr><tr><td>Active production inputs with zero consumption</td><td class="num">'+zeroInputs.length+'</td><td>Avoid unnecessary replenishment; confirm recipe links and stock need.</td></tr>';
+  $('generatedAt').innerHTML='<b>Generated:</b> '+new Date().toLocaleString('en-ZA',{timeZone:'Africa/Johannesburg'})+'. <b>Method:</b> sales come from completed POS sales; Cost of Sales uses recorded production-input usage valued at weighted purchase cost (or preferred unit cost where available) plus any physical stock variance on the selected end date; inventory purchases captured as expenses are excluded from operating expenses to avoid double-counting. Results remain provisional when costs, physical counts or cash-ups are incomplete.';
+  $('dashboard').classList.remove('hidden');setStatus('Dashboard loaded successfully.','good');
+ }catch(e){console.error(e);setStatus('Could not load management dashboard: '+(e.message||String(e)),'bad')}
+}
+async function init(){const d=today();$('from').value=monthStart();$('to').value=d;$('runBtn').onclick=load;$('todayBtn').onclick=()=>{$('from').value=d;$('to').value=d;load()};$('monthBtn').onclick=()=>{$('from').value=monthStart();$('to').value=today();load()};$('mgrSignInBtn').onclick=managerSignIn;$('mgrPassword').addEventListener('keydown',e=>{if(e.key==='Enter')managerSignIn()});const p=await verifyManager();if(p){setStatus('Manager session verified. Loading dashboard…','good');load()}}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+<!-- BUILD: FEASTERVILLE_MANAGEMENT_DASHBOARD_V103_20260925 -->
+</body></html>

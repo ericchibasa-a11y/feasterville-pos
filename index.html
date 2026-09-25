@@ -481,6 +481,7 @@ body.print-report #reportContent { position:absolute; left:0; top:0; width:100%;
 <button class="cat" onclick="showReport('reorder',this)">Reorder Report</button>
 <button class="cat" onclick="showPerformanceReportV102('products',this)">Product Performance</button>
 <button class="cat" onclick="showPerformanceReportV102('inputs',this)">Input Consumption</button>
+<button class="cat manager-only" onclick="location.href='management-dashboard.html'">Management Dashboard</button>
 <button class="primary" onclick="printCurrentReport()">SAVE REPORT AS PDF</button>
 <button class="secondary" onclick="printCurrentReport()">PRINT REPORT</button>
 </div>
@@ -623,6 +624,7 @@ body.print-report #reportContent { position:absolute; left:0; top:0; width:100%;
     <button type="button" class="cat" data-manager-target="profitLossPanel">PROFIT & LOSS</button>
     <button type="button" class="cat" data-manager-target="storesComparisonPanel">STORES COMPARISON & FINAL P&L</button>
     <button type="button" class="cat" data-manager-target="costingProfitPanel">COSTING & PROFITABILITY</button>
+    <button type="button" class="cat" onclick="location.href='management-dashboard.html'">MANAGEMENT DASHBOARD</button>
     <button type="button" class="cat" onclick="location.href='feasterville-audit-reporting.html'">AUDIT & FINANCIAL REPORTING</button>
   </div>
 </div>
@@ -8126,6 +8128,7 @@ window.openUnclosedCashupsV80=open;window.loadUnclosedCashupsV80=load;window.fvU
    pl:()=>target('profitLossPanel','Store Profit & Loss'),
    compare:()=>target('storesComparisonPanel','Stores Comparison & Final P&L'),
    costing:()=>target('costingProfitPanel','Costing & Pricing / Profitability'),
+   dashboard:()=>{location.href='management-dashboard.html';},
    monthend:()=>openPage('month-end-closure-report.html','Month-End Closure Report'),
    audit:()=>openPage('feasterville-audit-reporting.html','Audit & Financial Reporting'),
    assets:()=>target('fvAssetRegisterPanelV88','Asset Register'),
@@ -8139,7 +8142,7 @@ window.openUnclosedCashupsV80=open;window.loadUnclosedCashupsV80=load;window.fvU
   ['cash','CASH-UPS',[['closecash','CLOSE DAY / CASH-UP'],['histcash','HISTORICAL CASH-UP'],['unclosed','UNCLOSED CASH-UPS']]],
   ['inventory','INVENTORY',[['inv','INVENTORY LISTING & COUNT SHEETS'],['openbal','OPENING BALANCES'],['prodadmin','PRODUCTION INPUT ADMIN'],['prodstock','PRODUCTION INPUT STOCK'],['usage','USAGE FROM SALES'],['movements','STOCK MOVEMENTS'],['recon','STOCK RECONCILIATION']]],
   ['products','PRODUCTS & RECIPES',[['sellable','SELLABLE ITEMS'],['recipe','PRODUCT INPUTS / RECIPE LINK'],['easyrecipe','BUILD FINAL PRODUCT RECIPE'],['finalrecipe','FINAL PRODUCT → INPUTS'],['masterinputs','MASTER PRODUCTION INPUTS']]],
-  ['reports','REPORTS & FINANCE',[['reports','SALES & INVENTORY REPORTS'],['pl','STORE PROFIT & LOSS'],['compare','STORES COMPARISON & FINAL P&L'],['costing','COSTING & PROFITABILITY'],['monthend','MONTH-END REPORT'],['audit','AUDIT & FINANCIAL REPORTING'],['assets','ASSET REGISTER'],['bankrec','BANK RECONCILIATION']]],
+  ['reports','REPORTS & FINANCE',[['reports','SALES & INVENTORY REPORTS'],['dashboard','MANAGEMENT DASHBOARD'],['pl','STORE PROFIT & LOSS'],['compare','STORES COMPARISON & FINAL P&L'],['costing','COSTING & PROFITABILITY'],['monthend','MONTH-END REPORT'],['audit','AUDIT & FINANCIAL REPORTING'],['assets','ASSET REGISTER'],['bankrec','BANK RECONCILIATION']]],
   ['users','USERS & ACCESS',[['users','SALESPERSON & USER MANAGEMENT'],['access','ACCESS RIGHTS & USER MANAGEMENT'],['logged','CURRENTLY LOGGED IN USERS']]]
  ];
  function closeSubs(){document.querySelectorAll('#fvFunctionNavV82 .fvNavSubV82').forEach(x=>x.classList.remove('active'));document.querySelectorAll('#fvFunctionNavV82 .fvNavCatV82').forEach(x=>x.classList.remove('active'));}
