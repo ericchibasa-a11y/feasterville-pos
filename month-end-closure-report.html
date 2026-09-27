@@ -147,6 +147,23 @@ async function api(path){
     throw e;
   }
 }
+async function verifyManagerSession(){
+  const t=token();
+  if(!t){showLogin(true);return false;}
+  try{
+    const u=await fetch('https://sflyjcgbxbcwspfuzone.supabase.co/auth/v1/user',{headers:{apikey:KEY,Authorization:'Bearer '+t}});
+    const uraw=await u.text();let au={};try{au=uraw?JSON.parse(uraw):{}}catch(_){}
+    if(!u.ok||!au.id)throw Error('Manager sign-in required.');
+    const prof=await apiWithToken('pos_profiles?user_id=eq.'+encodeURIComponent(au.id)+'&select=user_id,display_name,role,store_code,active',t);
+    const p=Array.isArray(prof)&&prof.length?prof[0]:null;
+    if(!p||String(p.role||'').toLowerCase()!=='manager'||p.active===false)throw Error('Manager access required.');
+    showLogin(false);return true;
+  }catch(e){
+    showLogin(true);
+    setStatus('Manager access required for Month-End Closure.','warn');
+    return false;
+  }
+}
 async function managerSignIn(){
   const email=($('mgrEmail')?.value||'').trim(),password=$('mgrPassword')?.value||'',msg=$('mgrLoginMsg');
   try{
@@ -196,6 +213,7 @@ function isInternalTransfer(r){return String(r.supplier||'').toUpperCase().start
 function addBy(obj,key,val){obj[key]=(obj[key]||0)+n(val)}
 let lastInventory=[];
 async function load(){
+  if(!(await verifyManagerSession()))return;
   const st=$('store').value,m=$('month').value;if(!m)return alert('Select a month.');const {start,end,label}=monthBounds(m);const sf=st==='ALL'?'':'&store_code=eq.'+encodeURIComponent(st);const stores=st==='ALL'?['NDAYENI','SIVANA','BIRCH_ACRES']:[st];
   setStatus('Loading live month-end data...');$('report').classList.add('hidden');
   try{
@@ -294,7 +312,7 @@ async function load(){
   }catch(e){console.error(e);setStatus('Could not load month-end report: '+e.message,'bad')}
 }
 function exportCSV(){if(!lastInventory.length)return alert('Load the report first.');const h=['Store','Code','Production Input','Unit','Opening Qty','Opening Value','Received Qty','Purchases Cost','Used via Sales','Consumption Cost','Expected Close Qty','Physical Close Qty','Variance Qty','Closing Value','Month-End Count'];const lines=[h,...lastInventory.map(r=>[r.store_code,r.code,r.name,r.unit,r.openingQty,r.openingValue,r.receivedQty,r.purchaseCost,r.usedQty,r.consumptionCost,r.expectedClose,r.physicalClose??'',r.variance??'',r.closingValue,r.endCount?'COUNTED':'NO MONTH-END COUNT'])].map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(','));const b=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='Feasterville_Month_End_Inventory_'+$('month').value+'_'+$('store').value+'.csv';a.click();URL.revokeObjectURL(a.href)}
-function init(){const now=new Date(),m=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');$('month').value=m;$('loadBtn').onclick=load;$('printBtn').onclick=()=>{if($('report').classList.contains('hidden'))return alert('Load the report first.');window.print()};$('csvBtn').onclick=exportCSV;if($('mgrSignInBtn'))$('mgrSignInBtn').onclick=managerSignIn;if($('mgrPassword'))$('mgrPassword').addEventListener('keydown',e=>{if(e.key==='Enter')managerSignIn()});if(token()){showLogin(false);setStatus('Ready. Select the store and month, then load the report.','good')}else{showLogin(true);setStatus('No active POS login found. Sign in below as Manager.','warn')}}
+async function init(){const now=new Date(),m=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');$('month').value=m;$('loadBtn').onclick=load;$('printBtn').onclick=()=>{if($('report').classList.contains('hidden'))return alert('Load the report first.');window.print()};$('csvBtn').onclick=exportCSV;if($('mgrSignInBtn'))$('mgrSignInBtn').onclick=managerSignIn;if($('mgrPassword'))$('mgrPassword').addEventListener('keydown',e=>{if(e.key==='Enter')managerSignIn()});if(await verifyManagerSession()){setStatus('Ready. Select the store and month, then load the report.','good')}else{showLogin(true)}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>

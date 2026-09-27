@@ -1,0 +1,11 @@
+FEASTERVILLE POS V105.1 — INVENTORY CONTROLLER ACCESS-CONTROL CLEANUP
+Date: 27 Sep 2026
+
+- Inventory Controller can open Production Input Administration using the existing authenticated POS session.
+- Inventory Controller sees only agreed inventory functions: POS Home, Add Production Input, Existing Inputs, Receive Stock, Receipt History, Inventory Transfers, Movement History, Refresh and Top.
+- Sellable Items, Month-End Report and Apply Approved Costs are hidden for Inventory Controller.
+- Inventory Controller store selectors are locked to the assigned store.
+- Manager retains full Production Input Administration access.
+- Inventory Transfer page hides Month-End Report for Inventory Controller.
+- Month-End Closure now verifies that the active token belongs to an active Manager before loading data.
+- Database policy patch grants Inventory Controller INSERT/UPDATE on Production Inputs only for the assigned store; no delete or cross-store rights.

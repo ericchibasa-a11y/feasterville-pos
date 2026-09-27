@@ -3,18 +3,18 @@
 *{box-sizing:border-box}body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8;color:#17212b}.top{position:sticky;top:0;z-index:20;background:#111827;padding:10px;box-shadow:0 2px 8px #0003}.nav{max-width:1180px;margin:auto;display:flex;gap:8px;flex-wrap:wrap}.nav button,.nav a{border:0;border-radius:8px;padding:11px 14px;font-weight:700;cursor:pointer;text-decoration:none;background:#fff;color:#111827}.nav .primary{background:#16a34a;color:white}.wrap{max-width:1180px;margin:18px auto;padding:0 14px}.card{background:#fff;border:1px solid #d9dee5;border-radius:12px;padding:18px;margin-bottom:18px;box-shadow:0 1px 3px #0001}h1,h2{margin-top:0}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}label{font-weight:700;font-size:13px}input,select{width:100%;padding:10px;border:1px solid #b9c2cc;border-radius:7px;margin-top:5px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}button.save{background:#16a34a;color:#fff;border:0;border-radius:8px;padding:11px 18px;font-weight:800;cursor:pointer}button.secondary{background:#334155;color:#fff;border:0;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer}.msg{margin-top:10px;font-weight:700}.ok{color:#15803d}.bad{color:#b91c1c}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}.toolbar>*{max-width:320px}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px;border-bottom:1px solid #e5e7eb;text-align:left}th{background:#f8fafc;position:sticky;top:60px}.tablewrap{overflow:auto;max-height:520px}.tablewrap th{top:0;z-index:2}.pill{padding:3px 7px;border-radius:12px;background:#dcfce7;color:#166534;font-weight:700}.inactive{background:#fee2e2;color:#991b1b}@media(max-width:760px){.grid{grid-template-columns:1fr}.nav button,.nav a{flex:1 1 auto;text-align:center}th{top:105px}}
 </style></head><body>
 <div class="top"><div class="nav">
-<a href="index.html">POS HOME</a><button class="primary" onclick="go('add')">ADD PRODUCTION INPUT</button><button onclick="go('list')">EXISTING INPUTS</button><button onclick="go('sellable')">SELLABLE ITEMS</button><button onclick="go('receipt')">RECEIVE STOCK</button><button onclick="go('receiptHistory')">RECEIPT HISTORY</button><a href="inventory-transfer.html" style="background:#7c3aed;color:#fff">INVENTORY TRANSFERS</a><a href="production-input-consumption-report.html">MOVEMENT HISTORY</a><a href="month-end-closure-report.html">MONTH-END REPORT</a><a href="feasterville-preferred-costs-update.html">APPLY APPROVED COSTS</a><button onclick="refreshAdmin()">REFRESH</button><button onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>
+<a href="index.html">POS HOME</a><button class="primary" onclick="go('add')">ADD PRODUCTION INPUT</button><button onclick="go('list')">EXISTING INPUTS</button><button class="manager-only-control" onclick="go('sellable')">SELLABLE ITEMS</button><button onclick="go('receipt')">RECEIVE STOCK</button><button onclick="go('receiptHistory')">RECEIPT HISTORY</button><a href="inventory-transfer.html" style="background:#7c3aed;color:#fff">INVENTORY TRANSFERS</a><a href="production-input-consumption-report.html">MOVEMENT HISTORY</a><a class="manager-only-control" href="month-end-closure-report.html">MONTH-END REPORT</a><a class="manager-only-control" href="feasterville-preferred-costs-update.html">APPLY APPROVED COSTS</a><button onclick="refreshAdmin()">REFRESH</button><button onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>
 </div></div>
 <div class="wrap">
 <div class="card"><h1>Production Input Administration</h1>
-<div id="who">Checking Manager session…</div>
+<div id="who">Checking inventory administration session…</div>
 <div id="adminLogin" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid #ddd">
-  <h3 style="margin:0 0 10px">Manager Login</h3>
+  <h3 style="margin:0 0 10px">Inventory Administration Login</h3>
   <div class="grid">
-    <div><label>Manager Email<input id="adminEmail" type="email" autocomplete="username" placeholder="Manager email"></label></div>
+    <div><label>Email<input id="adminEmail" type="email" autocomplete="username" placeholder="Manager or Inventory Controller email"></label></div>
     <div><label>Password<input id="adminPassword" type="password" autocomplete="current-password" placeholder="Password"></label></div>
   </div>
-  <div class="actions"><button class="save" type="button" onclick="adminSignIn()">MANAGER SIGN IN</button></div>
+  <div class="actions"><button class="save" type="button" onclick="adminSignIn()">SIGN IN</button></div>
   <div id="loginMsg" class="msg"></div>
 </div></div>
 <div class="card" id="add"><h2>Add / Edit Production Input</h2>
@@ -33,7 +33,7 @@
 <div><label>Preferred Unit Cost (R)<input id="cost" type="number" step="0.01"></label></div>
 <div><label>Status<select id="active"><option value="true">Active</option><option value="false">Inactive</option></select></label></div>
 </div><div class="actions"><button class="save" onclick="saveInput()">SAVE INPUT</button><button class="secondary" onclick="clearForm()">CLEAR FORM</button></div><div id="msg" class="msg"></div></div>
-<div class="card" id="sellable">
+<div class="card manager-only-control" id="sellable">
 <h2>Sellable Items — Add / Edit</h2>
 <p style="margin-top:-6px;color:#475569">Manager only. Add new sellable items or edit the live menu for each store. Existing item codes are locked during editing to protect sales and recipe history.</p>
 <div class="grid">
@@ -124,38 +124,58 @@ async function request(path,options){
   return body;
 }
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function role(){return String(verifiedUser?.role||'').toLowerCase()}
+function allowed(){return ['manager','inventory_control'].includes(role())}
+function applyRoleAccess(){
+  const isInventory=role()==='inventory_control', assigned=verifiedUser?.store_code||'';
+  document.querySelectorAll('.manager-only-control').forEach(el=>{el.style.display=isInventory?'none':''});
+  if(isInventory&&assigned){
+    ['store','listStore','r_store','receiptHistoryStore'].forEach(id=>{const el=document.getElementById(id);if(el){el.value=assigned;el.disabled=true}});
+  }else{
+    ['store','listStore','r_store','receiptHistoryStore'].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=false});
+  }
+}
 function guard(){
   const w=document.getElementById('who'), box=document.getElementById('adminLogin');
-  if(!verifiedUser||verifiedUser.role!=='manager'){
-    w.innerHTML='<span class="bad">Manager sign-in required for Production Input Administration.</span>';
+  if(!allowed()){
+    w.innerHTML='<span class="bad">Manager or Inventory Controller sign-in required for Production Input Administration.</span>';
     if(box)box.style.display='block';
     return false;
   }
   if(box)box.style.display='none';
-  w.innerHTML='<span class="ok">Manager session active: '+esc(verifiedUser.name||'Manager')+'</span>';
+  const label=role()==='manager'?'Manager':'Inventory Controller';
+  w.innerHTML='<span class="ok">'+label+' session active: '+esc(verifiedUser.name||label)+(verifiedUser.store_code?' ('+esc(verifiedUser.store_code)+')':'')+'</span>';
+  applyRoleAccess();
   return true;
 }
-async function getManagerProfile(authUser){
+function managerGuard(){
+  if(role()==='manager')return true;
+  const m=document.getElementById('sellableMsg');
+  if(m){m.textContent='Manager access required.';m.className='msg bad'}
+  return false;
+}
+async function getAdminProfile(authUser){
   const rows=await request('/rest/v1/pos_profiles?user_id=eq.'+encodeURIComponent(authUser.id)+'&select=user_id,display_name,role,store_code,active');
   const p=Array.isArray(rows)&&rows.length?rows[0]:null;
-  if(!p||String(p.role||'').toLowerCase()!=='manager'||p.active===false)throw new Error('Manager access required.');
+  const r=String(p?.role||'').toLowerCase();
+  if(!p||!['manager','inventory_control'].includes(r)||p.active===false)throw new Error('Manager or Inventory Controller access required.');
   return p;
 }
 async function activateAdmin(authData){
   if(!authData||!authData.access_token||!authData.user)throw new Error('No login session was returned.');
   sessionStorage.setItem('feastervilleCloudAccessToken',authData.access_token);
   if(authData.refresh_token)sessionStorage.setItem('feastervilleCloudRefreshToken',authData.refresh_token);
-  const p=await getManagerProfile(authData.user);
-  verifiedUser={id:authData.user.id,name:p.display_name||authData.user.email,display_name:p.display_name||authData.user.email,role:'manager',store_code:p.store_code||null};
+  const p=await getAdminProfile(authData.user);
+  verifiedUser={id:authData.user.id,name:p.display_name||authData.user.email,display_name:p.display_name||authData.user.email,role:String(p.role).toLowerCase(),store_code:p.store_code||null};
   guard();
 }
-async function verifyManager(){
+async function verifyAdmin(){
   const token=tok();
   if(!token){verifiedUser=null;guard();return false}
   try{
     const au=await request('/auth/v1/user');
-    const p=await getManagerProfile(au);
-    verifiedUser={id:au.id,name:p.display_name||au.email,display_name:p.display_name||au.email,role:'manager',store_code:p.store_code||null};
+    const p=await getAdminProfile(au);
+    verifiedUser={id:au.id,name:p.display_name||au.email,display_name:p.display_name||au.email,role:String(p.role).toLowerCase(),store_code:p.store_code||null};
     guard();return true;
   }catch(_){
     verifiedUser=null;guard();return false;
@@ -170,10 +190,13 @@ async function adminSignIn(){
     if(!email||!password)throw new Error('Enter email and password.');
     const data=await request('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:email,password:password})});
     await activateAdmin(data);
-    m.textContent='Manager signed in successfully.';m.className='msg ok';
+    const label=role()==='manager'?'Manager':'Inventory Controller';
+    m.textContent=label+' signed in successfully.';m.className='msg ok';
     document.getElementById('adminPassword').value='';
     await loadInputs();
-    await loadSellableItems();
+    if(role()==='manager')await loadSellableItems();
+    await populateReceiptInputs();
+    await loadReceiptHistory();
   }catch(err){
     console.error(err);
     m.textContent=err.message;m.className='msg bad';
@@ -183,7 +206,7 @@ async function api(path,opt={}){
   let p=path.startsWith('/')?path:'/rest/v1/'+path;
   return request(p,opt);
 }
-async function refreshAdmin(){if(await verifyManager()){await loadInputs();await loadSellableItems();await loadReceiptHistory();}}
+async function refreshAdmin(){if(await verifyAdmin()){await loadInputs();if(role()==='manager')await loadSellableItems();await populateReceiptInputs();await loadReceiptHistory();}}
 function val(id){return (document.getElementById(id)?.value||'').trim()}
 function go(where){
   const el=document.getElementById(where);
@@ -259,7 +282,7 @@ function clearSellableForm(){
   sellableStatus('');
 }
 async function loadSellableItems(){
-  if(!guard())return;
+  if(!managerGuard())return;
   const store=document.getElementById('s_listStore')?.value||document.getElementById('s_store')?.value||'NDAYENI';
   const body=document.getElementById('sellableBody');
   if(body)body.innerHTML='<tr><td colspan="6">Loading live sellable items...</td></tr>';
@@ -294,7 +317,7 @@ function editSellableItem(x){
   go('sellable');
 }
 async function saveSellableItem(){
-  if(!guard())return;
+  if(!managerGuard())return;
   const store=document.getElementById('s_store').value;
   const code=String(document.getElementById('s_code').value||'').trim().toUpperCase();
   const name=String(document.getElementById('s_name').value||'').trim();
@@ -335,8 +358,8 @@ async function populateReceiptInputs(){
 }
 function applyReceiptDefaults(){const s=document.getElementById('r_input'),o=s?.options[s.selectedIndex];if(!o||!o.value)return;const a=document.getElementById('r_supplier'),c=document.getElementById('r_cost');if(a&&!a.value)a.value=o.dataset.supplier||'';if(c&&!c.value)c.value=o.dataset.cost||'';}
 async function saveReceipt(){
- if(!guard()){receiptStatus('Manager sign-in is required before saving stock receipts.',false);return;}
- const manager=user();
+ if(!guard()){receiptStatus('Manager or Inventory Controller sign-in is required before saving stock receipts.',false);return;}
+ const operator=user();
  const store=document.getElementById('r_store').value,sel=document.getElementById('r_input'),o=sel.options[sel.selectedIndex];
  const input_code=sel.value,input_name=o?.dataset.name||'',unit=o?.dataset.unit||'EA',receipt_date=document.getElementById('r_date').value;
  const supplier=String(document.getElementById('r_supplier').value||'').trim(),reference=String(document.getElementById('r_reference').value||'').trim();
@@ -344,7 +367,7 @@ async function saveReceipt(){
  if(!input_code){receiptStatus('Select a Production Input.',false);return;} if(!receipt_date){receiptStatus('Enter the receipt date.',false);return;}
  if(!Number.isFinite(qty)||qty<=0){receiptStatus('Quantity received must be greater than zero.',false);return;}
  if(!Number.isFinite(unit_cost)||unit_cost<0){receiptStatus('Unit cost cannot be negative.',false);return;}
- const payload={receipt_date,supplier:supplier||null,reference:reference||null,input_code,input_name,unit,qty,unit_cost,received_by:manager.name||manager.display_name||'Manager',created_by:manager.id,store_code:store};
+ const payload={receipt_date,supplier:supplier||null,reference:reference||null,input_code,input_name,unit,qty,unit_cost,received_by:operator.name||operator.display_name||'User',created_by:operator.id,store_code:store};
  try{
    receiptStatus('Saving stock receipt...');
    await request('/rest/v1/pos_stock_receipts',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(payload)});
@@ -437,11 +460,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('r_input')?.addEventListener('change',applyReceiptDefaults);
   const ss=document.getElementById('s_store'); if(ss)ss.value=initialStore;
   const sls=document.getElementById('s_listStore'); if(sls)sls.value=initialStore;
-  document.getElementById('s_store')?.addEventListener('change',(e)=>{const list=document.getElementById('s_listStore');if(list)list.value=e.target.value;clearSellableForm();loadSellableItems();});
-  document.getElementById('s_listStore')?.addEventListener('change',(e)=>{const form=document.getElementById('s_store');if(form)form.value=e.target.value;clearSellableForm();loadSellableItems();});
+  document.getElementById('s_store')?.addEventListener('change',(e)=>{if(role()!=='manager')return;const list=document.getElementById('s_listStore');if(list)list.value=e.target.value;clearSellableForm();loadSellableItems();});
+  document.getElementById('s_listStore')?.addEventListener('change',(e)=>{if(role()!=='manager')return;const form=document.getElementById('s_store');if(form)form.value=e.target.value;clearSellableForm();loadSellableItems();});
 });
 </script>
-<!-- BUILD: PRODUCTION_INPUT_ADMIN_PLUS_SELLABLE_ITEMS_V1_20260921 -->
+<!-- BUILD: V105_1_INVENTORY_CONTROLLER_ACCESS_CLEANUP_20260927 -->
 
 <script id="fvBirchAcresCoverageV91">
 /* V91 — Birch Acres full store-selector compatibility */
