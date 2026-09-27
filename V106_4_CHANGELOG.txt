@@ -1,0 +1,7 @@
+FEASTERVILLE POS V106.4 — BANKING RECONCILIATION FIX
+
+- Banking & Owner Funds now retrieves all POS sales using pagination, removing the 1,000-row truncation.
+- Added Other payment source to Sales -> Banking / Settlement Reconciliation.
+- Added Other to Capture Banking / Settlement source list.
+- POS Sales on Banking page should now match Management Dashboard for the same store/date range.
+- No database schema changes required.
