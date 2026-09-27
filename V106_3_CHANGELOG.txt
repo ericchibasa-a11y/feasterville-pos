@@ -1,0 +1,6 @@
+FEASTERVILLE POS V106.3 — OWNER DRAWINGS ALL STORES
+
+- Added "All Stores / Source Unknown" to Owner Drawings store/source dropdown.
+- Use this when personal funds were taken from the business but the originating store cannot be reliably identified.
+- Unallocated drawings are included when the report filter is All Stores, but are not assigned to an individual store reconciliation.
+- Existing Ndayeni, Sivana and Birch Acres options remain unchanged.
