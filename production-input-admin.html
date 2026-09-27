@@ -3,7 +3,7 @@
 *{box-sizing:border-box}body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8;color:#17212b}.top{position:sticky;top:0;z-index:20;background:#111827;padding:10px;box-shadow:0 2px 8px #0003}.nav{max-width:1180px;margin:auto;display:flex;gap:8px;flex-wrap:wrap}.nav button,.nav a{border:0;border-radius:8px;padding:11px 14px;font-weight:700;cursor:pointer;text-decoration:none;background:#fff;color:#111827}.nav .primary{background:#16a34a;color:white}.wrap{max-width:1180px;margin:18px auto;padding:0 14px}.card{background:#fff;border:1px solid #d9dee5;border-radius:12px;padding:18px;margin-bottom:18px;box-shadow:0 1px 3px #0001}h1,h2{margin-top:0}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}label{font-weight:700;font-size:13px}input,select{width:100%;padding:10px;border:1px solid #b9c2cc;border-radius:7px;margin-top:5px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}button.save{background:#16a34a;color:#fff;border:0;border-radius:8px;padding:11px 18px;font-weight:800;cursor:pointer}button.secondary{background:#334155;color:#fff;border:0;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer}.msg{margin-top:10px;font-weight:700}.ok{color:#15803d}.bad{color:#b91c1c}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}.toolbar>*{max-width:320px}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px;border-bottom:1px solid #e5e7eb;text-align:left}th{background:#f8fafc;position:sticky;top:60px}.tablewrap{overflow:auto;max-height:520px}.tablewrap th{top:0;z-index:2}.pill{padding:3px 7px;border-radius:12px;background:#dcfce7;color:#166534;font-weight:700}.inactive{background:#fee2e2;color:#991b1b}@media(max-width:760px){.grid{grid-template-columns:1fr}.nav button,.nav a{flex:1 1 auto;text-align:center}th{top:105px}}
 </style></head><body>
 <div class="top"><div class="nav">
-<a href="index.html">POS HOME</a><button class="primary" onclick="go('add')">ADD PRODUCTION INPUT</button><button onclick="go('list')">EXISTING INPUTS</button><button class="manager-only-control" onclick="go('sellable')">SELLABLE ITEMS</button><button onclick="go('receipt')">RECEIVE STOCK</button><button onclick="go('receiptHistory')">RECEIPT HISTORY</button><a href="inventory-transfer.html" style="background:#7c3aed;color:#fff">INVENTORY TRANSFERS</a><a href="production-input-consumption-report.html">MOVEMENT HISTORY</a><a class="manager-only-control" href="month-end-closure-report.html">MONTH-END REPORT</a><a class="manager-only-control" href="feasterville-preferred-costs-update.html">APPLY APPROVED COSTS</a><button onclick="refreshAdmin()">REFRESH</button><button onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>
+<a href="index.html">POS HOME</a><button class="manager-only-control primary" onclick="go('add')">ADD PRODUCTION INPUT</button><button class="manager-only-control" onclick="go('list')">EXISTING INPUTS</button><button class="manager-only-control" onclick="go('sellable')">SELLABLE ITEMS</button><button class="primary" onclick="go('receipt')">RECEIVE STOCK</button><button onclick="go('receiptHistory')">RECEIPT HISTORY</button><a class="manager-only-control" href="inventory-transfer.html" style="background:#7c3aed;color:#fff">INVENTORY TRANSFERS</a><a class="manager-only-control" href="production-input-consumption-report.html">MOVEMENT HISTORY</a><a class="manager-only-control" href="month-end-closure-report.html">MONTH-END REPORT</a><a class="manager-only-control" href="feasterville-preferred-costs-update.html">APPLY APPROVED COSTS</a><button onclick="refreshAdmin()">REFRESH</button><button onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>
 </div></div>
 <div class="wrap">
 <div class="card"><h1>Production Input Administration</h1>
@@ -17,7 +17,7 @@
   <div class="actions"><button class="save" type="button" onclick="adminSignIn()">SIGN IN</button></div>
   <div id="loginMsg" class="msg"></div>
 </div></div>
-<div class="card" id="add"><h2>Add / Edit Production Input</h2>
+<div class="card manager-only-control" id="add"><h2>Add / Edit Production Input</h2>
 <div class="grid">
 <div><label>Store<select id="store"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option><option value="BIRCH_ACRES">Birch Acres</option></select></label></div>
 <div><label>Input Code<input id="code" placeholder="e.g. ICI-052"></label></div>
@@ -99,7 +99,7 @@
 </div>
 </div>
 
-<div class="card" id="list"><h2>Existing Production Inputs</h2><div class="toolbar"><select id="listStore" onchange="loadInputs()"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option><option value="BIRCH_ACRES">Birch Acres</option></select><input id="search" placeholder="Search code, name or category" oninput="render()"></div><div class="tablewrap"><div id="listMsg" class="msg"></div><table><thead><tr><th>Code</th><th>Name</th><th>Category</th><th>Unit</th><th>Reorder</th><th>Status</th><th>Action</th></tr></thead><tbody id="tbody"></tbody></table></div></div>
+<div class="card manager-only-control" id="list"><h2>Existing Production Inputs</h2><div class="toolbar"><select id="listStore" onchange="loadInputs()"><option value="NDAYENI">Ndayeni</option><option value="SIVANA">Sivana</option><option value="BIRCH_ACRES">Birch Acres</option></select><input id="search" placeholder="Search code, name or category" oninput="render()"></div><div class="tablewrap"><div id="listMsg" class="msg"></div><table><thead><tr><th>Code</th><th>Name</th><th>Category</th><th>Unit</th><th>Reorder</th><th>Status</th><th>Action</th></tr></thead><tbody id="tbody"></tbody></table></div></div>
 </div>
 <script>
 const ROOT='https://sflyjcgbxbcwspfuzone.supabase.co';
@@ -130,7 +130,7 @@ function applyRoleAccess(){
   const isInventory=role()==='inventory_control', assigned=verifiedUser?.store_code||'';
   document.querySelectorAll('.manager-only-control').forEach(el=>{el.style.display=isInventory?'none':''});
   if(isInventory&&assigned){
-    ['store','listStore','r_store','receiptHistoryStore'].forEach(id=>{const el=document.getElementById(id);if(el){el.value=assigned;el.disabled=true}});
+    ['r_store','receiptHistoryStore'].forEach(id=>{const el=document.getElementById(id);if(el){el.value=assigned;el.disabled=true}});
   }else{
     ['store','listStore','r_store','receiptHistoryStore'].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=false});
   }
@@ -193,7 +193,7 @@ async function adminSignIn(){
     const label=role()==='manager'?'Manager':'Inventory Controller';
     m.textContent=label+' signed in successfully.';m.className='msg ok';
     document.getElementById('adminPassword').value='';
-    await loadInputs();
+    if(role()==='manager')await loadInputs();
     if(role()==='manager')await loadSellableItems();
     await populateReceiptInputs();
     await loadReceiptHistory();
@@ -206,7 +206,7 @@ async function api(path,opt={}){
   let p=path.startsWith('/')?path:'/rest/v1/'+path;
   return request(p,opt);
 }
-async function refreshAdmin(){if(await verifyAdmin()){await loadInputs();if(role()==='manager')await loadSellableItems();await populateReceiptInputs();await loadReceiptHistory();}}
+async function refreshAdmin(){if(await verifyAdmin()){if(role()==='manager')await loadInputs();if(role()==='manager')await loadSellableItems();await populateReceiptInputs();await loadReceiptHistory();}}
 function val(id){return (document.getElementById(id)?.value||'').trim()}
 function go(where){
   const el=document.getElementById(where);
@@ -224,6 +224,7 @@ function clearForm(){
   const m=document.getElementById('msg');if(m){m.textContent='';m.className='msg'}
 }
 async function saveInput(){
+  if(role()!=='manager'){const m=document.getElementById('msg');if(m){m.textContent='Manager access required.';m.className='msg bad'}return;}
   if(!guard())return;
   const m=document.getElementById('msg');
   const store=document.getElementById('store').value;
@@ -497,3 +498,5 @@ document.addEventListener('DOMContentLoaded',()=>{
 </script>
 
 </body></html>
+
+<!-- BUILD: V105.2_INVENTORY_CONTROLLER_RECEIPTS_ONLY_20260927 -->

@@ -1,0 +1,15 @@
+FEASTERVILLE POS V105.2 — INVENTORY CONTROLLER RECEIPTS-ONLY ADMIN ACCESS
+Date: 27 Sep 2026
+
+Inventory Controller on Production Input Administration:
+- Allowed: Receive Production Input Stock
+- Allowed: Stock Received — Review Captured Entries
+- Assigned store remains locked
+- Hidden: Add / Edit Production Input
+- Hidden: Existing Production Inputs admin/edit
+- Hidden: Sellable Items — Add / Edit
+- Hidden on this page: Inventory Transfers / Movement History / Month-End / Approved Costs
+- Manager retains full Production Input Administration access
+- Database INSERT/UPDATE permissions for Inventory Controller on master Production Inputs removed
+
+Inventory Transfers remain available from the main POS Inventory navigation under their separate authorised function.
