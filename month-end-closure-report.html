@@ -192,6 +192,7 @@ function firstValidCost(receipts,code,start,end,store){
   return r?n(r.unit_cost):0;
 }
 function uniqueCount(a){return new Set(a).size}
+function isInternalTransfer(r){return String(r.supplier||'').toUpperCase().startsWith('INTERNAL TRANSFER')||String(r.reference||'').toUpperCase().startsWith('TRF-')}
 function addBy(obj,key,val){obj[key]=(obj[key]||0)+n(val)}
 let lastInventory=[];
 async function load(){
@@ -201,7 +202,7 @@ async function load(){
     const [inputs,counts,receipts,sales,other,expenses,cashups]=await Promise.all([
       api('pos_store_production_inputs?select=store_code,code,name,unit,category,active,preferred_unit_cost&store_code=in.('+stores.join(',')+')&order=store_code.asc,name.asc'),
       api('pos_store_input_counts?select=store_code,input_code,count_date,opening_qty,received_qty,used_qty,physical_count,variance_qty,notes,counted_by&store_code=in.('+stores.join(',')+')&count_date=lte.'+end+'&order=count_date.asc'),
-      api('pos_stock_receipts?select=store_code,input_code,input_name,unit,qty,unit_cost,receipt_date&store_code=in.('+stores.join(',')+')&receipt_date=lte.'+end+'&order=receipt_date.asc'),
+      api('pos_stock_receipts?select=store_code,input_code,input_name,unit,qty,unit_cost,receipt_date,supplier,reference&store_code=in.('+stores.join(',')+')&receipt_date=lte.'+end+'&order=receipt_date.asc'),
       api('pos_sales?select=store_code,total,payment,sale_date&store_code=in.('+stores.join(',')+')&sale_date=gte.'+start+'&sale_date=lte.'+end+'&order=sale_date.asc'),
       api('pos_other_income?select=store_code,amount,category,transaction_date&store_code=in.('+stores.join(',')+')&transaction_date=gte.'+start+'&transaction_date=lte.'+end+'&order=transaction_date.asc'),
       api('pos_store_expenses?select=store_code,amount,category,description,expense_date&store_code=in.('+stores.join(',')+')&expense_date=gte.'+start+'&expense_date=lte.'+end+'&order=expense_date.asc'),
@@ -226,7 +227,7 @@ async function load(){
       const openingQty=startRow?n(startRow.opening_qty):(prior?closeOf(prior):n(savedMonthOpening?.opening_qty));
       const monthReceipts=receipts.filter(r=>r.store_code===item.store_code&&r.input_code===item.code&&r.receipt_date>=start&&r.receipt_date<=end);
       const receivedQty=monthReceipts.reduce((a,r)=>a+n(r.qty),0);
-      const purchaseCost=monthReceipts.reduce((a,r)=>a+n(r.qty)*n(r.unit_cost),0);
+      const purchaseCost=monthReceipts.filter(r=>!isInternalTransfer(r)).reduce((a,r)=>a+n(r.qty)*n(r.unit_cost),0);
       const usedQty=monthCs.reduce((a,c)=>a+n(c.used_qty),0);
       const priorAdjustments=monthCs.filter(x=>x.count_date<end&&intendedCount(x)).reduce((a,c)=>a+(n(c.physical_count)-(n(c.opening_qty)+n(c.received_qty)-n(c.used_qty))),0);
       const expectedClose=openingQty+receivedQty-usedQty+priorAdjustments;
@@ -243,7 +244,7 @@ async function load(){
       const openingValue=openingQty*openAvg;
       const consumptionCost=usedQty*endAvg;
       const closingValue=closeQty*endAvg;
-      const missingCostReceipts=monthReceipts.filter(r=>n(r.qty)>0&&!(n(r.unit_cost)>0)).length;
+      const missingCostReceipts=monthReceipts.filter(r=>!isInternalTransfer(r)&&n(r.qty)>0&&!(n(r.unit_cost)>0)).length;
       const missingCostBasis=endAvg<=0 && (Math.abs(openingQty)+Math.abs(receivedQty)+Math.abs(usedQty)+Math.abs(closeQty)>0);
       rows.push({...item,openingQty,openingValue,receivedQty,purchaseCost,usedQty,consumptionCost,expectedClose,physicalClose,variance,closeQty,closingValue,endCount,missingCostReceipts,missingCostBasis,endAvg,priorAdjustments});
     }

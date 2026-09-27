@@ -1,0 +1,20 @@
+FEASTERVILLE POS V104 — MANAGEMENT DASHBOARD REVIEW ENHANCEMENTS
+Date: 25 September 2026
+
+Changes from V103:
+1. All Stores production-input rankings combine the same production input code across stores, removing duplicate lines for the same input.
+2. Zero Activity Review excludes non-trading stores when All Stores is selected. Store-specific review still includes the selected store even if it had no sales.
+3. All Stores Zero Activity Review combines the same item code across the trading stores so the review is item-based rather than duplicated by store.
+4. Added Sales Growth Targets for average basket targets of R45, R50 and R55, showing projected sales, additional sales and uplift at the current transaction volume.
+5. Added detailed Zero-Sales Products review list with Store(s), Code, Product, Category, Price and review guidance.
+6. Added detailed Zero-Consumption Production Inputs review list with Store(s), Code, Input, Category, Unit, Expected Balance, Reorder Level and review guidance.
+7. Management Actions and Units Sold summary now use the revised zero-activity scope.
+
+Verification:
+- JavaScript syntax check passed.
+- Required dashboard element IDs verified with no duplicates.
+- Current September trading stores are Ndayini and Sivana; Birch Acres is therefore excluded from All Stores zero-activity review until it records sales.
+- No Supabase database/schema change is required.
+
+Deployment from V103:
+Only management-dashboard.html needs to be replaced on GitHub.

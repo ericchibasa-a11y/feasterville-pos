@@ -1,0 +1,30 @@
+FEASTERVILLE POS V103 — MANAGEMENT DASHBOARD
+Date: 25 September 2026
+Base: V102 PRODUCT & INPUT PERFORMANCE
+
+Added: management-dashboard.html (Manager only)
+
+Dashboard includes:
+1. POS sales and transaction count
+2. Average basket value
+3. Estimated Cost of Sales, Gross Profit and Gross Margin
+4. Estimated Net Profit after other income and operating expenses
+5. Sales channel mix (Cash, Card, Mr D, Uber Eats, Other)
+6. Store comparison for Ndayini, Sivana and Birch Acres
+7. Top 10 and least-selling products
+8. Top and least-consumed production inputs ranked by estimated consumption value
+9. Low-stock/reorder attention list
+10. Missing purchase-cost / cost-basis controls
+11. End-date physical-count coverage
+12. Cash-up store-day completion and cash variance
+13. Zero-sales products and zero-consumption inputs
+14. Automatic management actions and sales-growth opportunities
+15. Print / Save PDF
+
+Integration:
+- Added Management Dashboard under Sales & Inventory Reports.
+- Added Management Dashboard to Manager Inventory & Reports quick navigation.
+- Added Management Dashboard to the main Reports & Finance navigation where available.
+
+Database: No schema changes required. Uses existing Supabase tables and existing Manager authentication/RLS.
+V102 Product Performance and Input Consumption reports are retained unchanged.

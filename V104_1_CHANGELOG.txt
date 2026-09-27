@@ -1,0 +1,12 @@
+FEASTERVILLE POS V104.1 — ZERO ACTIVITY REVIEW LAYOUT REFINEMENT
+Date: 25 September 2026
+
+Changes from V104:
+- Zero-Sales Products — Review List now displays full width.
+- Zero-Consumption Inputs — Review List now displays full width below Zero-Sales Products.
+- Removed the side-by-side layout for these two detailed review tables.
+- No dashboard calculations, Supabase queries, management logic, filters, or other reports were changed.
+- Printing remains supported; review tables expand for print output.
+
+GitHub deployment:
+Replace management-dashboard.html only.

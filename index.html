@@ -8155,6 +8155,7 @@ window.openUnclosedCashupsV80=open;window.loadUnclosedCashupsV80=load;window.fvU
    inv:()=>target('inventoryListingPanel','Inventory Listing & Count Sheets'),
    openbal:()=>openPage('opening-balance-admin.html','Opening Balances'),
    prodadmin:()=>openPage('production-input-admin.html','Production Input Administration'),
+   transfer:()=>openPage('inventory-transfer.html','Inventory Transfers'),
    prodstock:()=>target('productionInputsPanel','Production Input Stock'),
    usage:()=>target('usagePanel','Production Input Usage From Sales'),
    movements:()=>target('stockMovementPanel','Production Input Stock Movements'),
@@ -8180,7 +8181,7 @@ window.openUnclosedCashupsV80=open;window.loadUnclosedCashupsV80=load;window.fvU
  const groups=[
   ['pos','POS & SALES',[['sales','SALES SCREEN'],['order','CURRENT ORDER'],['today',"TODAY'S SALES"]]],
   ['cash','CASH-UPS',[['closecash','CLOSE DAY / CASH-UP'],['histcash','HISTORICAL CASH-UP'],['unclosed','UNCLOSED CASH-UPS']]],
-  ['inventory','INVENTORY',[['inv','INVENTORY LISTING & COUNT SHEETS'],['openbal','OPENING BALANCES'],['prodadmin','PRODUCTION INPUT ADMIN'],['prodstock','PRODUCTION INPUT STOCK'],['usage','USAGE FROM SALES'],['movements','STOCK MOVEMENTS'],['recon','STOCK RECONCILIATION']]],
+  ['inventory','INVENTORY',[['inv','INVENTORY LISTING & COUNT SHEETS'],['openbal','OPENING BALANCES'],['prodadmin','PRODUCTION INPUT ADMIN'],['transfer','INVENTORY TRANSFERS'],['prodstock','PRODUCTION INPUT STOCK'],['usage','USAGE FROM SALES'],['movements','STOCK MOVEMENTS'],['recon','STOCK RECONCILIATION']]],
   ['products','PRODUCTS & RECIPES',[['sellable','SELLABLE ITEMS'],['recipe','PRODUCT INPUTS / RECIPE LINK'],['easyrecipe','BUILD FINAL PRODUCT RECIPE'],['finalrecipe','FINAL PRODUCT → INPUTS'],['masterinputs','MASTER PRODUCTION INPUTS']]],
   ['reports','REPORTS & FINANCE',[['reports','SALES & INVENTORY REPORTS'],['dashboard','MANAGEMENT DASHBOARD'],['pl','STORE PROFIT & LOSS'],['compare','STORES COMPARISON & FINAL P&L'],['costing','COSTING & PROFITABILITY'],['monthend','MONTH-END REPORT'],['audit','AUDIT & FINANCIAL REPORTING'],['assets','ASSET REGISTER'],['bankrec','BANK RECONCILIATION']]],
   ['users','USERS & ACCESS',[['users','SALESPERSON & USER MANAGEMENT'],['access','ACCESS RIGHTS & USER MANAGEMENT'],['logged','CURRENTLY LOGGED IN USERS']]]

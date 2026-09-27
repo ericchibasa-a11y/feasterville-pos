@@ -1,0 +1,10 @@
+FEASTERVILLE POS V104.2 — 25 September 2026
+
+Change made:
+- Added a manager-only MANAGEMENT DASHBOARD shortcut on the live POS top bar.
+- The new shortcut is positioned immediately after OPENING BALANCES.
+- It opens management-dashboard.html.
+- No sales, inventory, cash-up, costing, database, or report calculation logic was changed.
+
+Base:
+- V104.1 Zero Activity Review layout.

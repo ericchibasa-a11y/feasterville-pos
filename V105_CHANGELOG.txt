@@ -1,0 +1,30 @@
+FEASTERVILLE POS V105 — INVENTORY TRANSFERS — 27 Sep 2026
+
+Base: V104.2 Management Dashboard Top Tab.
+
+Added:
+- inventory-transfer.html
+- INVENTORY TRANSFERS navigation in the main POS inventory menu.
+- Inventory Transfers link in Production Input Administration.
+- Transfer workflow: Dispatch -> Pending/In Transit -> Receive/Confirm.
+- Cancel Pending Transfer restores stock to the sending store.
+- Transfer reference, users, timestamps, notes and status audit trail.
+- Manager access across stores; Inventory Controller limited to assigned-store dispatch/receipt controls.
+- Production Input transfer only in V105. Sellable-item transfer is intentionally deferred until sellable stock movement tracking is unified.
+
+Stock/accounting design:
+- Dispatch creates an internal negative stock movement at source.
+- Receive creates an internal positive stock movement at destination.
+- Cost basis travels with the stock for valuation.
+- Month-End Purchase Cost excludes internal transfers so transfers do not inflate purchases.
+- Management Dashboard ignores internal transfers when checking missing supplier purchase costs.
+- Transfers do not create sales, operating expenses or revenue.
+
+Database setup:
+1. Open Supabase SQL Editor for the Feasterville / Point Of Sale project.
+2. Run FEASTERVILLE_POS_V105_INVENTORY_TRANSFERS.sql once.
+3. Upload the V105 files to the existing GitHub/site root, preserving CNAME.
+4. Sign in and test with a small quantity first.
+
+Important:
+The SQL migration was packaged but was NOT applied automatically by ChatGPT because the live database safety gate blocked the DDL change. Apply the supplied SQL manually before using the new page.
