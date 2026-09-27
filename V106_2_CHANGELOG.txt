@@ -1,0 +1,6 @@
+FEASTERVILLE POS V106.2
+
+- Added a Manager-only BANKING & OWNER FUNDS shortcut to the live top bar.
+- The new shortcut is positioned immediately after MANAGEMENT DASHBOARD.
+- Opens banking-owner-control.html.
+- No database changes in this version.

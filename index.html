@@ -7896,6 +7896,46 @@ if(typeof oldShow==='function')window.showReport=function(type,btn){activeMode=n
 </script>
 <!-- BUILD: V104_2_MANAGEMENT_DASHBOARD_TOP_NAV_20260925 -->
 
+<style id="fvBankingOwnerTopNavStyleV1062">
+#fvBankingOwnerTopNav{background:#0f766e;color:#fff;font-weight:800}
+</style>
+<script>
+/* V106.2 — Manager Banking & Owner Funds shortcut next to Management Dashboard */
+(function(){
+ 'use strict';
+ if(window.__fvBankingOwnerTopNavV1062)return;window.__fvBankingOwnerTopNavV1062=true;
+ function role(){
+   const cu=window.currentUser||window.salesSessionUser||{};
+   return String(cu.role||'').toLowerCase();
+ }
+ function mount(){
+   const bar=document.getElementById('liveTopBar');
+   if(!bar)return;
+   if(typeof window.fvManagementDashboardTopNavMountV1042==='function')window.fvManagementDashboardTopNavMountV1042();
+   let b=document.getElementById('fvBankingOwnerTopNav');
+   if(!b){
+     b=document.createElement('button');
+     b.id='fvBankingOwnerTopNav';
+     b.type='button';
+     b.textContent='BANKING & OWNER FUNDS';
+     b.onclick=function(){window.location.href='banking-owner-control.html';};
+   }
+   const dash=document.getElementById('fvManagementDashboardTopNav');
+   if(dash&&dash.parentNode===bar){
+     if(dash.nextSibling!==b)bar.insertBefore(b,dash.nextSibling);
+   }else if(b.parentNode!==bar){
+     bar.appendChild(b);
+   }
+   b.style.display=role()==='manager'?'inline-block':'none';
+ }
+ [100,400,900,1700,3200].forEach(ms=>setTimeout(mount,ms));
+ document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')mount();});
+ window.fvBankingOwnerTopNavMountV1062=mount;
+})();
+</script>
+<!-- BUILD: V106_2_BANKING_OWNER_TOP_NAV_20260927 -->
+
+
 <!-- BUILD: STABLE_SALESPERSON_FIX_V2_20260920 -->
 <style id="fvUnclosedCashupStyleV80">
 #fvUnclosedCashupBtnV80{background:#f59e0b;color:#111;border:0;border-radius:8px;padding:9px 12px;font-weight:800;cursor:pointer;margin-right:8px}
