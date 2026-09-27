@@ -1,0 +1,13 @@
+FEASTERVILLE POS V106 — BANKING & OWNER FUNDS CONTROL
+
+Added manager-only Banking & Owner Funds Control.
+- Owner Drawings captured separately from operating expenses.
+- Cash/Card/Mr D/Uber settlements and banking capture.
+- POS sales are pulled directly into reconciliation.
+- Cash owner drawings reduce expected cash banking.
+- Gross settlement, fees, net received and outstanding variance shown.
+- History tables for settlements and drawings.
+- New Reports & Finance navigation link: BANKING & OWNER FUNDS.
+- Database tables protected by Manager-only RLS.
+
+Base: V105.2 Inventory Controller Receipts Only.
