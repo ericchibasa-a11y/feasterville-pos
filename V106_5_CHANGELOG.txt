@@ -1,0 +1,8 @@
+FEASTERVILLE POS V106.5 — BANKING NUMBER FORMAT
+27 Sep 2026
+
+- Banking & Owner Funds Control now formats currency consistently with the Management Dashboard.
+- Thousands are separated with spaces and cents use a comma.
+- Example: R54 898,60 instead of R54898.60.
+- Applied to summary cards, reconciliation table, settlements history and owner drawings history.
+- No database or SQL changes required.

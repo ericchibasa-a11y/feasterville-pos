@@ -39,7 +39,7 @@
 </div></div>
 <script>
 const BASE='https://sflyjcgbxbcwspfuzone.supabase.co',KEY='sb_publishable_iASq-tni6KYrFK0R2S35zA_mpwt4MqM';
-const $=id=>document.getElementById(id), money=n=>'R'+Number(n||0).toFixed(2), esc=s=>String(s??'').replace(/[&<>\"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[m]));
+const $=id=>document.getElementById(id), money=n=>'R'+Number(n||0).toLocaleString('en-ZA',{minimumFractionDigits:2,maximumFractionDigits:2}).replace(/,/g,' ').replace(/\.(\d{2})$/,',$1'), esc=s=>String(s??'').replace(/[&<>\"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[m]));
 const tok=()=>sessionStorage.getItem('feastervilleCloudAccessToken')||sessionStorage.getItem('ftok')||localStorage.getItem('feastervilleCloudAccessToken')||'';
 const today=()=>new Date().toLocaleDateString('en-CA',{timeZone:'Africa/Johannesburg'});
 async function req(path,opt={}){const h={apikey:KEY,'Content-Type':'application/json',...(opt.headers||{})};if(tok())h.Authorization='Bearer '+tok();const r=await fetch(BASE+path,{...opt,headers:h});const t=await r.text();let d=null;try{d=t?JSON.parse(t):null}catch(_){d=t}if(!r.ok)throw new Error(d?.message||d?.error||t||('HTTP '+r.status));return d}
