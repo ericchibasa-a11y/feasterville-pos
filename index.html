@@ -533,8 +533,8 @@ body.print-report #reportContent { position:absolute; left:0; top:0; width:100%;
 </section>
 
 <section class="panel manager-only" id="storesComparisonPanel" style="grid-column:1/-1;display:none">
-  <h2>Stores Comparison &amp; Final Feasterville Profit / Loss</h2>
-  <p class="small">Manager only. Compares Ndayeni, Sivana and Birch Acres side by side for the selected period, then combines all stores into one final Feasterville profit or loss statement.</p>
+  <h2>Stores Comparison &amp; Estimated Feasterville Profit / Loss</h2>
+  <p class="small">Manager only. Compares Ndayeni, Sivana and Birch Acres side by side for the selected period, then combines all stores using the same cost-of-sales and operating-expense method as the Management Dashboard.</p>
   <div class="order-head" style="align-items:end;flex-wrap:wrap">
     <label><b>From Date</b><br><input id="scFrom" type="date"></label>
     <label><b>To Date</b><br><input id="scTo" type="date"></label>
@@ -543,27 +543,29 @@ body.print-report #reportContent { position:absolute; left:0; top:0; width:100%;
     <button type="button" class="secondary" id="scPrintBtn">PRINT / SAVE PDF</button>
   </div>
   <p id="scStatus" class="small"></p>
-  <div id="scPrintArea">
+  <div id="scPrintArea" hidden>
+    <p id="scQualityNote" class="small"></p>
+    <p><a id="scDashboardLink" href="management-dashboard.html">OPEN DASHBOARD FOR THE SAME PERIOD</a></p>
     <h3>Store Performance Comparison</h3>
     <div style="overflow:auto"><table class="inv-table">
       <thead><tr><th>Measure</th><th style="text-align:right">Ndayeni</th><th style="text-align:right">Sivana</th><th style="text-align:right">Birch Acres</th><th style="text-align:right">Feasterville Total</th></tr></thead>
-      <tbody id="scComparisonRows"><tr><td colspan="4">Open this section to load the store comparison.</td></tr></tbody>
+      <tbody id="scComparisonRows"><tr><td colspan="5">Open this section to load the store comparison.</td></tr></tbody>
     </table></div>
     <div class="inv-grid" style="margin-top:12px">
-      <div class="inv-card">Ndayeni Profit / (Loss)<br><b id="scNdayeniNet">R0.00</b></div>
-      <div class="inv-card">Sivana Profit / (Loss)<br><b id="scSivanaNet">R0.00</b></div><div class="inv-card">Birch Acres Profit / (Loss)<br><b id="scBirchNet">R0.00</b></div>
-      <div class="inv-card">Final Feasterville Profit / (Loss)<br><b id="scFinalNet">R0.00</b></div>
-      <div class="inv-card">Final Profit Margin<br><b id="scFinalMargin">0.0%</b></div>
+      <div class="inv-card">Ndayeni Estimated Profit / (Loss)<br><b id="scNdayeniNet">R0.00</b></div>
+      <div class="inv-card">Sivana Estimated Profit / (Loss)<br><b id="scSivanaNet">R0.00</b></div><div class="inv-card">Birch Acres Estimated Profit / (Loss)<br><b id="scBirchNet">R0.00</b></div>
+      <div class="inv-card">Estimated Feasterville Profit / (Loss)<br><b id="scFinalNet">R0.00</b></div>
+      <div class="inv-card">Estimated Net Margin (of POS Sales)<br><b id="scFinalMargin">0.0%</b></div>
     </div>
-    <h3>Final Feasterville Profit &amp; Loss Statement</h3>
+    <h3>Estimated Feasterville Profit &amp; Loss Statement</h3>
     <div style="overflow:auto"><table class="inv-table">
       <thead><tr><th>Description</th><th style="text-align:right">Amount</th></tr></thead>
       <tbody id="scFinalRows"><tr><td colspan="2">No data loaded.</td></tr></tbody>
     </table></div>
-    <h3>Expenses by Store</h3>
+    <h3>Operating Expenses by Store</h3>
     <div style="overflow:auto"><table class="inv-table">
       <thead><tr><th>Expense Category</th><th style="text-align:right">Ndayeni</th><th style="text-align:right">Sivana</th><th style="text-align:right">Birch Acres</th><th style="text-align:right">Total</th></tr></thead>
-      <tbody id="scExpenseRows"><tr><td colspan="4">No data loaded.</td></tr></tbody>
+      <tbody id="scExpenseRows"><tr><td colspan="5">No data loaded.</td></tr></tbody>
     </table></div>
   </div>
 </section>
@@ -7050,6 +7052,7 @@ document.addEventListener('click',e=>{if(/production input count sheet|inventory
 })();
 </script>
 <!-- BUILD: COUNT_SHEET_CONFIRMATION_V48 -->
+<script src="report-finance.js?v=108"></script>
 <script>
 /* V49 — STORES COMPARISON + FINAL FEASTERVILLE PROFIT & LOSS */
 (function(){
@@ -7064,36 +7067,41 @@ function day(){return new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Johannes
 function monthStart(){return day().slice(0,8)+'01'}
 async function api(path){const r=await fetch(BASE+'/'+path,{headers:{apikey:KEY,Authorization:'Bearer '+tok()}}),t=await r.text();if(!r.ok)throw Error(t||('HTTP '+r.status));return t?JSON.parse(t):[]}
 function setDates(){const f=document.getElementById('scFrom'),t=document.getElementById('scTo');if(f&&!f.value)f.value=monthStart();if(t&&!t.value)t.value=day()}
-function blank(){return {sales:0,other:0,income:0,expenses:0,net:0,count:0,expBy:{}}}
-function addExp(obj,row){const c=row.category||'Other Expenses';obj.expBy[c]=(obj.expBy[c]||0)+Number(row.amount||0)}
-function paint(id,n){const e=document.getElementById(id);if(!e)return;e.textContent=money(n);e.style.color=Number(n)<0?'#b00020':'#176b2c'}
+function paint(id,n){const e=document.getElementById(id);if(e){e.textContent=money(n);e.style.color=n<0?'#b00020':'#176b2c'}}
 async function load(){
  if(U().role!=='manager')return;setDates();
- const from=document.getElementById('scFrom')?.value,to=document.getElementById('scTo')?.value,status=document.getElementById('scStatus');
+ const from=document.getElementById('scFrom').value,to=document.getElementById('scTo').value,status=document.getElementById('scStatus'),area=document.getElementById('scPrintArea'),printButton=document.getElementById('scPrintBtn');
  if(!from||!to)return alert('Select From Date and To Date.');if(from>to)return alert('From Date cannot be after To Date.');
- if(status)status.textContent='Loading Ndayeni, Sivana, Birch Acres and final Feasterville Profit & Loss...';
+ area.hidden=true;printButton.disabled=true;status.textContent='Loading all sales, consumption costs and operating expenses...';
  try{
-  const [sales,other,exp]=await Promise.all([
-   api('pos_sales?select=store_code,total,sale_date&sale_date=gte.'+from+'&sale_date=lte.'+to+'&store_code=in.(NDAYENI,SIVANA,BIRCH_ACRES)'),
-   api('pos_other_income?select=store_code,amount,category,transaction_date&transaction_date=gte.'+from+'&transaction_date=lte.'+to+'&store_code=in.(NDAYENI,SIVANA,BIRCH_ACRES)'),
-   api('pos_store_expenses?select=store_code,amount,category,expense_date&expense_date=gte.'+from+'&expense_date=lte.'+to+'&store_code=in.(NDAYENI,SIVANA,BIRCH_ACRES)')
-  ]);
-  const d={NDAYENI:blank(),SIVANA:blank(),BIRCH_ACRES:blank()};
-  (sales||[]).forEach(x=>{const k=String(x.store_code||'').toUpperCase();if(d[k]){d[k].sales+=Number(x.total||0);d[k].count++}});
-  (other||[]).forEach(x=>{const k=String(x.store_code||'').toUpperCase();if(d[k])d[k].other+=Number(x.amount||0)});
-  (exp||[]).forEach(x=>{const k=String(x.store_code||'').toUpperCase();if(d[k]){d[k].expenses+=Number(x.amount||0);addExp(d[k],x)}});
-  Object.values(d).forEach(x=>{x.income=x.sales+x.other;x.net=x.income-x.expenses});
-  const n=d.NDAYENI,v=d.SIVANA,b=d.BIRCH_ACRES,t={sales:n.sales+v.sales+b.sales,other:n.other+v.other+b.other,income:n.income+v.income+b.income,expenses:n.expenses+v.expenses+b.expenses,net:n.net+v.net+b.net,count:n.count+v.count+b.count};
-  const rows=[['POS Sales',n.sales,v.sales,b.sales,t.sales],['Other Income',n.other,v.other,b.other,t.other],['Total Income',n.income,v.income,b.income,t.income],['Total Expenses',n.expenses,v.expenses,b.expenses,t.expenses],['NET PROFIT / (LOSS)',n.net,v.net,b.net,t.net]];
-  document.getElementById('scComparisonRows').innerHTML=rows.map((r,i)=>'<tr'+(i===4?' style="font-weight:bold"':'')+'><td>'+r[0]+'</td><td style="text-align:right">'+money(r[1])+'</td><td style="text-align:right">'+money(r[2])+'</td><td style="text-align:right">'+money(r[3])+'</td><td style="text-align:right">'+money(r[4])+'</td></tr>').join('');
-  paint('scNdayeniNet',n.net);paint('scSivanaNet',v.net);paint('scBirchNet',b.net);paint('scFinalNet',t.net);
-  const margin=t.income>0?t.net/t.income*100:0,me=document.getElementById('scFinalMargin');if(me){me.textContent=margin.toFixed(1)+'%';me.style.color=margin<0?'#b00020':'#176b2c'}
-  const cats=[...new Set([...Object.keys(n.expBy),...Object.keys(v.expBy),...Object.keys(b.expBy)])].sort((x,y)=>((n.expBy[y]||0)+(v.expBy[y]||0)+(b.expBy[y]||0))-((n.expBy[x]||0)+(v.expBy[x]||0)+(b.expBy[x]||0)));
-  document.getElementById('scExpenseRows').innerHTML=cats.map(c=>'<tr><td>'+esc(c)+'</td><td style="text-align:right">'+money(n.expBy[c]||0)+'</td><td style="text-align:right">'+money(v.expBy[c]||0)+'</td><td style="text-align:right">'+money(b.expBy[c]||0)+'</td><td style="text-align:right">'+money((n.expBy[c]||0)+(v.expBy[c]||0)+(b.expBy[c]||0))+'</td></tr>').join('')||'<tr><td colspan="5">No expenses captured for this period.</td></tr>';
-  const expLines=cats.map(c=>'<tr><td>&nbsp;&nbsp;'+esc(c)+'</td><td style="text-align:right">'+money((n.expBy[c]||0)+(v.expBy[c]||0)+(b.expBy[c]||0))+'</td></tr>').join('')||'<tr><td>&nbsp;&nbsp;No expenses captured</td><td style="text-align:right">R0.00</td></tr>';
-  document.getElementById('scFinalRows').innerHTML='<tr><td>Ndayeni POS Sales</td><td style="text-align:right">'+money(n.sales)+'</td></tr><tr><td>Sivana POS Sales</td><td style="text-align:right">'+money(v.sales)+'</td></tr><tr><td>Birch Acres POS Sales</td><td style="text-align:right">'+money(b.sales)+'</td></tr><tr><td>Other Income — All Stores</td><td style="text-align:right">'+money(t.other)+'</td></tr><tr><td><b>TOTAL FEASTERVILLE INCOME</b></td><td style="text-align:right"><b>'+money(t.income)+'</b></td></tr><tr><td colspan="2"><b>LESS: FEASTERVILLE EXPENSES</b></td></tr>'+expLines+'<tr><td><b>TOTAL FEASTERVILLE EXPENSES</b></td><td style="text-align:right"><b>'+money(t.expenses)+'</b></td></tr><tr><td><b>FINAL FEASTERVILLE '+(t.net<0?'LOSS':'PROFIT')+'</b></td><td style="text-align:right"><b>'+money(t.net)+'</b></td></tr>';
-  if(status)status.textContent='Ndayeni vs Sivana vs Birch Acres — '+from+' to '+to+' — '+t.count+' completed sale(s) combined.';
- }catch(e){console.error(e);if(status)status.textContent='Could not load store comparison: '+e.message}
+ const stores=['NDAYENI','SIVANA','BIRCH_ACRES'],sf='&store_code=in.('+stores.join(',')+')',period='&sale_date=gte.'+from+'&sale_date=lte.'+to;
+ const all=p=>FeastervilleFinance.fetchAll(api,p);
+ const [sales,other,exp,inputs,counts,receipts,cashups]=await Promise.all([
+  all('pos_sales?select=id,store_code,total,sale_date'+period+sf+'&order=sale_date.asc,id.asc'),
+  all('pos_other_income?select=store_code,amount,category,transaction_date&transaction_date=gte.'+from+'&transaction_date=lte.'+to+sf+'&order=transaction_date.asc'),
+  all('pos_store_expenses?select=store_code,amount,category,description,expense_date&expense_date=gte.'+from+'&expense_date=lte.'+to+sf+'&order=expense_date.asc'),
+  all('pos_store_production_inputs?select=store_code,code,name,unit,preferred_unit_cost&active=eq.true'+sf+'&order=store_code.asc,code.asc'),
+  all('pos_store_input_counts?select=store_code,input_code,count_date,opening_qty,received_qty,used_qty,physical_count,variance_qty,notes,counted_by&count_date=lte.'+to+sf+'&order=count_date.asc,store_code.asc,input_code.asc'),
+  all('pos_stock_receipts?select=store_code,input_code,qty,unit_cost,receipt_date,supplier,reference&receipt_date=lte.'+to+sf+'&order=receipt_date.asc'),
+  all('pos_daily_cashups?select=store_code,cashup_date,status&cashup_date=gte.'+from+'&cashup_date=lte.'+to+sf+'&order=cashup_date.asc')
+ ]);
+ const {inputRows,missingReceiptCosts}=FeastervilleFinance.buildInputs(inputs,counts,receipts,from,to);
+ const result=FeastervilleFinance.summarize(stores,sales,other,exp,inputRows),[n,v,b]=result.metrics,t=result.total;
+ const measures=[['POS Sales','sales'],['Estimated Cost of Sales','cogs'],['Gross Profit / (Loss)','gross'],['Other Income','other'],['Operating Expenses','expenses'],['ESTIMATED NET PROFIT / (LOSS)','net']];
+ document.getElementById('scComparisonRows').innerHTML=measures.map(([label,key])=>'<tr><td>'+label+'</td>'+[n,v,b,t].map(x=>'<td style="text-align:right">'+money(x[key])+'</td>').join('')+'</tr>').join('');
+ paint('scNdayeniNet',n.net);paint('scSivanaNet',v.net);paint('scBirchNet',b.net);paint('scFinalNet',t.net);
+ document.getElementById('scFinalMargin').textContent=(t.sales?t.net/t.sales*100:0).toFixed(1)+'%';
+ const categories=[...new Set(result.operatingExpenses.map(e=>e.category||'Other Expenses'))].sort();
+ const catTotal=(c,store)=>result.operatingExpenses.filter(e=>(e.category||'Other Expenses')===c&&(!store||e.store_code===store)).reduce((a,e)=>a+Number(e.amount||0),0);
+ document.getElementById('scExpenseRows').innerHTML=categories.map(c=>'<tr><td>'+esc(c)+'</td>'+[...stores,null].map(st=>'<td style="text-align:right">'+money(catTotal(c,st))+'</td>').join('')+'</tr>').join('')||'<tr><td colspan="5">No operating expenses captured.</td></tr>';
+ const lines=[['POS Sales — All Stores',t.sales],['Less: Estimated Cost of Sales',t.cogs],['GROSS PROFIT / (LOSS)',t.gross],['Other Income — All Stores',t.other],...categories.map(c=>['Operating Expense: '+c,catTotal(c)]),['TOTAL OPERATING EXPENSES',t.expenses],['ESTIMATED NET PROFIT / (LOSS)',t.net]];
+ document.getElementById('scFinalRows').innerHTML=lines.map(([label,value])=>'<tr><td>'+esc(label)+'</td><td style="text-align:right">'+money(value)+'</td></tr>').join('');
+ const missingCosts=missingReceiptCosts+inputRows.filter(x=>x.missingBasis).length,uncounted=inputRows.filter(x=>!x.endCount).length,saleDays=new Set(sales.map(x=>x.store_code+'|'+x.sale_date)),closed=new Set(cashups.filter(x=>String(x.status||'').toUpperCase()==='CLOSED').map(x=>x.store_code+'|'+x.cashup_date)),unclosed=[...saleDays].filter(k=>!closed.has(k)).length;
+ document.getElementById('scQualityNote').textContent='Estimated profit: '+missingCosts+' missing cost issue(s), '+uncounted+' active inputs without an end-date physical count, '+unclosed+' unclosed sales store-day(s). Cost of sales uses recorded usage at weighted receipt cost or preferred unit cost, plus end-date count variance. Inventory purchases are excluded from operating expenses to avoid counting them twice. Net margin = estimated net profit / POS sales. Use the same dates and All Stores on the dashboard to compare.';
+ const link=document.getElementById('scDashboardLink');link.href='management-dashboard.html?store=ALL&from='+encodeURIComponent(from)+'&to='+encodeURIComponent(to);
+ status.textContent='All stores — '+from+' to '+to+' — '+t.count+' completed sale(s). '+(missingCosts||uncounted||unclosed?'PROVISIONAL: complete cost, count and cash-up checks.':'Control checks passed; profit remains an estimate.');
+ area.hidden=false;printButton.disabled=false;
+ }catch(e){console.error(e);status.textContent='Could not load complete store comparison: '+e.message+' Please retry; no partial report is displayed.'}
 }
 window.loadStoresComparisonV49=load;
 function print(){const a=document.getElementById('scPrintArea');if(!a)return;const w=window.open('','_blank','width=1100,height=850');if(!w)return alert('Please allow pop-ups to print the report.');w.document.write('<!doctype html><html><head><title>Feasterville Stores Comparison and Final Profit & Loss</title><style>@page{size:A4;margin:12mm}body{font-family:Arial}table{width:100%;border-collapse:collapse;margin-bottom:16px}th,td{border:1px solid #bbb;padding:7px}.inv-grid{display:flex;gap:8px;flex-wrap:wrap}.inv-card{border:1px solid #ccc;padding:8px;min-width:180px}</style></head><body><h2>Feasterville Stores Comparison & Final Profit / Loss</h2><p>'+esc(document.getElementById('scStatus')?.textContent||'')+'</p>'+a.innerHTML+'</body></html>');w.document.close();w.focus();setTimeout(()=>w.print(),300)}
