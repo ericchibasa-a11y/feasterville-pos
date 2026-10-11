@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+window.fvCountConfirmed=function(c){return !!(c&&(c.counted_at||c.counted_by||c.count_type||c.notes));};
+</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Feasterville Food - Restaurant POS | 51 Senagal Street, Isivana Section, Tembisa</title>
@@ -5797,14 +5801,14 @@ function priorClosing(list,d){
  const p=(list||[]).filter(x=>x.count_date<d).sort((a,b)=>String(b.count_date).localeCompare(String(a.count_date)))[0];
  if(!p)return 0;
  const physical=n(p.physical_count);
- return physical!==0?physical:(n(p.opening_qty)+n(p.received_qty)-n(p.used_qty));
+ return window.fvCountConfirmed(p)?physical:(n(p.opening_qty)+n(p.received_qty)-n(p.used_qty));
 }
 
 async function liveRows(){
  const s=store(),d=today();
  const [inputs,allCounts]=await Promise.all([
    api('pos_store_production_inputs?store_code=eq.'+encodeURIComponent(s)+'&active=eq.true&select=code,name,unit,reorder_level&order=code.asc'),
-   api('pos_store_input_counts?store_code=eq.'+encodeURIComponent(s)+'&select=input_code,count_date,opening_qty,received_qty,used_qty,physical_count&order=count_date.desc')
+   api('pos_store_input_counts?store_code=eq.'+encodeURIComponent(s)+'&select=input_code,count_date,opening_qty,received_qty,used_qty,physical_count,counted_at,counted_by,count_type,notes&order=count_date.desc')
  ]);
  const byCode={};
  (allCounts||[]).forEach(x=>(byCode[x.input_code]||(byCode[x.input_code]=[])).push(x));
@@ -5813,12 +5817,12 @@ async function liveRows(){
    const c=list.find(x=>x.count_date===d)||{};
    const prior=priorClosing(list,d);
    let opening=n(c.opening_qty);
-   if((!c.count_date||opening===0)&&prior!==0)opening=prior;
+   if(!c.count_date)opening=prior;
    const received=n(c.received_qty);
    const used=n(c.used_qty);
    const expected=opening+received-used;
    const physical=n(c.physical_count);
-   const variance=physical-expected;
+   const variance=window.fvCountConfirmed(c)?physical-expected:null;
    return {...p,opening,received,used,expected,physical,variance};
  });
 }
@@ -5849,8 +5853,8 @@ async function renderLiveRecon(btn){
      '<table class="inv-table"><thead><tr><th>Code</th><th>Input</th><th>Unit</th><th>Opening</th><th>Received</th><th>Used</th><th>Expected Closing</th><th>Physical Count</th><th>Variance</th><th>Action</th></tr></thead><tbody>'+
      rr.map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.unit)+'</td>'+
        '<td>'+fmt(r.opening)+'</td><td>'+fmt(r.received)+'</td><td>'+fmt(r.used)+'</td>'+
-       '<td>'+fmt(r.expected)+'</td><td>'+fmt(r.physical)+'</td><td><b>'+fmt(r.variance)+'</b></td>'+
-       '<td>'+(r.variance<0?'INVESTIGATE SHORTAGE':r.variance>0?'CHECK SURPLUS':'OK')+'</td></tr>').join('')+
+       '<td>'+fmt(r.expected)+'</td><td>'+(r.variance===null?'—':fmt(r.physical))+'</td><td><b>'+(r.variance===null?'—':fmt(r.variance))+'</b></td>'+
+       '<td>'+(r.variance===null?'COUNT NOT CONFIRMED':r.variance<0?'INVESTIGATE SHORTAGE':r.variance>0?'CHECK SURPLUS':'OK')+'</td></tr>').join('')+
      '</tbody></table></div>';
    if(box.dataset.v54Html!==nextHtml){
      box.innerHTML=nextHtml;
@@ -6803,14 +6807,14 @@ async function render(force=false){
  const sc=store(),d=day();
  const [inputs,counts]=await Promise.all([
   get('pos_store_production_inputs?select=code,name,unit,reorder_level&store_code=eq.'+encodeURIComponent(sc)+'&active=eq.true&order=name.asc'),
-  get('pos_store_input_counts?select=input_code,opening_qty,received_qty,used_qty,physical_count,variance_qty&store_code=eq.'+encodeURIComponent(sc)+'&count_date=eq.'+d)
+  get('pos_store_input_counts?select=input_code,opening_qty,received_qty,used_qty,physical_count,counted_at,counted_by,count_type,notes,variance_qty&store_code=eq.'+encodeURIComponent(sc)+'&count_date=eq.'+d)
  ]);
  const cm={};counts.forEach(x=>cm[x.input_code]=x);
  const ns=JSON.stringify([sc,d,counts.map(x=>[x.input_code,x.opening_qty,x.received_qty,x.used_qty,x.physical_count])]);
  if(!force&&ns===sig)return;sig=ns;
  host.innerHTML='<div style="display:flex;gap:10px;align-items:center;margin:10px 0"><b>'+sc+' — '+d+'</b><button class="primary" id="fvReconRefreshV64">REFRESH RECONCILIATION</button><span class="small">Live database</span></div>'+
  '<div style="overflow:auto"><table class="inv-table"><thead><tr><th>Code</th><th>Production Input</th><th>Unit</th><th>Opening</th><th>Received</th><th>Used via Sales</th><th>Expected</th><th>Physical Count</th><th>Variance</th><th>Status</th></tr></thead><tbody>'+
- inputs.map(i=>{let c=cm[i.code]||{},o=+c.opening_qty||0,r=+c.received_qty||0,u=+c.used_qty||0,p=+c.physical_count||0,e=o+r-u,v=p-e,st=Math.abs(v)<.0005?'OK':(v<0?'SHORTAGE':'SURPLUS');return '<tr><td>'+i.code+'</td><td>'+i.name+'</td><td>'+(i.unit||'')+'</td><td>'+o.toFixed(3)+'</td><td>'+r.toFixed(3)+'</td><td>'+u.toFixed(3)+'</td><td><b>'+e.toFixed(3)+'</b></td><td>'+p.toFixed(3)+'</td><td>'+v.toFixed(3)+'</td><td>'+st+'</td></tr>'}).join('')+
+ inputs.map(i=>{let c=cm[i.code]||{},o=+c.opening_qty||0,r=+c.received_qty||0,u=+c.used_qty||0,p=+c.physical_count||0,e=o+r-u,v=p-e,st=!window.fvCountConfirmed(c)?'COUNT NOT CONFIRMED':Math.abs(v)<.0005?'OK':(v<0?'SHORTAGE':'SURPLUS');return '<tr><td>'+i.code+'</td><td>'+i.name+'</td><td>'+(i.unit||'')+'</td><td>'+o.toFixed(3)+'</td><td>'+r.toFixed(3)+'</td><td>'+u.toFixed(3)+'</td><td><b>'+e.toFixed(3)+'</b></td><td>'+(window.fvCountConfirmed(c)?p.toFixed(3):'—')+'</td><td>'+(window.fvCountConfirmed(c)?v.toFixed(3):'—')+'</td><td>'+st+'</td></tr>'}).join('')+
  '</tbody></table></div><div class="small">Updated '+new Date().toLocaleTimeString('en-ZA',{timeZone:'Africa/Johannesburg'})+'</div>';
  document.getElementById('fvReconRefreshV64').onclick=()=>render(true).catch(e=>alert('Could not refresh reconciliation: '+e.message));
 }
@@ -6908,10 +6912,10 @@ async function loadSales(force=false){if(!T())return;let f=document.getElementBy
 window.loadSelectedSalesV45=()=>loadSales(true);window.todaySelectedSalesV45=function(){let d=D(),f=document.getElementById('fvSalesFromV45'),t=document.getElementById('fvSalesToV45');if(f)f.value=d;if(t)t.value=d;loadSales(true).catch(e=>alert(e.message))};
 async function receive(){try{let sc=S(),sel=document.getElementById('piStockInput'),q=document.getElementById('piStockQty'),tc=document.getElementById('piStockTotalCost'),sup=document.getElementById('piStockSupplier'),ref=document.getElementById('piStockReference');if(!sel?.value)throw Error('Please select a Production Input.');let qty=Number(q?.value||0);if(!(qty>0))throw Error('Enter a quantity greater than zero.');let totalCost=Number(tc?.value||0);if(!(totalCost>0))throw Error('Enter the total purchase cost. This prevents stock receipts with missing costing.');let unitCost=totalCost/qty;let x=await A('pos_store_production_inputs?select=code,name,unit&store_code=eq.'+encodeURIComponent(sc)+'&code=eq.'+encodeURIComponent(sel.value)+'&active=eq.true&limit=1');if(!x?.[0])throw Error('Production input not found for '+sc+'.');let u=U()||{},i=x[0];await A('pos_stock_receipts',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({receipt_date:(document.getElementById('piStockDate')?.value||D()),supplier:(sup?.value||'').trim()||null,reference:(ref?.value||'').trim()||null,input_code:i.code,input_name:i.name,unit:i.unit||null,qty,unit_cost:unitCost,received_by:u.display_name||u.name||u.email||'POS User',created_by:u.user_id||u.id||null,store_code:sc})});if(q)q.value='1';if(tc)tc.value='';if(sup)sup.value='';if(ref)ref.value='';let pv=document.getElementById('piStockUnitCostPreview');if(pv)pv.textContent='R0.00';countSig='';reconSig='';setTimeout(()=>{renderCount(true).catch(()=>{});renderRecon(true).catch(()=>{});if(typeof window.loadCostingProfitability==='function')window.loadCostingProfitability().catch?.(()=>{})},800);alert('Stock and purchase cost saved: '+i.name+' — '+qty+' '+(i.unit||'')+' | R'+totalCost.toFixed(2)+' total | R'+unitCost.toFixed(2)+' per '+(i.unit||'unit'));return true}catch(e){alert('Receive Production Input Stock: '+e.message);return false}}
 window.receiveProductionStock=receive;window.recordProductionReceipt=receive;
-async function savePhysical(code,val){let sc=S(),d=D(),n=Number(val||0),ex=await A('pos_store_input_counts?select=input_code&store_code=eq.'+encodeURIComponent(sc)+'&input_code=eq.'+encodeURIComponent(code)+'&count_date=eq.'+d+'&limit=1');if(ex?.length)await A('pos_store_input_counts?store_code=eq.'+encodeURIComponent(sc)+'&input_code=eq.'+encodeURIComponent(code)+'&count_date=eq.'+d,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({physical_count:n})});else await A('pos_store_input_counts',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({store_code:sc,input_code:code,count_date:d,opening_qty:0,received_qty:0,used_qty:0,physical_count:n})})}
-async function renderCount(force=false){let b=document.getElementById('productionCountBody');if(!b||!T())return;let a=document.activeElement;if(a&&b.contains(a))return;let sc=S(),d=D(),[ins,cts]=await Promise.all([A('pos_store_production_inputs?select=code,name,unit&store_code=eq.'+encodeURIComponent(sc)+'&active=eq.true&order=name.asc'),A('pos_store_input_counts?select=input_code,opening_qty,received_qty,used_qty,physical_count&store_code=eq.'+encodeURIComponent(sc)+'&count_date=eq.'+d)]),cm={};(cts||[]).forEach(x=>cm[x.input_code]=x);let sig=JSON.stringify(cts||[]);if(!force&&sig===countSig)return;countSig=sig;b.innerHTML=(ins||[]).map(i=>{let c=cm[i.code]||{},o=+c.opening_qty||0,r=+c.received_qty||0,u=+c.used_qty||0,p=+c.physical_count||0,e=o+r-u,v=p-e;return '<tr><td>'+i.code+'</td><td>'+E(i.name)+'</td><td>'+E(i.unit||'')+'</td><td><b>'+e.toFixed(2)+'</b></td><td><input class="stock-input fv67physical" data-code="'+i.code+'" type="number" step="0.001" value="'+p+'" style="max-width:165px"></td><td>'+v.toFixed(2)+'</td><td>'+(Math.abs(v)<.0005?'OK':v<0?'INVESTIGATE SHORTAGE':'INVESTIGATE SURPLUS')+'</td></tr>'}).join('');b.querySelectorAll('.fv67physical').forEach(el=>el.addEventListener('blur',async()=>{try{await savePhysical(el.dataset.code,el.value);countSig='';reconSig='';await renderCount(true);await renderRecon(true)}catch(e){alert('Could not save physical count: '+e.message)}}))}
+async function savePhysical(code,val){if(val===''||!Number.isFinite(Number(val))||Number(val)<0)throw Error('Enter a valid physical count.');let sc=S(),d=D(),n=Number(val),ex=await A('pos_store_input_counts?select=input_code&store_code=eq.'+encodeURIComponent(sc)+'&input_code=eq.'+encodeURIComponent(code)+'&count_date=eq.'+d+'&limit=1');if(ex?.length)await A('pos_store_input_counts?store_code=eq.'+encodeURIComponent(sc)+'&input_code=eq.'+encodeURIComponent(code)+'&count_date=eq.'+d,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({physical_count:n,counted_at:new Date().toISOString(),count_type:'DAILY'})});else await A('pos_store_input_counts',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({store_code:sc,input_code:code,count_date:d,opening_qty:0,received_qty:0,used_qty:0,physical_count:n,counted_at:new Date().toISOString(),count_type:'DAILY'})})}
+async function renderCount(force=false){let b=document.getElementById('productionCountBody');if(!b||!T())return;let a=document.activeElement;if(a&&b.contains(a))return;let sc=S(),d=D(),[ins,cts]=await Promise.all([A('pos_store_production_inputs?select=code,name,unit&store_code=eq.'+encodeURIComponent(sc)+'&active=eq.true&order=name.asc'),A('pos_store_input_counts?select=input_code,opening_qty,received_qty,used_qty,physical_count,counted_at,counted_by,count_type,notes&store_code=eq.'+encodeURIComponent(sc)+'&count_date=eq.'+d)]),cm={};(cts||[]).forEach(x=>cm[x.input_code]=x);let sig=JSON.stringify(cts||[]);if(!force&&sig===countSig)return;countSig=sig;b.innerHTML=(ins||[]).map(i=>{let c=cm[i.code]||{},o=+c.opening_qty||0,r=+c.received_qty||0,u=+c.used_qty||0,p=+c.physical_count||0,e=o+r-u,v=p-e;return '<tr><td>'+i.code+'</td><td>'+E(i.name)+'</td><td>'+E(i.unit||'')+'</td><td><b>'+e.toFixed(2)+'</b></td><td><input class="stock-input fv67physical" data-code="'+i.code+'" type="number" step="0.001" value="'+(window.fvCountConfirmed(c)?p:'')+'" style="max-width:165px"></td><td>'+(window.fvCountConfirmed(c)?v.toFixed(2):'—')+'</td><td>'+(!window.fvCountConfirmed(c)?'COUNT NOT CONFIRMED':Math.abs(v)<.0005?'OK':v<0?'INVESTIGATE SHORTAGE':'INVESTIGATE SURPLUS')+'</td></tr>'}).join('');b.querySelectorAll('.fv67physical').forEach(el=>el.addEventListener('blur',async()=>{try{await savePhysical(el.dataset.code,el.value);countSig='';reconSig='';await renderCount(true);await renderRecon(true)}catch(e){alert('Could not save physical count: '+e.message)}}))}
 window.refreshProductionInputCountSheetV67=()=>renderCount(true);
-async function renderRecon(force=false){let h=document.getElementById('reconContent');if(!h||!T())return;let sc=S(),d=D(),[ins,cts]=await Promise.all([A('pos_store_production_inputs?select=code,name,unit&store_code=eq.'+encodeURIComponent(sc)+'&active=eq.true&order=name.asc'),A('pos_store_input_counts?select=input_code,opening_qty,received_qty,used_qty,physical_count&store_code=eq.'+encodeURIComponent(sc)+'&count_date=eq.'+d)]),cm={};(cts||[]).forEach(x=>cm[x.input_code]=x);let sig=JSON.stringify(cts||[]);if(!force&&sig===reconSig)return;reconSig=sig;h.innerHTML='<div><b>'+sc+' — '+d+'</b> <button class="primary" onclick="refreshProductionInputReconV67()">REFRESH RECONCILIATION</button></div><table class="inv-table"><tr><th>Code</th><th>Production Input</th><th>Unit</th><th>Opening</th><th>Received</th><th>Used</th><th>Expected</th><th>Physical</th><th>Variance</th><th>Status</th></tr>'+(ins||[]).map(i=>{let c=cm[i.code]||{},o=+c.opening_qty||0,r=+c.received_qty||0,u=+c.used_qty||0,p=+c.physical_count||0,e=o+r-u,v=p-e;return '<tr><td>'+i.code+'</td><td>'+E(i.name)+'</td><td>'+E(i.unit||'')+'</td><td>'+o.toFixed(3)+'</td><td>'+r.toFixed(3)+'</td><td>'+u.toFixed(3)+'</td><td><b>'+e.toFixed(3)+'</b></td><td>'+p.toFixed(3)+'</td><td>'+v.toFixed(3)+'</td><td>'+(Math.abs(v)<.0005?'OK':v<0?'SHORTAGE':'SURPLUS')+'</td></tr>'}).join('')+'</table><div class="small">Live database — updated '+new Date().toLocaleTimeString('en-ZA',{timeZone:'Africa/Johannesburg'})+'</div>'}
+async function renderRecon(force=false){let h=document.getElementById('reconContent');if(!h||!T())return;let sc=S(),d=D(),[ins,cts]=await Promise.all([A('pos_store_production_inputs?select=code,name,unit&store_code=eq.'+encodeURIComponent(sc)+'&active=eq.true&order=name.asc'),A('pos_store_input_counts?select=input_code,opening_qty,received_qty,used_qty,physical_count,counted_at,counted_by,count_type,notes&store_code=eq.'+encodeURIComponent(sc)+'&count_date=eq.'+d)]),cm={};(cts||[]).forEach(x=>cm[x.input_code]=x);let sig=JSON.stringify(cts||[]);if(!force&&sig===reconSig)return;reconSig=sig;h.innerHTML='<div><b>'+sc+' — '+d+'</b> <button class="primary" onclick="refreshProductionInputReconV67()">REFRESH RECONCILIATION</button></div><table class="inv-table"><tr><th>Code</th><th>Production Input</th><th>Unit</th><th>Opening</th><th>Received</th><th>Used</th><th>Expected</th><th>Physical</th><th>Variance</th><th>Status</th></tr>'+(ins||[]).map(i=>{let c=cm[i.code]||{},o=+c.opening_qty||0,r=+c.received_qty||0,u=+c.used_qty||0,p=+c.physical_count||0,e=o+r-u,v=p-e;return '<tr><td>'+i.code+'</td><td>'+E(i.name)+'</td><td>'+E(i.unit||'')+'</td><td>'+o.toFixed(3)+'</td><td>'+r.toFixed(3)+'</td><td>'+u.toFixed(3)+'</td><td><b>'+e.toFixed(3)+'</b></td><td>'+(window.fvCountConfirmed(c)?p.toFixed(3):'—')+'</td><td>'+(window.fvCountConfirmed(c)?v.toFixed(3):'—')+'</td><td>'+(!window.fvCountConfirmed(c)?'COUNT NOT CONFIRMED':Math.abs(v)<.0005?'OK':v<0?'SHORTAGE':'SURPLUS')+'</td></tr>'}).join('')+'</table><div class="small">Live database — updated '+new Date().toLocaleTimeString('en-ZA',{timeZone:'Africa/Johannesburg'})+'</div>'}
 window.refreshProductionInputReconV67=()=>renderRecon(true);let oldShow=window.showRecon;window.showRecon=function(type,btn){if(typeof oldShow==='function')try{oldShow.apply(this,arguments)}catch(_){};if(type==='raw')setTimeout(()=>renderRecon(true).catch(()=>{}),100)};
 setInterval(()=>{if(document.visibilityState!=='visible'||!T())return;let rp=document.getElementById('reportsPanel');if(rp&&rp.style.display!=='none')loadSales(false).catch(()=>{});let b=document.getElementById('productionCountBody'),a=document.activeElement;if(b&&!(a&&b.contains(a)))renderCount(false).catch(()=>{});let r=document.getElementById('reconPanel');if(r&&r.style.display!=='none')renderRecon(false).catch(()=>{})},5000);
 })();
@@ -7028,7 +7032,7 @@ document.addEventListener('click',e=>{if((e.target?.dataset?.managerTarget||'')=
 'use strict';
 if(window.__fvCountConfirmV48)return;window.__fvCountConfirmV48=true;
 const BASE='https://sflyjcgbxbcwspfuzone.supabase.co/rest/v1',KEY='sb_publishable_iASq-tni6KYrFK0R2S35zA_mpwt4MqM';
-const drafts={};let current={};
+const drafts={};let current={},context=null;
 const U=()=>window.inventorySessionUser||window.currentUser||{};
 function tok(){return sessionStorage.getItem('feastervilleCloudAccessToken')||localStorage.getItem('feastervilleCloudAccessToken')||''}
 function store(){const u=U();return String(u.role==='inventory_control'?(u.store_code||u.assigned_store||'NDAYENI'):(document.getElementById('storeLocationSelect')?.value||localStorage.getItem('feastervilleStoreCode')||'NDAYENI')).toUpperCase()}
@@ -7036,15 +7040,28 @@ function day(){return new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Johannes
 async function req(path,opt={}){const r=await fetch(BASE+'/'+path,{...opt,headers:{apikey:KEY,Authorization:'Bearer '+tok(),'Content-Type':'application/json',...(opt.headers||{})}}),t=await r.text();if(!r.ok)throw Error(t||('HTTP '+r.status));return t?JSON.parse(t):[]}
 async function render(){
  const body=document.getElementById('productionCountBody');if(!body||!tok()||!['manager','inventory_control'].includes(U().role))return;
- const sc=store(),d=day(),[inputs,counts]=await Promise.all([req('pos_store_production_inputs?select=code,name,unit&store_code=eq.'+encodeURIComponent(sc)+'&active=eq.true&order=name.asc'),req('pos_store_input_counts?select=input_code,opening_qty,received_qty,used_qty,physical_count&store_code=eq.'+encodeURIComponent(sc)+'&count_date=eq.'+d)]);
- current={};counts.forEach(x=>current[x.input_code]=x);
- body.innerHTML=inputs.map(i=>{const c=current[i.code]||{},o=+c.opening_qty||0,r=+c.received_qty||0,u=+c.used_qty||0,p=+c.physical_count||0,e=o+r-u,shown=Object.prototype.hasOwnProperty.call(drafts,i.code)?Number(drafts[i.code]||0):p,v=shown-e,act=Math.abs(v)<.0005?'OK':(v<0?'INVESTIGATE SHORTAGE':'INVESTIGATE SURPLUS');return '<tr><td>'+i.code+'</td><td>'+i.name+'</td><td>'+(i.unit||'')+'</td><td><b>'+e.toFixed(2)+'</b></td><td><input type="number" step="0.001" class="stock-input fv48physical" data-code="'+i.code+'" value="'+shown+'" style="max-width:165px"></td><td>'+v.toFixed(2)+'</td><td>'+act+'</td></tr>'}).join('');
+ const sc=store(),d=day(),[inputs,counts]=await Promise.all([req('pos_store_production_inputs?select=code,name,unit&store_code=eq.'+encodeURIComponent(sc)+'&active=eq.true&order=name.asc'),req('pos_store_input_counts?select=input_code,opening_qty,received_qty,used_qty,physical_count,counted_at,counted_by,count_type,notes&store_code=eq.'+encodeURIComponent(sc)+'&count_date=eq.'+d)]);
+ if(context&&context!==sc+'|'+d)Object.keys(drafts).forEach(k=>delete drafts[k]);context=sc+'|'+d;current={};counts.forEach(x=>current[x.input_code]=x);
+ body.innerHTML=inputs.map(i=>{const c=current[i.code]||{},o=+c.opening_qty||0,r=+c.received_qty||0,u=+c.used_qty||0,p=+c.physical_count||0,e=o+r-u,shown=Object.prototype.hasOwnProperty.call(drafts,i.code)?drafts[i.code]:(window.fvCountConfirmed(c)?p:''),v=shown===''?null:Number(shown)-e,act=v===null?'COUNT NOT CONFIRMED':(Math.abs(v)<.0005?'OK':(v<0?'INVESTIGATE SHORTAGE':'INVESTIGATE SURPLUS'));return '<tr><td>'+i.code+'</td><td>'+i.name+'</td><td>'+(i.unit||'')+'</td><td><b>'+e.toFixed(2)+'</b></td><td><input type="number" step="0.001" class="stock-input fv48physical" data-code="'+i.code+'" value="'+shown+'" style="max-width:165px"></td><td>'+(v===null?'—':v.toFixed(2))+'</td><td>'+act+'</td></tr>'}).join('');
  body.querySelectorAll('.fv48physical').forEach(el=>el.addEventListener('input',function(){drafts[this.dataset.code]=this.value}));
  let refresh=document.getElementById('fv48CountRefresh');if(!refresh){refresh=document.createElement('button');refresh.id='fv48CountRefresh';refresh.className='secondary';refresh.textContent='REFRESH COUNT SHEET';refresh.style.margin='8px 8px 8px 0';body.closest('table').before(refresh);refresh.onclick=()=>{Object.keys(drafts).forEach(k=>delete drafts[k]);render().catch(e=>alert('Could not refresh count sheet: '+e.message))}}
  let save=document.getElementById('fv48CountConfirm');if(!save){save=document.createElement('button');save.id='fv48CountConfirm';save.className='primary';save.textContent='CONFIRM & SAVE COUNT SHEET';save.style.margin='8px 0';refresh.insertAdjacentElement('afterend',save);save.onclick=confirmSave}
  let st=document.getElementById('fv48CountStatus');if(!st){st=document.createElement('span');st.id='fv48CountStatus';st.className='small';st.style.marginLeft='10px';save.insertAdjacentElement('afterend',st)}st.textContent='Enter physical quantities, then confirm once. Changes are not saved until confirmed.';
 }
-async function confirmSave(){const entries=Object.entries(drafts);if(!entries.length)return alert('No count changes to confirm. Enter the physical counts first.');if(!confirm('Confirm and save '+entries.length+' count change(s) for '+store()+'?'))return;const b=document.getElementById('fv48CountConfirm');b.disabled=true;b.textContent='SAVING COUNTS...';try{for(const [code,val] of entries){const c=current[code]||{};await req('pos_store_input_counts?on_conflict=store_code,input_code,count_date',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({store_code:store(),input_code:code,count_date:day(),opening_qty:Number(c.opening_qty)||0,received_qty:Number(c.received_qty)||0,used_qty:Number(c.used_qty)||0,physical_count:Number(val)||0})})}Object.keys(drafts).forEach(k=>delete drafts[k]);await render();if(window.refreshLiveReconV55)await window.refreshLiveReconV55();alert('Count sheet confirmed and saved successfully.')}catch(e){alert('Could not confirm count sheet: '+e.message)}finally{b.disabled=false;b.textContent='CONFIRM & SAVE COUNT SHEET'}}
+async function confirmSave(){
+ const sc=store(),d=day(),entries=Object.entries(drafts).filter(([_,v])=>v!=='');
+ if(context!==sc+'|'+d)return alert('Refresh the selected store before saving.');
+ if(!entries.length)return alert('Enter physical quantities first.');
+ if(entries.some(([_,v])=>!Number.isFinite(Number(v))||Number(v)<0))return alert('Enter valid non-negative counts.');
+ if(!confirm('Confirm and save '+entries.length+' count change(s) for '+sc+'?'))return;
+ const b=document.getElementById('fv48CountConfirm');b.disabled=true;b.textContent='SAVING COUNTS...';
+ try{const stamp=new Date().toISOString();for(const [code,val] of entries){
+  await req('pos_store_input_counts?on_conflict=store_code,input_code,count_date',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({store_code:sc,input_code:code,count_date:d,physical_count:Number(val),counted_at:stamp,count_type:'DAILY'})});
+  delete drafts[code];
+ }await render();if(window.refreshProductionInputReconV67)await window.refreshProductionInputReconV67();alert('Count sheet confirmed and saved successfully.');
+ }catch(e){alert('Could not confirm count sheet: '+e.message)}finally{b.disabled=false;b.textContent='CONFIRM & SAVE COUNT SHEET'}
+}
+
 window.refreshProductionInputCountSheetV63=render;window.refreshProductionInputCountSheetV48=render;
 setTimeout(()=>render().catch(()=>{}),900);
 setInterval(()=>{const b=document.getElementById('productionCountBody'),a=document.activeElement;if(document.visibilityState==='visible'&&b&&!(a&&b.contains(a))&&!Object.keys(drafts).length)render().catch(()=>{})},6000);
@@ -8489,3 +8506,5 @@ window.fvAccountingV89={openAccounting,loadAccounting,refreshAll};
 })();
 </script>
 <!-- BUILD: V89_GL_TRIAL_BALANCE_ASSET_BANK_POSTING_20260921 -->
+
+<!-- BUILD: CONFIRMED_COUNT_VARIANCE_FIX_20261011 -->
