@@ -4163,7 +4163,7 @@ document.addEventListener('DOMContentLoaded',function(){
  }
  // Cash-up is a store-day control. A completed cash-up must be recognised whether
  // the manager or the store salesperson completed it, avoiding duplicate cash-ups.
- async function existing(){const me=u();if(!me||!me.id)return[];if(me.role==='manager'){const rows=await api('pos_daily_cashups?store_code=eq.'+encodeURIComponent(store())+'&cashup_date=eq.'+day()+'&select=*');return (rows||[]).filter(r=>String(r.status||'').toUpperCase()==='CLOSED');}return api('pos_daily_cashups?store_code=eq.'+encodeURIComponent(store())+'&cashup_date=eq.'+day()+'&user_id=eq.'+encodeURIComponent(me.id)+'&select=*')}
+ async function existing(){const me=u();if(!me||!me.id)return[];if(me.role==='manager'){const rows=await api('pos_daily_cashups?store_code=eq.'+encodeURIComponent(store())+'&cashup_date=eq.'+day()+'&select=*');return (rows||[]).filter(r=>String(r.status||'').toUpperCase()==='CLOSED');}return (await api('rpc/fv_cashup_exists_own',{method:'POST',body:JSON.stringify({p_store_code:store(),p_cashup_date:day()})}))?[{status:'CLOSED'}]:[]}
  function expenseTotal(){return cashExpenses.reduce((a,x)=>a+Number(x.amount||0),0)}
  function renderExpenseList(){
    const box=document.getElementById('fvCashExpenseList');if(!box)return;
@@ -4174,6 +4174,10 @@ document.addEventListener('DOMContentLoaded',function(){
  }
  function renderCashupSummary(){
    if(!totals)return;
+   if(String(u()?.role||'').toLowerCase()==='salesperson'){
+     document.getElementById('fvCashupSummary').textContent='Blind cash-up: count and submit the physical cash. Expected cash, sales totals and variance are available to management only.';
+     return;
+   }
    document.getElementById('fvCashupSummary').innerHTML='<table><tr><td>Number of sales</td><td>'+totals.count+'</td></tr><tr><td>Cash Sales</td><td>'+money(totals.cash)+'</td></tr><tr><td>Card Sales</td><td>'+money(totals.card)+'</td></tr><tr><td>Mr D</td><td>'+money(totals.mrd)+'</td></tr><tr><td>Uber Eats</td><td>'+money(totals.uber)+'</td></tr><tr><td><b>Total Expenses</b></td><td><b>'+money(expenseTotal())+'</b></td></tr><tr><td><b>Total Sales</b></td><td><b>'+money(totals.total)+'</b></td></tr></table>';
  }
  function clearPendingExpense(){
@@ -4192,7 +4196,7 @@ document.addEventListener('DOMContentLoaded',function(){
    cashExpenses.push({type,amount,detail});
    clearPendingExpense();renderExpenseList();renderCashupSummary();variance();return true;
  }
- function variance(){if(!totals)return;let f=Number(document.getElementById('fvOpeningFloat').value||0),e=expenseTotal(),a=Number(document.getElementById('fvActualCash').value||0),expected=totals.cash+f-e,v=a-expected;document.getElementById('fvCashupVariance').textContent='Expected cash: '+money(expected)+' (after total expenses '+money(e)+') | Difference: '+money(v)}
+ function variance(){if(!totals)return;if(String(u()?.role||'').toLowerCase()==='salesperson'){document.getElementById('fvCashupVariance').textContent='Cash count will be reviewed by the manager.';return;}let f=Number(document.getElementById('fvOpeningFloat').value||0),e=expenseTotal(),a=Number(document.getElementById('fvActualCash').value||0),expected=totals.cash+f-e,v=a-expected;document.getElementById('fvCashupVariance').textContent='Expected cash: '+money(expected)+' (after total expenses '+money(e)+') | Difference: '+money(v)}
  window.openFvCashup=async function(){
    try{
     const me=u();if(!me||!['salesperson','manager'].includes(me.role)){alert('Cash-up is available to Salesperson and Manager accounts only.');return}
@@ -4225,9 +4229,10 @@ document.addEventListener('DOMContentLoaded',function(){
     const expenseNote=cashExpenses.length?'Cash expenses: '+cashExpenses.map(x=>x.type+' — '+money(x.amount)+(x.detail?' ('+x.detail+')':'')).join(' | ')+' | Total Expenses — '+money(e):'';
     const revisitNote=window.fvCashupTargetDate?('Revisited unclosed cash-up for '+day()):'';let notes=[revisitNote,expenseNote,cashupNotes].filter(Boolean).join(' | ')||null;
     let payload={store_code:store(),cashup_date:day(),user_id:me.id,salesperson_name:me.role==='manager'?('Manager — '+(store()==='SIVANA'?'Sivana':'Ndayini')):(me.name||me.display_name||me.email||'Salesperson'),opening_float:f,cash_sales:totals.cash,card_sales:totals.card,mr_d_sales:totals.mrd,uber_eats_sales:totals.uber,other_sales:totals.other,total_sales:totals.total,expected_cash:expected,actual_cash:a,sale_count:totals.count,notes:notes,status:'CLOSED'};
-    await api('pos_daily_cashups',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify(payload)});
+    await api('pos_daily_cashups',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(payload)});
     for(const x of cashExpenses){await api('pos_store_expenses',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({store_code:store(),expense_date:day(),category:x.type,supplier:null,description:x.detail||('Cash paid from till — '+x.type),payment_method:'Cash',amount:x.amount,reference:'Cash-Up '+day()})});}
-    cashExpenses=[];clearPendingExpense();renderExpenseList();closeFvCashupModal();if(typeof window.loadUnclosedCashupsV80==='function')setTimeout(()=>window.loadUnclosedCashupsV80(),150);alert('Day closed successfully. Total expenses '+money(e)+' | Expected cash '+money(expected)+' | Actual cash '+money(a)+' | Difference '+money(a-expected));
+    cashExpenses=[];clearPendingExpense();renderExpenseList();closeFvCashupModal();if(typeof window.loadUnclosedCashupsV80==='function')setTimeout(()=>window.loadUnclosedCashupsV80(),150);alert(me.role==='salesperson'?'Cash-up submitted successfully for management review.':('Day closed successfully. Total expenses '+money(e)+' | Expected cash '+money(expected)+' | Actual cash '+money(a)+' | Difference '+money(a-expected)));
+    document.getElementById('fvCashupVariance').textContent='';document.getElementById('fvCashupSummary').textContent='';totals=null;
    }catch(e){console.error(e);alert('Cash-up could not be saved: '+e.message)}
  };
  function addButton(){return;let me=u();if(!me||!['salesperson','manager'].includes(me.role)||document.getElementById('fvCashupBtn'))return;let target=document.querySelector('header .actions')||document.querySelector('header')||document.querySelector('.topbar')||document.body;let b=document.createElement('button');b.id='fvCashupBtn';b.type='button';b.textContent=me.role==='manager'?'STORE CASH-UP / CLOSE DAY':'CLOSE DAY / CASH-UP';b.onclick=openFvCashup;target.appendChild(b)}
