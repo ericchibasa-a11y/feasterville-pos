@@ -8038,6 +8038,11 @@ async function api(path){
  let x=await run();if(!x.r.ok&&(x.r.status===401||/PGRST303|JWT expired|jwt.*expired/i.test(x.text))){await refreshAuth();x=await run()}
  if(!x.r.ok)throw Error(x.text||('HTTP '+x.r.status));return x.text?JSON.parse(x.text):[];
 }
+async function apiPost(path,payload){
+ const response=await fetch(ROOT+'/rest/v1/'+path,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+token(),'Content-Type':'application/json'},body:JSON.stringify(payload)});
+ if(!response.ok)throw Error(await response.text());
+ return response.json();
+}
 async function apiAll(path){
  const out=[];let offset=0;const size=1000;
  while(true){const sep=path.includes('?')?'&':'?';const rows=await api(path+sep+'limit='+size+'&offset='+offset);out.push(...rows);if(rows.length<size)break;offset+=size;if(offset>100000)break}
@@ -8088,8 +8093,12 @@ async function load(){
   if(store!=='ALL')salesPath+='&store_code=eq.'+encodeURIComponent(store);
   let closePath='pos_daily_cashups?cashup_date=gte.'+encodeURIComponent(from)+'&cashup_date=lte.'+encodeURIComponent(to)+'&select=store_code,cashup_date,user_id,salesperson_name,status';
   if(store!=='ALL')closePath+='&store_code=eq.'+encodeURIComponent(store);
-  if(r==='salesperson'&&user()?.id)closePath+='&user_id=eq.'+encodeURIComponent(user().id);
-  let [sales,closes]=await Promise.all([apiAll(salesPath),apiAll(closePath)]);
+  let [sales,closes]=await Promise.all([
+    apiAll(salesPath),
+    r==='salesperson'
+      ? apiPost('rpc/fv_own_closed_cashup_dates',{p_from:from,p_to:to,p_store_code:store})
+      : apiAll(closePath)
+  ]);
   if(r==='salesperson')sales=(sales||[]).filter(isOwnSale);
   // For a manager, any CLOSED record closes that store/date. The earlier
   // manager-name check ignored valid salesperson cash-ups.
