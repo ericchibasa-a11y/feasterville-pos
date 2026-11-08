@@ -6586,13 +6586,24 @@ async function managerLiveSales(){
     (document.getElementById('reportsPanel')||document.getElementById('reportPanel')||document.body).appendChild(box);
   }
   const total=(rows||[]).reduce((a,r)=>a+Number(r.total||0),0);
-  box.innerHTML='<h3>Live Sales — '+sc+'</h3>'+
+  const newMarkup='<h3>Live Sales — '+sc+'</h3>'+
     '<div style="margin-bottom:8px"><b>Today:</b> '+(rows||[]).length+' sales &nbsp; <b>Total:</b> '+zar(total)+
-    ' &nbsp; <span class="small">Updated '+new Date().toLocaleTimeString('en-ZA',{timeZone:'Africa/Johannesburg'})+'</span></div>'+
+    ' &nbsp; <span class="small" id="fvLiveSalesUpdatedV60"></span></div>'+
     '<div style="overflow:auto"><table><thead><tr><th>Time</th><th>Cashier</th><th>Payment</th><th>Total</th></tr></thead><tbody>'+
     ((rows||[]).map(r=>'<tr><td>'+String(r.sale_time||'').slice(0,8)+'</td><td>'+(r.cashier||'—')+
     '</td><td>'+(r.payment||'—')+'</td><td>'+zar(r.total)+'</td></tr>').join('')||
     '<tr><td colspan="4">No sales today.</td></tr>')+'</tbody></table></div>';
+  // Preserve the table and its scroll position when no sale has changed.
+  if(box.dataset.salesMarkup!==newMarkup){
+    const scroller=box.querySelector('div[style*="overflow:auto"]');
+    const previousScroll=scroller?scroller.scrollLeft:0;
+    box.innerHTML=newMarkup;
+    box.dataset.salesMarkup=newMarkup;
+    const nextScroller=box.querySelector('div[style*="overflow:auto"]');
+    if(nextScroller)nextScroller.scrollLeft=previousScroll;
+  }
+  const stamp=box.querySelector('#fvLiveSalesUpdatedV60');
+  if(stamp)stamp.textContent='Updated '+new Date().toLocaleTimeString('en-ZA',{timeZone:'Africa/Johannesburg'});
 }
 window.refreshManagerLiveSalesV60=managerLiveSales;
 
