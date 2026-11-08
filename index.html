@@ -4745,19 +4745,22 @@ function getProducts(){
 function isMrD(p){
   return String(p.code||'').toUpperCase().startsWith('MRD-') || String(p.category||'').toUpperCase().startsWith('MR D -');
 }
+function isUber(p){return String(p.code||'').toUpperCase().startsWith('UBER-') || /^UBER\s*EATS\s*-/.test(String(p.category||'').toUpperCase());}
+function isUberStore(){return ['NDAYENI','BIRCH_ACRES'].includes(String(document.getElementById('storeLocationSelect')?.value||'').toUpperCase());}
 function availableMenu(){
   const list=getProducts();
   if(currentMenu==='MRD' && !list.some(isMrD)) return 'STORE';
+  if(currentMenu==='UBER' && !isUberStore()) return 'STORE';
   return currentMenu;
 }
 function menuProducts(){
   const mode=availableMenu();
   const list=getProducts();
-  return mode==='MRD' ? list.filter(isMrD) : list.filter(p=>!isMrD(p));
+  return mode==='MRD' ? list.filter(isMrD) : mode==='UBER' ? list.filter(isUber) : list.filter(p=>!isMrD(p)&&!isUber(p));
 }
 function displayCategory(raw){
   const c=String(raw||'');
-  return currentMenu==='MRD' ? c.replace(/^MR D\s*-\s*/i,'') : c;
+  return currentMenu==='MRD' ? c.replace(/^MR D\s*-\s*/i,'') : currentMenu==='UBER' ? c.replace(/^UBER\s*EATS\s*-\s*/i,'') : c;
 }
 function ensureMenuBar(){
   const cats=document.getElementById('categories');
@@ -4771,8 +4774,10 @@ function ensureMenuBar(){
   }
   const hasMrD=getProducts().some(isMrD);
   if(currentMenu==='MRD'&&!hasMrD) currentMenu='STORE';
+  if(currentMenu==='UBER'&&!isUberStore())currentMenu='STORE';
   bar.innerHTML=
     (hasMrD?'<button type="button" data-main-sales-menu="MRD" class="cat '+(currentMenu==='MRD'?'active':'')+'" style="font-weight:800">MR D MENU</button>':'')+
+    (isUberStore()?'<button type="button" data-main-sales-menu="UBER" class="cat '+(currentMenu==='UBER'?'active':'')+'" style="font-weight:800">UBER EATS MENU</button>':'')+
     '<button type="button" data-main-sales-menu="STORE" class="cat '+(currentMenu==='STORE'?'active':'')+'" style="font-weight:800">STORE MENU</button>';
   return bar;
 }
@@ -4812,7 +4817,7 @@ function selectCategory(cat){
   renderProducts();
 }
 function selectMainMenu(menu){
-  currentMenu=menu==='STORE'?'STORE':'MRD';
+  currentMenu=menu==='UBER'&&isUberStore()?'UBER':menu==='MRD'?'MRD':'STORE';
   currentCategory='ALL';
   const search=document.getElementById('salesProductSearch');
   if(search)search.value='';
