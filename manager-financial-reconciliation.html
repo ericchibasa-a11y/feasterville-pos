@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Feasterville — Manager Financial Reconciliation</title>
+<style>body{font:15px Arial,sans-serif;background:#f4f6f2;color:#18211b;margin:0}header{background:#172418;color:white;padding:20px}main{max-width:1100px;margin:24px auto;padding:0 15px}.card{background:white;border-radius:12px;padding:18px;margin:12px 0;box-shadow:0 2px 8px #0001}select,button{font:inherit;padding:10px;border-radius:7px}button{background:#8cc63f;border:0;cursor:pointer;font-weight:bold}table{border-collapse:collapse;width:100%;min-width:850px}th,td{padding:10px;border-bottom:1px solid #ddd;text-align:right}th:first-child,td:first-child{text-align:left}th{background:#edf2e7}.scroll{overflow:auto}.warn{color:#9b4200}.bad{color:#a00}.muted{color:#59665b}a{color:inherit}</style>
+</head><body><header><h2>Feasterville · Manager Financial Reconciliation</h2><a href="index.html">← Back to POS</a></header>
+<main><div class="card"><strong>Provisional figures — not confirmed net profit.</strong><p class="muted">Revenue is from recorded POS sales. Estimated COGS may omit ingredient costs; expenses may be missing. Cash-up differences are not automatically cash shortages.</p>
+<label>Month <input id="month" type="month" value="2026-10"></label> <button id="refresh">Refresh</button><p id="status" role="status">Checking manager access…</p></div>
+<div class="card scroll"><table><thead><tr><th>Store</th><th>POS sales</th><th>Cash-ups</th><th>Difference</th><th>Est. COGS</th><th>Recorded expenses</th><th>Provisional margin</th><th>Missing costs</th><th>Review</th></tr></thead><tbody id="rows"><tr><td colspan="9">Loading…</td></tr></tbody></table></div></main>
+<script>
+(function(){
+'use strict';
+const endpoint='https://sflyjcgbxbcwspfuzone.supabase.co/rest/v1/rpc/pos_manager_financial_reconciliation';
+const key='sb_publishable_iASq-tni6KYrFK0R2S35zA_mpwt4MqM';
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money=n=>new Intl.NumberFormat('en-ZA',{style:'currency',currency:'ZAR'}).format(Number(n||0));
+async function load(){
+ const token=sessionStorage.getItem('feastervilleCloudAccessToken');
+ if(!token){$('status').textContent='Please sign in to the cloud POS as a manager, then reopen this report.';$('rows').innerHTML='';return;}
+ $('status').textContent='Loading manager-only reconciliation…';$('rows').innerHTML='';
+ try{
+  const m=$('month').value;
+  if(!/^\d{4}-\d{2}$/.test(m))throw new Error('Choose a valid month.');
+  const res=await fetch(endpoint,{method:'POST',headers:{'apikey':key,'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({p_month:m+'-01'})});
+  if(!res.ok){if(res.status===401||res.status===403)throw new Error('Manager access denied or session expired.');throw new Error('Unable to load reconciliation ('+res.status+').');}
+  const data=await res.json();
+  if(!Array.isArray(data))throw new Error('Unexpected report response.');
+  $('rows').innerHTML=data.map(r=>'<tr><td>'+esc(r.store_code)+'</td><td>'+money(r.pos_revenue)+'</td><td>'+money(r.cashup_revenue)+'</td><td>'+money(r.pos_cashup_difference)+'</td><td>'+money(r.estimated_cogs)+'</td><td>'+money(r.recorded_pos_expenses)+'</td><td>'+money(r.provisional_pos_margin)+'</td><td>'+Number(r.missing_cost_inputs||0)+'</td><td class="warn">'+esc(r.review_status)+'</td></tr>').join('')||'<tr><td colspan="9">No records for this month.</td></tr>';
+  $('status').textContent='Manager-only report loaded. Figures remain provisional pending expense and stock-cost verification.';
+ }catch(err){$('status').textContent=err.message;$('rows').innerHTML='';}
+}
+$('refresh').addEventListener('click',load);load();
+})();
+</script></body></html>
