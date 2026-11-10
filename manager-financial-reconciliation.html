@@ -15,14 +15,15 @@ const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=n=>new Intl.NumberFormat('en-ZA',{style:'currency',currency:'ZAR'}).format(Number(n||0));
 async function load(){
- const token=sessionStorage.getItem('feastervilleCloudAccessToken');
- if(!token){$('status').textContent='Please sign in to the cloud POS as a manager, then reopen this report.';$('rows').innerHTML='';return;}
+ const token=sessionStorage.getItem('feastervilleCloudAccessToken') || localStorage.getItem('feastervilleCloudAccessToken');
+ $('status').textContent='Refreshing report…';
+ if(!token){$('status').textContent='No cloud login token found in this browser. Use Back to POS, sign in as Manager, then return to Reports & Finance → Financial Reconciliation. Refresh will retry after login.';$('rows').innerHTML='';return;}
  $('status').textContent='Loading manager-only reconciliation…';$('rows').innerHTML='';
  try{
   const m=$('month').value;
   if(!/^\d{4}-\d{2}$/.test(m))throw new Error('Choose a valid month.');
   const res=await fetch(endpoint,{method:'POST',headers:{'apikey':key,'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({p_month:m+'-01'})});
-  if(!res.ok){if(res.status===401||res.status===403)throw new Error('Manager access denied or session expired.');throw new Error('Unable to load reconciliation ('+res.status+').');}
+  if(!res.ok){if(res.status===401||res.status===403)throw new Error('Manager access denied or session expired. Please sign in again.');throw new Error('Unable to load reconciliation ('+res.status+').');}
   const data=await res.json();
   if(!Array.isArray(data))throw new Error('Unexpected report response.');
   $('rows').innerHTML=data.map(r=>'<tr><td>'+esc(r.store_code)+'</td><td>'+money(r.pos_revenue)+'</td><td>'+money(r.cashup_revenue)+'</td><td>'+money(r.pos_cashup_difference)+'</td><td>'+money(r.estimated_cogs)+'</td><td>'+money(r.recorded_pos_expenses)+'</td><td>'+money(r.provisional_pos_margin)+'</td><td>'+Number(r.missing_cost_inputs||0)+'</td><td class="warn">'+esc(r.review_status)+'</td></tr>').join('')||'<tr><td colspan="9">No records for this month.</td></tr>';
