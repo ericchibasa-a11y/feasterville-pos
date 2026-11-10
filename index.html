@@ -8278,6 +8278,7 @@ window.openUnclosedCashupsV80=open;window.loadUnclosedCashupsV80=load;window.fvU
    dashboard:()=>{location.href='management-dashboard.html';},
    monthend:()=>openPage('month-end-closure-report.html','Month-End Closure Report'),
    audit:()=>openPage('feasterville-audit-reporting.html','Audit & Financial Reporting'),
+   finrecon:()=>openPage('manager-financial-reconciliation.html','Manager Financial Reconciliation'),
    assets:()=>target('fvAssetRegisterPanelV88','Asset Register'),
    bankrec:()=>target('fvBankReconPanelV88','Bank Reconciliation'),
    bankowner:()=>openPage('banking-owner-control.html','Banking & Owner Funds Control'),
@@ -8290,7 +8291,7 @@ window.openUnclosedCashupsV80=open;window.loadUnclosedCashupsV80=load;window.fvU
   ['cash','CASH-UPS',[['closecash','CLOSE DAY / CASH-UP'],['histcash','HISTORICAL CASH-UP'],['unclosed','UNCLOSED CASH-UPS']]],
   ['inventory','INVENTORY',[['inv','INVENTORY LISTING & COUNT SHEETS'],['openbal','OPENING BALANCES'],['prodadmin','PRODUCTION INPUT ADMIN'],['transfer','INVENTORY TRANSFERS'],['stockcount','WEEKLY & MONTHLY COUNTS'],['prodstock','PRODUCTION INPUT STOCK'],['usage','USAGE FROM SALES'],['movements','STOCK MOVEMENTS'],['recon','STOCK RECONCILIATION']]],
   ['products','PRODUCTS & RECIPES',[['sellable','SELLABLE ITEMS'],['recipe','PRODUCT INPUTS / RECIPE LINK'],['easyrecipe','BUILD FINAL PRODUCT RECIPE'],['finalrecipe','FINAL PRODUCT → INPUTS'],['masterinputs','MASTER PRODUCTION INPUTS']]],
-  ['reports','REPORTS & FINANCE',[['reports','SALES & INVENTORY REPORTS'],['dashboard','MANAGEMENT DASHBOARD'],['pl','STORE PROFIT & LOSS'],['compare','STORES COMPARISON & FINAL P&L'],['costing','COSTING & PROFITABILITY'],['monthend','MONTH-END REPORT'],['audit','AUDIT & FINANCIAL REPORTING'],['assets','ASSET REGISTER'],['bankrec','BANK RECONCILIATION'],['bankowner','BANKING & OWNER FUNDS']]],
+  ['reports','REPORTS & FINANCE',[['reports','SALES & INVENTORY REPORTS'],['dashboard','MANAGEMENT DASHBOARD'],['pl','STORE PROFIT & LOSS'],['compare','STORES COMPARISON & FINAL P&L'],['costing','COSTING & PROFITABILITY'],['monthend','MONTH-END REPORT'],['audit','AUDIT & FINANCIAL REPORTING'],['finrecon','FINANCIAL RECONCILIATION (PROVISIONAL)'],['assets','ASSET REGISTER'],['bankrec','BANK RECONCILIATION'],['bankowner','BANKING & OWNER FUNDS']]],
   ['users','USERS & ACCESS',[['users','SALESPERSON & USER MANAGEMENT'],['access','ACCESS RIGHTS & USER MANAGEMENT'],['logged','CURRENTLY LOGGED IN USERS']]]
  ];
  function closeSubs(){document.querySelectorAll('#fvFunctionNavV82 .fvNavSubV82').forEach(x=>x.classList.remove('active'));document.querySelectorAll('#fvFunctionNavV82 .fvNavCatV82').forEach(x=>x.classList.remove('active'));}
