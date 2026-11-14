@@ -197,10 +197,10 @@ body.print-report #reportContent { position:absolute; left:0; top:0; width:100%;
 <div class="row"><span>Discount</span><input id="discount" type="number" min="0" value="0" style="width:100px"></div>
 <div class="row grand"><span>TOTAL</span><span id="total">R0.00</span></div>
 <div class="pay">
-<label>Payment<br><select id="payment"><option>Cash</option><option>Card</option><option>Mr D</option><option>Uber Eats</option></select></label>
+<label>Payment<br><select id="payment"><option>Cash</option><option>Card</option><option value="Cash + Card">Cash + Card</option><option>Mr D</option><option>Uber Eats</option></select></label>
 <label>Amount Received<br><input id="received" type="number" min="0" value="0" oninput="render()"></label>
 </div>
-<div class="row"><span>Change</span><b id="change">R0.00</b></div>
+<div id="fvSplitPayment" style="display:none;margin-top:8px"><label>Cash portion (R) <input id="fvSplitCash" type="number" min="0" step="0.01" value="0" oninput="window.fvUpdateSplit?.()"></label><div>Card portion: <b id="fvSplitCard">R0.00</b></div></div><div class="row"><span>Change</span><b id="change">R0.00</b></div>
 <button class="primary" style="width:100%;margin-top:8px" onclick="completeSale()">COMPLETE SALE</button>
 <button class="secondary" style="width:100%;margin-top:8px" onclick="printReceipt()">PRINT RECEIPT</button>
 <button class="danger" style="width:100%;margin-top:8px" onclick="clearCart()">CLEAR ORDER</button>
@@ -939,7 +939,22 @@ function printReceipt(){
     '.receipt-item-values{display:flex!important;justify-content:space-between!important;gap:8px!important}'+
     'hr{border:0;border-top:1px dashed #000;margin:5px 0}'+
     'button{display:none!important}'+
-    '</style></head><body><div class="receipt-wrap">'+receiptHtml+'</div></body></html>';
+    '</style></head><body><div class="receipt-wrap">'+receiptHtml+'</div><script>
+(function(){
+window.fvUpdateSplit=function(){
+ const p=document.getElementById('payment'), box=document.getElementById('fvSplitPayment');
+ if(!p||!box)return;
+ const split=p.value==='Cash + Card';box.style.display=split?'block':'none';
+ const total=Number(document.getElementById('total')?.textContent?.replace(/[^0-9.-]/g,'')||0);
+ const cash=Number(document.getElementById('fvSplitCash')?.value||0);
+ const card=document.getElementById('fvSplitCard');
+ if(card)card.textContent='R'+Math.max(total-cash,0).toFixed(2);
+};
+document.getElementById('payment')?.addEventListener('change',window.fvUpdateSplit);
+new MutationObserver(()=>{if(document.getElementById('payment')?.value==='Cash + Card')window.fvUpdateSplit()}).observe(document.getElementById('total'),{childList:true,characterData:true,subtree:true});
+window.fvUpdateSplit();
+})();
+<\/script></body></html>';
 
   w.document.open();
   w.document.write(doc);
@@ -1846,6 +1861,7 @@ document.addEventListener('DOMContentLoaded',function(){
         cashier:window.currentUser?.name||'Manager',
         orderType:document.getElementById('orderType')?.value||'Take Away',
         payment:payment,
+        ...(isSplit ? {cash_amount:splitCash,card_amount:splitCard} : {}),
         received:received,
         total:total,
         items:cart.map(function(i){
@@ -2327,6 +2343,12 @@ document.addEventListener('DOMContentLoaded',function(){
       const total = Math.max(subtotal - discount, 0);
       const payment = document.getElementById('payment')?.value || 'Cash';
       let received = Number(document.getElementById('received')?.value || 0);
+      const isSplit = payment === 'Cash + Card';
+      const splitCash = Number(document.getElementById('fvSplitCash')?.value || 0);
+      const splitCard = Math.round((total - splitCash)*100)/100;
+      if(isSplit && (!Number.isFinite(splitCash) || splitCash<=0 || splitCard<=0 || Math.round((splitCash+splitCard)*100)!==Math.round(total*100))) {
+        throw new Error('Enter a valid cash portion; the remainder will be charged to card.');
+      }
       const isCash = String(payment).trim().toLowerCase() === 'cash';
 
       if (isCash) {
@@ -2347,11 +2369,12 @@ document.addEventListener('DOMContentLoaded',function(){
         };
       });
 
-      const result = await api('/rest/v1/rpc/create_pos_sale', {
+      const result = await api(isSplit ? '/rest/v1/rpc/create_pos_sale_split' : '/rest/v1/rpc/create_pos_sale', {
         method:'POST',
         body:JSON.stringify({
           p_order_type:document.getElementById('orderType')?.value || 'Take Away',
           p_payment:payment,
+          ...(isSplit ? {p_cash_amount:splitCash,p_card_amount:splitCard} : {}),
           p_received:received,
           p_total:total,
           p_cashier:(window.salesSessionUser||window.currentUser)?.name || 'POS User',
@@ -2404,6 +2427,8 @@ document.addEventListener('DOMContentLoaded',function(){
       const r = document.getElementById('received');
       if (d) d.value = 0;
       if (r) r.value = 0;
+      const splitInput=document.getElementById('fvSplitCash'); if(splitInput)splitInput.value=0;
+      window.fvUpdateSplit?.();
 
       try { if (typeof render === 'function') render(); } catch (_) {}
       try { if (typeof renderCartReliable === 'function') renderCartReliable(); } catch (_) {}
