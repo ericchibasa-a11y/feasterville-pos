@@ -4234,15 +4234,15 @@ document.addEventListener('DOMContentLoaded',function(){
    const me=u();if(!me)throw Error('Please sign in.');
    let rows=[];
    if(me.role==='manager'){
-     rows=await api('pos_sales?store_code=eq.'+encodeURIComponent(store())+'&sale_date=eq.'+day()+'&select=id,total,payment,cashier');
+     rows=await api('pos_sales?store_code=eq.'+encodeURIComponent(store())+'&sale_date=eq.'+day()+'&select=id,total,payment,cashier,cash_amount,card_amount');
    }else{
-     const q='pos_sales?store_code=eq.'+encodeURIComponent(store())+'&sale_date=eq.'+day()+'&cashier=eq.'+encodeURIComponent(me.name||me.display_name||me.email||'')+'&select=id,total,payment,cashier';
+     const q='pos_sales?store_code=eq.'+encodeURIComponent(store())+'&sale_date=eq.'+day()+'&cashier=eq.'+encodeURIComponent(me.name||me.display_name||me.email||'')+'&select=id,total,payment,cashier,cash_amount,card_amount';
      rows=await api(q);
      // Some historic cashier values may differ from display name. For salesperson, use current user's email/name variants if exact name has no rows.
-     if(!rows.length && me.email){rows=await api('pos_sales?store_code=eq.'+encodeURIComponent(store())+'&sale_date=eq.'+day()+'&select=id,total,payment,cashier');rows=rows.filter(x=>[me.name,me.display_name,me.email].filter(Boolean).map(String).map(v=>v.toLowerCase()).includes(String(x.cashier||'').toLowerCase()));}
+     if(!rows.length && me.email){rows=await api('pos_sales?store_code=eq.'+encodeURIComponent(store())+'&sale_date=eq.'+day()+'&select=id,total,payment,cashier,cash_amount,card_amount');rows=rows.filter(x=>[me.name,me.display_name,me.email].filter(Boolean).map(String).map(v=>v.toLowerCase()).includes(String(x.cashier||'').toLowerCase()));}
    }
    let x={cash:0,card:0,mrd:0,uber:0,other:0,total:0,count:rows.length};
-   rows.forEach(r=>{let v=Number(r.total||0),b=payBucket(r.payment);x[b]+=v;x.total+=v});return x;
+   rows.forEach(r=>{let v=Number(r.total||0),b=payBucket(r.payment);if(b==='other'&&String(r.payment||'').toLowerCase().replace(/[^a-z0-9]/g,'')==='cashcard'){const cash=Number(r.cash_amount||0),card=Number(r.card_amount||0);if(Math.abs(cash+card-v)>0.01)throw Error('Split tender mismatch on sale '+r.id);x.cash+=cash;x.card+=card;}else{x[b]+=v;}x.total+=v});return x;
  }
  // Cash-up is a store-day control. A completed cash-up must be recognised whether
  // the manager or the store salesperson completed it, avoiding duplicate cash-ups.
@@ -8215,7 +8215,7 @@ async function load(){
  if(!from||!to)return status('Select From Date and To Date.',true);if(from>to)return status('From Date cannot be after To Date.',true);
  status('Checking sales and cash-ups...');
  try{
-  let salesPath='pos_sales?sale_date=gte.'+encodeURIComponent(from)+'&sale_date=lte.'+encodeURIComponent(to)+'&select=sale_date,store_code,total,payment,cashier&order=sale_date.desc';
+  let salesPath='pos_sales?sale_date=gte.'+encodeURIComponent(from)+'&sale_date=lte.'+encodeURIComponent(to)+'&select=sale_date,store_code,total,payment,cashier,cash_amount,card_amount&order=sale_date.desc';
   if(store!=='ALL')salesPath+='&store_code=eq.'+encodeURIComponent(store);
   let closePath='pos_daily_cashups?cashup_date=gte.'+encodeURIComponent(from)+'&cashup_date=lte.'+encodeURIComponent(to)+'&select=store_code,cashup_date,user_id,salesperson_name,status';
   if(store!=='ALL')closePath+='&store_code=eq.'+encodeURIComponent(store);
@@ -8230,7 +8230,7 @@ async function load(){
   // manager-name check ignored valid salesperson cash-ups.
   const closed=new Set((closes||[]).filter(x=>String(x.status||'').toUpperCase()==='CLOSED'&&(r==='manager'?true:String(x.user_id||'')===String(user()?.id||''))).map(x=>String(x.store_code)+'|'+String(x.cashup_date)));
   const map=new Map();
-  (sales||[]).forEach(x=>{const key=String(x.store_code)+'|'+String(x.sale_date);if(!map.has(key))map.set(key,{store_code:x.store_code,date:x.sale_date,cash:0,card:0,mrd:0,uber:0,other:0,total:0,count:0});const y=map.get(key),v=N(x.total),b=payBucket(x.payment);y[b]+=v;y.total+=v;y.count++});
+  (sales||[]).forEach(x=>{const key=String(x.store_code)+'|'+String(x.sale_date);if(!map.has(key))map.set(key,{store_code:x.store_code,date:x.sale_date,cash:0,card:0,mrd:0,uber:0,other:0,total:0,count:0});const y=map.get(key),v=N(x.total),b=payBucket(x.payment);if(b==='other'&&String(x.payment||'').toLowerCase().replace(/[^a-z0-9]/g,'')==='cashcard'){const cash=N(x.cash_amount),card=N(x.card_amount);if(Math.abs(cash+card-v)>0.01)throw Error('Split tender mismatch on '+x.sale_date+' '+x.store_code);y.cash+=cash;y.card+=card;}else{y[b]+=v;}y.total+=v;y.count++});
   const rows=[...map.values()].filter(x=>!closed.has(String(x.store_code)+'|'+String(x.date))).sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(a.store_code).localeCompare(String(b.store_code)));
   const body=document.getElementById('fvUnclosedCashupBodyV80');
   const table=document.getElementById('fvUnclosedCashupTableV80');
