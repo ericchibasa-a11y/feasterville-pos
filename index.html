@@ -197,9 +197,10 @@ body.print-report #reportContent { position:absolute; left:0; top:0; width:100%;
 <div class="row"><span>Discount</span><input id="discount" type="number" min="0" value="0" style="width:100px"></div>
 <div class="row grand"><span>TOTAL</span><span id="total">R0.00</span></div>
 <div class="pay">
-<label>Payment<br><select id="payment"><option>Cash</option><option>Card</option><option>Mr D</option><option>Uber Eats</option></select></label>
+<label>Payment<br><select id="payment"><option>Cash</option><option>Card</option><option>Mr D</option><option>Uber Eats</option><option>Cash + Card</option></select></label>
 <label>Amount Received<br><input id="received" type="number" min="0" value="0" oninput="render()"></label>
 </div>
+<div id="fvSplitPaymentFields" style="display:none;margin:8px 0;padding:10px;border:1px solid #ddd;border-radius:6px"><label>Cash portion (R) <input id="fvSplitCash" type="number" min="0" step="0.01" value="0" style="width:120px"></label> <label>Card portion (R) <input id="fvSplitCard" type="number" min="0" step="0.01" value="0" style="width:120px"></label><div id="fvSplitPaymentStatus" style="font-size:12px;margin-top:5px"></div></div>
 <div class="row"><span>Change</span><b id="change">R0.00</b></div>
 <button class="primary" style="width:100%;margin-top:8px" onclick="completeSale()">COMPLETE SALE</button>
 <button class="secondary" style="width:100%;margin-top:8px" onclick="printReceipt()">PRINT RECEIPT</button>
@@ -2385,6 +2386,13 @@ document.addEventListener('DOMContentLoaded',function(){
       const total = Math.max(subtotal - discount, 0);
       const payment = document.getElementById('payment')?.value || 'Cash';
       let received = Number(document.getElementById('received')?.value || 0);
+      const isSplit = payment === 'Cash + Card';
+      const splitCash = Number(document.getElementById('fvSplitCash')?.value || 0);
+      const splitCard = Number(document.getElementById('fvSplitCard')?.value || 0);
+      if (isSplit && (!Number.isFinite(splitCash) || !Number.isFinite(splitCard) || splitCash < 0 || splitCard < 0 || Math.round((splitCash+splitCard)*100) !== Math.round(total*100))) {
+        throw new Error('Cash and card portions must add up to R' + total.toFixed(2));
+      }
+      if (isSplit) received = total;
       const isCash = String(payment).trim().toLowerCase() === 'cash';
 
       if (isCash) {
@@ -2416,12 +2424,11 @@ document.addEventListener('DOMContentLoaded',function(){
           document.getElementById('storeLocationSelect')?.value!==saleStore)
         throw new Error('Store mismatch: sign in again before processing a sale.');
 
-      const result = await api('/rest/v1/rpc/create_pos_sale', {
+      const result = await api(isSplit ? '/rest/v1/rpc/create_pos_sale_split' : '/rest/v1/rpc/create_pos_sale', {
         method:'POST',
         body:JSON.stringify({
+          ...(isSplit ? {p_cash_amount:splitCash,p_card_amount:splitCard} : {p_payment:payment,p_received:received}),
           p_order_type:document.getElementById('orderType')?.value || 'Take Away',
-          p_payment:payment,
-          p_received:received,
           p_total:total,
           p_cashier:(window.salesSessionUser||window.currentUser)?.name || 'POS User',
           p_items:items,
@@ -7920,6 +7927,21 @@ if(typeof oldShow==='function')window.showReport=function(type,btn){activeMode=n
 </script>
 <!-- BUILD: PRODUCT_INPUT_PERFORMANCE_V102_20260925 -->
 
+<script>
+/* Split tender UI: only applies when Cash + Card is selected. */
+(function(){
+ function update(){
+  const payment=document.getElementById('payment');const box=document.getElementById('fvSplitPaymentFields');const received=document.getElementById('received');if(!payment||!box)return;
+  const split=payment.value==='Cash + Card';box.style.display=split?'block':'none';
+  if(received){received.disabled=split; if(split)received.value='0';}
+  const status=document.getElementById('fvSplitPaymentStatus');if(status&&split){const total=Number((document.getElementById('total')?.textContent||'').replace(/[^0-9.-]/g,''))||0;const cash=Number(document.getElementById('fvSplitCash')?.value||0);const card=Number(document.getElementById('fvSplitCard')?.value||0);const diff=total-cash-card;status.textContent='Total R'+total.toFixed(2)+' | Remaining R'+diff.toFixed(2);status.style.color=Math.abs(diff)<0.005?'green':'#a33';}
+ }
+ document.addEventListener('change',function(e){if(e.target?.id==='payment')update();});
+ document.addEventListener('input',function(e){if(['fvSplitCash','fvSplitCard','discount'].includes(e.target?.id))update();});
+ document.addEventListener('click',function(){setTimeout(update,0);},true);
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',update);else update();
+})();
+</script>
 </body>
 
 
