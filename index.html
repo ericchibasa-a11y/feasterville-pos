@@ -4808,6 +4808,8 @@ if(window.__fvSalesMenuHierarchyV42)return;window.__fvSalesMenuHierarchyV42=true
 
 let currentMenu='MRD';
 let currentCategory='ALL';
+// The original POS owns the cart and render lifecycle. Reuse its add handler.
+const originalAddSaleProduct=typeof window.add==='function'?window.add:null;
 
 const money = n => 'R' + Number(n || 0).toFixed(2);
 function getProducts(){
@@ -4909,9 +4911,12 @@ function selectMainMenu(menu){
 function addSaleProduct(code){
   const p=getProducts().find(x=>String(x.code)===String(code));
   if(!p){alert('Product could not be found. Please refresh the sale screen.');return}
-  const x=cart.find(i=>String(i.code)===String(code));
-  if(x)x.qty++; else cart.push({...p,qty:1});
-  render();
+  if(typeof originalAddSaleProduct!=='function'){
+    alert('Sales cart is unavailable. Please refresh and sign in again.');
+    return;
+  }
+  // The original add() updates the actual shared sales cart and recalculates totals.
+  originalAddSaleProduct(String(code));
 }
 
 document.addEventListener('click',function(e){
