@@ -2262,6 +2262,19 @@ document.addEventListener('DOMContentLoaded',function(){
       setMessage('');
     } catch (err) {
       console.error(err);
+      // Never leave a previously authenticated salesperson visible after a failed sign-in.
+      window.salesSessionUser = null;
+      window.inventorySessionUser = null;
+      window.currentUser = null;
+      currentLiveUser = null;
+      currentProfile = null;
+      accessToken = '';
+      sessionStorage.removeItem(TOKEN_KEY);
+      sessionStorage.removeItem(REFRESH_KEY);
+      const overlay = el('liveLoginOverlay');
+      if (overlay) overlay.style.removeProperty('display');
+      const badge = document.getElementById('userBadge');
+      if (badge) badge.textContent = 'Sign in required';
       setMessage(err.message, true);
       setStatus('Login failed');
     }
@@ -2500,6 +2513,11 @@ document.addEventListener('DOMContentLoaded',function(){
       sessionStorage.removeItem(TOKEN_KEY);
       sessionStorage.removeItem(REFRESH_KEY);
       accessToken = '';
+      window.salesSessionUser = null;
+      window.inventorySessionUser = null;
+      window.currentUser = null;
+      const overlay = el('liveLoginOverlay');
+      if (overlay) overlay.style.removeProperty('display');
       setStatus('Sign in required');
     }
   })();
