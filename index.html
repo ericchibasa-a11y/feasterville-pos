@@ -1947,7 +1947,23 @@ document.addEventListener('DOMContentLoaded',function(){
 
     if (accessToken) headers.Authorization = 'Bearer ' + accessToken;
 
-    const response = await fetch(SUPABASE_URL + path, Object.assign({}, options, {headers}));
+    let response = await fetch(SUPABASE_URL + path, Object.assign({}, options, {headers}));
+    if (response.status === 401 && !path.startsWith('/auth/v1/token') &&
+        sessionStorage.getItem(REFRESH_KEY)) {
+      const renewed = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=refresh_token', {
+        method:'POST',
+        headers:{apikey:API_KEY,'Content-Type':'application/json'},
+        body:JSON.stringify({refresh_token:sessionStorage.getItem(REFRESH_KEY)})
+      });
+      if (renewed.ok) {
+        const session = await renewed.json();
+        accessToken = session.access_token;
+        sessionStorage.setItem(TOKEN_KEY, accessToken);
+        if (session.refresh_token) sessionStorage.setItem(REFRESH_KEY, session.refresh_token);
+        headers.Authorization = 'Bearer ' + accessToken;
+        response = await fetch(SUPABASE_URL + path, Object.assign({}, options, {headers}));
+      }
+    }
     const raw = await response.text();
     let body = null;
 
@@ -2200,6 +2216,28 @@ document.addEventListener('DOMContentLoaded',function(){
 
     // Manager keeps the existing full live initialization.
     applyProfile(authData.user, profile);
+    // Read-only sales catalogue from the selected store, including after store changes.
+    window.refreshManagerSalesCatalogue = async function() {
+      if (!window.currentUser || window.currentUser.role !== 'manager') return;
+      const store = localStorage.getItem('feastervilleStoreCode') || 'NDAYENI';
+      try {
+        const rows = await api('/rest/v1/pos_store_products?store_code=eq.' +
+          encodeURIComponent(store) +
+          '&select=code,name,category,price,active&order=category.asc,code.asc');
+        liveStoreProducts[store] = Array.isArray(rows) ? rows : [];
+        window.liveStoreProducts = liveStoreProducts;
+        if (typeof window.refreshSalesSelectionV42 === 'function') window.refreshSalesSelectionV42();
+      } catch (error) {
+        console.error('Live sales catalogue load failed for ' + store, error);
+        const box = document.getElementById('products');
+        if (box) box.textContent = 'Unable to load products: ' + error.message;
+      }
+    };
+    document.addEventListener('change', function(e) {
+      if (e.target && /store/i.test(e.target.id || ''))
+        setTimeout(window.refreshManagerSalesCatalogue, 150);
+    });
+    await window.refreshManagerSalesCatalogue();
     el('liveLoginOverlay').style.display = 'none';
     el('liveLogout').style.display = '';
     setStatus('ONLINE - shared database');
