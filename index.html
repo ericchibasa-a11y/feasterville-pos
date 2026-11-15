@@ -872,6 +872,8 @@ function add(code){
  const x=cart.find(i=>i.code===code); if(x)x.qty++; else cart.push({...p,qty:1});
  render();
 }
+// Stable bridge to the actual sales cart, before later menu scripts replace window.add.
+window.__fvOriginalCartAdd=add;
 function changeQty(code,d){
  const x=cart.find(i=>i.code===code); if(!x)return;
  x.qty+=d; if(x.qty<=0)cart=cart.filter(i=>i.code!==code); render();
@@ -4809,7 +4811,7 @@ if(window.__fvSalesMenuHierarchyV42)return;window.__fvSalesMenuHierarchyV42=true
 let currentMenu='MRD';
 let currentCategory='ALL';
 // The original POS owns the cart and render lifecycle. Reuse its add handler.
-const originalAddSaleProduct=typeof window.add==='function'?window.add:null;
+const originalAddSaleProduct=window.__fvOriginalCartAdd;
 
 const money = n => 'R' + Number(n || 0).toFixed(2);
 function getProducts(){
