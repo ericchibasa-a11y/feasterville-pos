@@ -2144,6 +2144,8 @@ document.addEventListener('DOMContentLoaded',function(){
         '&select=code,name,category,price,active&order=category.asc,code.asc');
       window.liveStoreProducts = window.liveStoreProducts || {};
       window.liveStoreProducts[su.store_code] = Array.isArray(rows) ? rows : [];
+      if (typeof window.refreshSalesSelectionV42 === 'function')
+        window.refreshSalesSelectionV42();
 
       // Build the sales catalogue directly, no production/report refreshes.
       try { cats(); } catch (_) {}
@@ -4794,6 +4796,12 @@ let currentCategory='ALL';
 
 function getProducts(){
   try{
+    const user=window.salesSessionUser||window.currentUser;
+    const store=user?.role==='manager'
+      ? (localStorage.getItem('feastervilleStoreCode')||'NDAYENI')
+      : (user?.store_code||localStorage.getItem('feastervilleStoreCode')||'NDAYENI');
+    const live=window.liveStoreProducts?.[store];
+    if(Array.isArray(live)) return live.filter(p=>p.active!==false);
     return (typeof activeProducts==='function'?activeProducts():[])||[];
   }catch(e){
     console.error('V42 active products',e);
