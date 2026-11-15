@@ -2404,6 +2404,17 @@ document.addEventListener('DOMContentLoaded',function(){
         };
       });
 
+      // Fail closed if the visible store and the authenticated salesperson disagree.
+      const saleUser=window.salesSessionUser||window.currentUser;
+      const saleStore=saleUser?.role==='manager'
+        ? (localStorage.getItem('feastervilleStoreCode')||'NDAYENI')
+        : saleUser?.store_code;
+      if (!['NDAYENI','SIVANA','BIRCH_ACRES'].includes(saleStore))
+        throw new Error('No valid store is assigned to this account.');
+      if (saleUser?.role!=='manager' &&
+          document.getElementById('storeLocationSelect')?.value!==saleStore)
+        throw new Error('Store mismatch: sign in again before processing a sale.');
+
       const result = await api('/rest/v1/rpc/create_pos_sale', {
         method:'POST',
         body:JSON.stringify({
@@ -2720,6 +2731,7 @@ document.addEventListener('DOMContentLoaded', function(){
       if(badge){
         const code=select.value||localStorage.getItem('feastervilleStoreCode')||'NDAYENI';
         badge.textContent=(STORE_NAMES[code]||code)+' POS — MANAGER';
+        document.title='Feasterville '+(STORE_NAMES[code]||code)+' POS';
       }
       return;
     }
@@ -2733,6 +2745,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     if(badge){
       badge.textContent=(STORE_NAMES[assigned]||assigned)+' POS — LOCKED TO YOUR ACCOUNT';
+      document.title='Feasterville '+(STORE_NAMES[assigned]||assigned)+' POS';
     }
 
     // Prevent any old change handler or browser restore from changing the store.
