@@ -939,7 +939,29 @@ function printReceipt(){
     '.receipt-item-values{display:flex!important;justify-content:space-between!important;gap:8px!important}'+
     'hr{border:0;border-top:1px dashed #000;margin:5px 0}'+
     'button{display:none!important}'+
-    '</style></head><body><div class="receipt-wrap">'+receiptHtml+'</div></body></html>';
+    '</style></head><body><div class="receipt-wrap">'+receiptHtml+'</div>
+<script>
+/* Cross-POS navigation: display only to authenticated manager or Birch Acres salesperson. */
+(function(){
+ const target='https://pos.noshville.co.za/';
+ function authorized(){
+   const u=window.salesSessionUser||window.currentUser;
+   return !!u && (u.role==='manager'||(u.role==='salesperson'&&u.store_code==='BIRCH_ACRES'));
+ }
+ function update(){
+   let b=document.getElementById('fvSwitchToNoshville');
+   if(!b){const bar=document.getElementById('liveTopBar');if(!bar)return;
+     b=document.createElement('a');b.id='fvSwitchToNoshville';b.href=target;b.target='_blank';b.rel='noopener noreferrer';b.textContent='Switch to Noshville POS';
+     b.style.cssText='display:none;background:#8cc63f;color:#111;padding:10px;border-radius:7px;font-weight:bold;text-decoration:none';bar.appendChild(b);
+     b.addEventListener('click',function(e){if(!authorized()){e.preventDefault();return;}if(document.querySelector('#orderTable tbody tr')?.textContent?.trim()){if(!confirm('Check that the current sale is completed or saved before switching POS. Continue?'))e.preventDefault();}});
+   }
+   b.style.display=authorized()?'inline-block':'none';
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',update);else update();
+ setInterval(update,1200);
+})();
+</script>
+</body></html>';
 
   w.document.open();
   w.document.write(doc);
