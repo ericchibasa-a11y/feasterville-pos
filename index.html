@@ -2147,6 +2147,8 @@ document.addEventListener('DOMContentLoaded',function(){
       if (typeof window.refreshSalesSelectionV42 === 'function')
         window.refreshSalesSelectionV42();
 
+      // V42 owns the sales menu and price formatting; avoid the legacy renderer
+      // which uses lexical helpers outside this login module's scope.
       // Build the sales catalogue directly, no production/report refreshes.
       try { cats(); } catch (_) {}
       try {
@@ -4794,6 +4796,7 @@ if(window.__fvSalesMenuHierarchyV42)return;window.__fvSalesMenuHierarchyV42=true
 let currentMenu='MRD';
 let currentCategory='ALL';
 
+const money = n => 'R' + Number(n || 0).toFixed(2);
 function getProducts(){
   try{
     const user=window.salesSessionUser||window.currentUser;
