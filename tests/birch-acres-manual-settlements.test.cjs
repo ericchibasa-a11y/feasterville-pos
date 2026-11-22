@@ -11,4 +11,7 @@ assert.throws(()=>settlementBalance(records,[t,t]),/Duplicate bank transfer/);
 assert.throws(()=>settlementBalance(records,[{...t,amount:61}]),/exceeds outstanding/);
 assert.throws(()=>validateTransfer({...t,from_company:'noshville'}),/direction/);
 assert.throws(()=>validateTransfer({...t,amount:0}),/amount/);
+assert.throws(()=>validateTransfer({...t,transfer_date:'2026-02-30'}),/Valid transfer date/);
+assert.throws(()=>validateTransfer({...t,transfer_date:'2026-13-01'}),/Valid transfer date/);
+assert.throws(()=>settlementBalance(records,[t,{...t,reference:'eft-001'}]),/Duplicate bank transfer/);
 console.log('Manual intercompany settlement tests passed');
