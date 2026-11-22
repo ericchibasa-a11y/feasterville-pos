@@ -5,10 +5,10 @@ const job={checkout_id:'BA-20261122-104',store_code:'BIRCH_ACRES',state:'posting
  const a=companyAdapter({feasterville:client('FV'),noshville:client('NV')});
  assert.equal(await a.postFeasterville(job),'FV-1');assert.equal(await a.postNoshville(job),'NV-1');
  assert.deepEqual(calls.map(x=>x.fn),['birch_post_feasterville_sale','birch_post_noshville_sale']);
- assert.equal(calls[0].args.p_request_hash,job.request_hash);assert.equal(calls[1].args.p_expected_company_total,20);assert.equal(calls[1].args.p_cashier_identity,job.cashier_id);
+ assert.equal(calls[0].args.p_request_hash,job.request_hash);assert.equal(calls[1].args.p_expected_company_total,20);assert.equal(calls[1].args.p_cashier_identity,job.cashier_id);assert.equal(calls[1].args.p_payment_method,'other');
  assert.deepEqual(calls[1].args.p_lines,[{product_id:'NV1',quantity:2}]);
  await assert.rejects(a.postNoshville({...job,payment_reference:null}),/payment reference/);
- await assert.rejects(a.postFeasterville({...job,items:[]}),/company lines/);await assert.rejects(a.postNoshville({...job,noshville_amount:0}),/company amount/);await assert.rejects(a.postNoshville({...job,cashier_id:null}),/cashier ID/);
+ await assert.rejects(a.postFeasterville({...job,items:[]}),/company lines/);await assert.rejects(a.postNoshville({...job,noshville_amount:0}),/company amount/);await assert.rejects(a.postNoshville({...job,cashier_id:null}),/cashier ID/);await assert.rejects(a.postNoshville({...job,cashier_id:'not-a-uuid'}),/cashier ID/);
  await assert.rejects(companyAdapter({feasterville:{rpc:async()=>({error:{message:'offline'}})},noshville:client('NV')}).postFeasterville(job),/offline/);
  console.log('Company posting contract tests passed');
 })().catch(e=>{console.error(e);process.exitCode=1});
