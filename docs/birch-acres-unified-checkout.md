@@ -64,3 +64,13 @@ Design review -> isolated prototype -> test DBs -> parallel shadow testing -> ma
 - Track terminal batch ID, payment provider transaction reference, gross amount, processing fees, net bank deposit, allocation per company, and transfer settlement reference.
 - Confirm accountant-approved fee allocation and merchant/acquirer permission to process both entities through one terminal **before live rollout**.
 - Cash collection ownership and physical cash-up arrangements still require confirmation; do not assume cash follows the card settlement rule.
+
+
+## Confirmed Birch Acres physical cash custody (22 November 2026)
+- Birch Acres has **one shared physical cash till box**, held/controlled operationally by Feasterville, as well as one card terminal that settles to Feasterville's bank.
+- A single end-of-day physical cash count reconciles total cash tender, cash change, opening float, permitted cash movements, and actual cash on hand.
+- Every cash transaction still has two independent company sale allocations. The Noshville portion is **not Feasterville sales revenue**; it is Feasterville's intercompany payable and Noshville's matching receivable.
+- Track separate payment types and split tender, company shares, cash float, cash expenses, withdrawals, refunds, cashier, and daily settlement. Avoid double counting Noshville cash in Feasterville revenue or Feasterville inventory.
+- Record intercompany transfers only when actually paid and confirmed; show outstanding balance by day and cumulatively.
+- Require manager authorization for till adjustments, reversals, manual allocations and settlement reconciliation.
+- Confirm accountant-approved custody/agency accounting, tax invoice responsibilities, and cash-control policy before enabling production.
