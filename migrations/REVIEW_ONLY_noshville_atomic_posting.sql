@@ -8,6 +8,9 @@ create table if not exists birch_internal.posted_checkouts (
  checkout_id text primary key,
  sale_id uuid not null unique references public.sales(id),
  request_hash text not null,
+ payment_reference text not null,
+ cashier_identity uuid not null,
+ expected_company_total numeric(14,2) not null,
  created_at timestamptz not null default now()
 );
 revoke all on birch_internal.posted_checkouts from public, anon, authenticated;
@@ -56,7 +59,7 @@ begin
  perform pg_advisory_xact_lock(hashtextextended(p_checkout_id, 981247));
  select * into v_prior from birch_internal.posted_checkouts where checkout_id=p_checkout_id;
  if found then
-  if v_prior.request_hash <> p_request_hash then raise exception 'Checkout identity conflict'; end if;
+  if v_prior.request_hash <> p_request_hash or v_prior.payment_reference <> p_payment_reference or v_prior.cashier_identity <> p_cashier_identity or v_prior.expected_company_total <> p_expected_company_total then raise exception 'Checkout identity conflict'; end if;
   return jsonb_build_object('sale_reference',v_prior.sale_id::text,'already_posted',true);
  end if;
  -- Aggregate and lock ALL required parent/child stock rows in stable order.
@@ -108,8 +111,8 @@ begin
  join public.products p on p.id=(x->>'product_id')::uuid;
  if v_total is null or v_total<=0 or v_total<>p_expected_company_total then raise exception 'Company total mismatch'; end if;
  -- Uses the existing Noshville sequence, not MAX(order_no)+1.
- insert into public.sales(order_no,payment_method,subtotal,total_amount,status)
- values (nextval('public.sales_order_no_seq'),p_payment_method,v_total,v_total,'completed')
+ insert into public.sales(order_no,cashier_id,payment_method,subtotal,total_amount,status)
+ values (nextval('public.sales_order_no_seq'),p_cashier_identity,p_payment_method,v_total,v_total,'completed')
  returning id into v_sale_id;
  -- Existing trg_sale_item_stock handles BOTH stock deduction and movement ledger.
  insert into public.sale_items(sale_id,product_id,description,quantity,unit_cost,unit_price,line_total,line_cost)
@@ -118,8 +121,8 @@ begin
         round(p.cost_price*(x->>'quantity')::numeric,2)
  from jsonb_array_elements(p_lines) x
  join public.products p on p.id=(x->>'product_id')::uuid;
- insert into birch_internal.posted_checkouts(checkout_id,sale_id,request_hash)
- values(p_checkout_id,v_sale_id,p_request_hash);
+ insert into birch_internal.posted_checkouts(checkout_id,sale_id,request_hash,payment_reference,cashier_identity,expected_company_total)
+ values(p_checkout_id,v_sale_id,p_request_hash,p_payment_reference,p_cashier_identity,p_expected_company_total);
  return jsonb_build_object('sale_reference',v_sale_id::text,'already_posted',false);
 end $$;
 revoke all on function birch_internal.post_noshville_sale(text,text,jsonb,numeric,text,uuid,public.payment_method) from public,anon,authenticated;
