@@ -34,3 +34,5 @@ jobs:
         run: node tests/birch-acres-company-posting.test.cjs
       - name: Check Noshville stock and price preflight
         run: node tests/birch-acres-noshville-preflight.test.cjs
+      - name: Check Feasterville Birch Acres preflight
+        run: node tests/birch-acres-feasterville-preflight.test.cjs
