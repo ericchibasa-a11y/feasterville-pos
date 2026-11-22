@@ -115,3 +115,21 @@ Inspected deployed Supabase Edge Function inventories (read-only):
 - Establish a single trusted Birch Acres manager identity mapping; never assume Feasterville JWT grants access to Noshville, or vice versa.
 - New integration must authenticate callers and authorize manager/store scope server-side; keep privileged keys in backend-only secrets.
 - Security review and end-to-end test execution are release blockers. Draft PR #6 must not be merged until complete.
+
+
+## Verified live readiness findings (22 November 2026)
+Read-only queries against the actual connected Supabase projects:
+- Feasterville `pos_stores` has ACTIVE `BIRCH_ACRES`, `NDAYENI`, `SIVANA`; legacy `ENDAYINI` is inactive. Use `BIRCH_ACRES` as exact scope; never guess `BIRCH`.
+- Feasterville `pos_sales` contains recent NDAYENI and SIVANA sales; no BIRCH_ACRES sales in the last-seven-day query. This does not prove the store has had no trading outside that range or via another deployment.
+- Noshville `public.sales` currently has zero rows, while `public.profiles` has five rows. Before activation confirm that the actual Noshville trading application writes to this project and table. Otherwise financial reports could incorrectly show zero sales.
+- User confirmed that their working Feasterville browser address is `https://pos.feasterville.co.za` despite repository name `feasterville-pos`. Do not change a working production domain based solely on the repository name.
+- Deployed Feasterville `feasterville-pos` Edge Function was inspected: it serves a separate HTML POS and uses a Supabase user access token; the Noshville `manage-staff` function checks auth token and active manager profile. These are distinct identities and need a deliberate trusted identity bridge.
+
+### Blocking acceptance gates
+1. Confirm actual live Noshville sales write destination and Birch Acres inventory/product data.
+2. Establish trusted staff identity mapping and server-side authorization, including cashier and manager scopes.
+3. Build atomic, idempotent per-company sales and stock posting, durable coordinator and retry queue.
+4. Verify shared cash/card settlement and legal merchant agreement; prohibit double recognition of revenue.
+5. End-to-end test mixed basket, single-company basket, duplicate requests, partial failure, refunds, and offline/interrupted sessions.
+6. Validate both companies' daily reports against known real sales and physical cash-up; only then pilot with feature flag and rollback.
+No live deployment or financial DB writes have been performed.
