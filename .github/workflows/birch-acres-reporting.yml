@@ -7,6 +7,8 @@ on:
     paths:
       - 'src/birch-acres-*.js'
       - 'tests/birch-acres-*.test.cjs'
+      - 'migrations/PROPOSED_birch_checkout_coordinator.sql'
+      - 'migrations/REVIEW_ONLY_noshville_atomic_posting.sql'
       - '.github/workflows/birch-acres-reporting.yml'
 jobs:
   reporting:
@@ -52,3 +54,5 @@ jobs:
         run: node tests/birch-acres-recovery-lookups.test.cjs
       - name: Check Noshville draft SQL integrity and release blockers
         run: node tests/birch-acres-noshville-sql-integrity.test.cjs
+      - name: Check coordinator SQL integrity and release blockers
+        run: node tests/birch-acres-coordinator-sql-integrity.test.cjs
