@@ -46,7 +46,7 @@ begin
     or p_cashier_identity is null then
   raise exception 'Missing verified company amount, payment reference or cashier';
  end if;
- if p_checkout_id is null or p_checkout_id !~ '^[-a-zA-Z0-9_]{8,100}
+ if p_checkout_id is null or p_checkout_id !~ '^[-a-zA-Z0-9_]{8,100}$' or coalesce(p_request_hash,'') !~ '^[0-9a-f]{64}$' then
   raise exception 'Invalid checkout identity';
  end if;
  if p_lines is null or jsonb_typeof(p_lines) <> 'array' or jsonb_array_length(p_lines)=0 then
