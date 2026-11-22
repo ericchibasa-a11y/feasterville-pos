@@ -1,3 +1,4 @@
+(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.BirchAcresManualSettlements=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
 // Manager-only service logic for manual bank transfers. Does not move money.
 // A trusted backend MUST authenticate manager, persist transfer IDs uniquely,
@@ -33,4 +34,5 @@ function settlementBalance(records,transfers){
  if(paid>due)throw Error('Transfer exceeds outstanding intercompany payable');
  return Object.freeze({due:due/100,paid:paid/100,outstanding:(due-paid)/100,status:due===paid?'settled':paid===0?'unpaid':'partially_settled'});
 }
-module.exports={validateTransfer,settlementBalance};
+return Object.freeze({validateTransfer,settlementBalance});
+});
