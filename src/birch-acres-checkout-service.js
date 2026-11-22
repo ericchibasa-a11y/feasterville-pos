@@ -8,16 +8,17 @@ async function execute(input,a){
  assertAdapter(a);
  const totals=rules.validate(input);
  const verified=await a.authorizeAndPrice(input);
- if(!verified||verified.authorized!==true||verified.store_code!=='BIRCH_ACRES'||verified.feasterville_amount!==totals.feasterville_amount||verified.noshville_amount!==totals.noshville_amount||verified.total_amount!==totals.total_amount||typeof verified.request_hash!=='string'||verified.request_hash.length<16)throw Error('Server authorization or pricing failed');
+ if(!verified||verified.authorized!==true||verified.store_code!=='BIRCH_ACRES'||verified.feasterville_amount!==totals.feasterville_amount||verified.noshville_amount!==totals.noshville_amount||verified.total_amount!==totals.total_amount||typeof verified.request_hash!=='string'||!/^[a-f0-9]{64}$/.test(verified.request_hash)||typeof verified.cashier_id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(verified.cashier_id))throw Error('Server authorization or pricing failed');
  input={...input,request_hash:verified.request_hash};
  const existing=await a.load(totals.checkout_id);
  if(existing&&existing.request_hash!==input.request_hash)throw Error('Checkout ID already used with different request');
  if(!existing){
   if(typeof input.request_hash!=='string'||!input.request_hash)throw Error('Missing canonical request hash');
-  await a.create({...totals,items:input.items.map(x=>({company:x.company,product_id:x.product_id,quantity:x.quantity})),request_hash:input.request_hash,state:'draft'});
+  await a.create({...totals,items:input.items.map(x=>({company:x.company,product_id:x.product_id,quantity:x.quantity})),request_hash:input.request_hash,cashier_id:verified.cashier_id,state:'draft'});
  }
  let job=await a.load(totals.checkout_id);
  if(!job)throw Error('Checkout not persisted');
+ if(job.cashier_id!==verified.cashier_id)throw Error('Persisted checkout cashier mismatch');
  if(!Array.isArray(job.items)||JSON.stringify(job.items)!==JSON.stringify(input.items.map(x=>({company:x.company,product_id:x.product_id,quantity:x.quantity}))))throw Error('Persisted checkout basket mismatch');
  if(job.feasterville_amount!==totals.feasterville_amount||job.noshville_amount!==totals.noshville_amount||job.cash_amount!==totals.cash_amount||job.card_amount!==totals.card_amount)throw Error('Persisted checkout totals mismatch');
  if(job.state==='completed')return {status:'completed',checkout_id:job.checkout_id};
@@ -30,7 +31,7 @@ async function execute(input,a){
   if(job.state==='draft'){await a.transition(job.checkout_id,'draft','reserved',{});job=await a.load(job.checkout_id);}
   if(job.state==='reserved'){await a.transition(job.checkout_id,'reserved','payment_pending',{});job=await a.load(job.checkout_id);}
   if(job.state!=='payment_pending')throw Error('Unexpected payment state');
-  await a.transition(job.checkout_id,'payment_pending','payment_confirmed',{payment_reference:proof.reference});
+  await a.transition(job.checkout_id,'payment_pending','payment_confirmed',{payment_reference:proof.reference,payment_confirmed_at:new Date().toISOString()});
   job=await a.load(job.checkout_id);
  }
  if(job.state==='payment_confirmed'||job.state==='needs_reconciliation'){
