@@ -21,3 +21,9 @@
 7. Owner approved staging-only testing on 22 November 2026; this does NOT authorize live migration or deployment. Obtain separate explicit launch approval after a documented staging test report and rollback plan.
 
 **Production status:** No changes made to production sales, inventory or auth in this development branch.
+
+## Live read-only verification — 22 November 2026
+- Connected Supabase projects are Feasterville (`sflyjcgbxbcwspfuzone`), Noshville (`gknaqtvkqjwqwkovmajg`), and an inactive Bookkeeping System. **No dedicated staging project was identified.**
+- Read-only `information_schema.tables` checks in both active POS databases returned **zero** `public.birch_%` tables. This confirms the proposed coordinator and transfer tables are not installed in either live database.
+- Do not use either active production project for staging. Provision isolated test projects/copies, with synthetic data and separate test credentials, before executing the review-only migrations or testing posting.
+- A successful GitHub mock/static workflow is not proof of staging integration, manager-only authorization, payment verification, or live readiness.
