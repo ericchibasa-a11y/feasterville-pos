@@ -36,3 +36,5 @@ jobs:
         run: node tests/birch-acres-noshville-preflight.test.cjs
       - name: Check Feasterville Birch Acres preflight
         run: node tests/birch-acres-feasterville-preflight.test.cjs
+      - name: Check mixed tender and intercompany allocation
+        run: node tests/birch-acres-tender-allocation.test.cjs
