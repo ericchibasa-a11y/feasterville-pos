@@ -9,14 +9,14 @@ function payload(job,company){
  if(!/^[-a-zA-Z0-9_]{8,100}$/.test(id)||job.store_code!=='BIRCH_ACRES')throw Error('Invalid Birch Acres checkout');
  if(typeof job.request_hash!=='string'||!/^[a-f0-9]{64}$/i.test(job.request_hash))throw Error('Missing canonical request hash');
  if(!job.payment_reference||typeof job.payment_reference!=='string')throw Error('Missing verified payment reference');
- if(typeof job.cashier_id!=='string'||!job.cashier_id.trim())throw Error('Missing verified cashier ID');
+ if(typeof job.cashier_id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(job.cashier_id))throw Error('Missing verified cashier ID');
  const amount=company==='noshville'?job.noshville_amount:job.feasterville_amount;
  if(typeof amount!=='number'||!Number.isFinite(amount)||amount<=0||Math.round(amount*100)!==amount*100)throw Error('Invalid company amount');
  if(job.state!=='posting')throw Error('Checkout not in posting state');
  const lines=job.items?.filter(x=>x.company===company);
  if(!Array.isArray(lines)||!lines.length)throw Error('Missing company lines');
  for(const line of lines)if(typeof line.product_id!=='string'||!line.product_id||!Number.isInteger(line.quantity)||line.quantity<1)throw Error('Invalid company line');
- return {p_checkout_id:id,p_request_hash:job.request_hash,p_payment_reference:job.payment_reference,p_lines:lines.map(x=>({product_id:x.product_id,quantity:x.quantity})),p_expected_company_total:amount,p_cashier_identity:job.cashier_id};
+ return {p_checkout_id:id,p_request_hash:job.request_hash,p_payment_reference:job.payment_reference,p_lines:lines.map(x=>({product_id:x.product_id,quantity:x.quantity})),p_expected_company_total:amount,p_cashier_identity:job.cashier_id,p_payment_method:'other'};
 }
 function companyAdapter({feasterville,noshville}){
  requireRpc(feasterville);requireRpc(noshville);
