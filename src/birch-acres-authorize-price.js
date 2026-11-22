@@ -14,7 +14,7 @@ function createAuthorizationAdapter({getIdentity,getFeastervilleCatalog,getNoshv
   if(!input||input.store_code!=='BIRCH_ACRES'||!Array.isArray(input.items)||!input.items.length)throw Error('Invalid basket');
   const fvLines=input.items.filter(x=>x.company==='feasterville'),nvLines=input.items.filter(x=>x.company==='noshville');
   if(fvLines.length+nvLines.length!==input.items.length)throw Error('Unknown company');
-  const fv=fvLines.length?prepareFeastervilleSale(fvLines,await getFeastervilleCatalog()):{total_amount:0};
+  const fv=fvLines.length?prepareFeastervilleSale(fvLines,await getFeastervilleCatalog()):{total_amount:0,items:[]};
   const nv=nvLines.length?prepareNoshvilleSale(nvLines,await getNoshvilleProducts()):{total_amount:0};
   // Reject manipulated browser prices and tender amounts before creating a job.
   const trustedPrices=new Map();
