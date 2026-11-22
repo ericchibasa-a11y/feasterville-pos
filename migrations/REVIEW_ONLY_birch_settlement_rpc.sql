@@ -23,7 +23,7 @@ begin
  perform pg_advisory_xact_lock(2142026, 1);
  -- Cash is allocated first to Feasterville, then to Noshville.
  -- Noshville card proceeds collected by Feasterville create the payable.
- select coalesce(sum(least(noshville_amount,card_amount)),0)
+ select coalesce(sum(greatest(0,noshville_amount-greatest(0,cash_amount-feasterville_amount))),0)
  into v_due
  from public.birch_checkout_jobs
  where store_code='BIRCH_ACRES' and state='completed'
