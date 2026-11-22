@@ -1,0 +1,26 @@
+name: Birch Acres reporting checks
+on:
+  push:
+    branches:
+      - feature/birch-acres-unified-checkout-design
+  pull_request:
+    paths:
+      - 'src/birch-acres-*.js'
+      - 'tests/birch-acres-*.test.cjs'
+      - '.github/workflows/birch-acres-reporting.yml'
+jobs:
+  reporting:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check reporting allocation
+        run: node tests/birch-acres-reporting.test.cjs
+      - name: Check period comparisons
+        run: node tests/birch-acres-trends.test.cjs
+      - name: Check source adapters
+        run: node tests/birch-acres-adapters.test.cjs
