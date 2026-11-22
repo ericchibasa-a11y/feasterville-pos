@@ -3,7 +3,7 @@
 // reserve stock, verify external payment, and idempotently post company sales.
 // Never call this directly from an untrusted browser.
 const rules=require('./birch-acres-checkout-rules.js');
-function assertAdapter(a){for(const name of ['load','create','transition','verifyPayment','postFeasterville','postNoshville','authorizeAndPrice'])if(typeof a[name]!=='function')throw Error('Missing adapter: '+name)}
+function assertAdapter(a){for(const name of ['load','create','transition','verifyPayment','postFeasterville','postNoshville','authorizeAndPrice','inspectRecovery'])if(typeof a[name]!=='function')throw Error('Missing adapter: '+name)}
 async function execute(input,a){
  assertAdapter(a);
  const totals=rules.validate(input);
@@ -39,6 +39,17 @@ async function execute(input,a){
  }
  if(job.state!=='posting')throw Error('Unexpected checkout state: '+job.state);
  try{
+  // Inspect both company databases before every posting attempt, including
+  // retries after a lost response. Unknown lookup status must fail closed.
+  const inspection=await a.inspectRecovery(job);
+  if(!inspection||inspection.checkout_id!==job.checkout_id)throw Error('Recovery inspection unavailable');
+  for(const [field,key] of [['feasterville_sale_reference','feasterville_sale_reference'],['noshville_sale_reference','noshville_sale_reference']]){
+   if(job[field]&&inspection[key]!==job[field])throw Error('Persisted sale reference conflicts with company database');
+   if(!job[field]&&inspection[key]){
+    await a.transition(job.checkout_id,'posting','posting',{[field]:inspection[key]});
+   }
+  }
+  job=await a.load(job.checkout_id);
   // Adapter must use checkout_id as unique idempotency key in each company DB.
   // Retry a partial post only after inspecting existing company sale reference.
   if(totals.feasterville_amount>0&&!job.feasterville_sale_reference){
