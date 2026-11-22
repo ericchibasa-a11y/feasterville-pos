@@ -23,7 +23,7 @@ function prepareNoshvilleSale(lines,products){
   }
   items.push({product_id:String(p.id),description:p.name,quantity:line.quantity,unit_price:price/100,unit_cost:cost/100,line_total:price*line.quantity/100,line_cost:cost*line.quantity/100});
  }
- for(const [id,qty] of requirements){const p=byId.get(id);if(!p||Number(p.stock_qty)<qty)throw Error('Insufficient stock: '+id)}
+ for(const [id,qty] of requirements){const p=byId.get(id);if(!p||!Number.isFinite(Number(p.stock_qty))||Number(p.stock_qty)<qty)throw Error('Insufficient stock: '+id)}
  return {items,total_amount:items.reduce((s,i)=>s+Math.round(i.line_total*100),0)/100,stock_requirements:[...requirements].map(([product_id,quantity])=>({product_id,quantity})).sort((a,b)=>a.product_id.localeCompare(b.product_id))};
 }
 module.exports={prepareNoshvilleSale};
