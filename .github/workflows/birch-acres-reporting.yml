@@ -42,3 +42,5 @@ jobs:
         run: node tests/birch-acres-settlement-record.test.cjs
       - name: Check server authorization and pricing
         run: node tests/birch-acres-authorize-price.test.cjs
+      - name: Check company catalog readers
+        run: node tests/birch-acres-catalog-readers.test.cjs
