@@ -17,7 +17,7 @@
 3. Build the server-side authenticated checkout endpoint, persisted coordinator, payment verification and idempotent company posting; no service-role keys in browser.
 4. Build the Birch Acres cashier UI and a manager-only reconciliation report. Leave Ndayini and Sivana untouched.
 5. Test cash-only, card-only, mixed tenders, one-company baskets, mixed baskets, insufficient stock, stale prices, concurrent retries, lost responses, and recovery after one-company success.
-6. Verify card-terminal merchant agreement and accountant-approved intercompany settlements before taking card payments for both companies.
-7. Obtain explicit launch approval after a documented staging test report and rollback plan.
+6. Owner confirmed on 22 November 2026: use one card machine, record company revenue separately, and settle Noshville's share through manual intercompany transfers. Implement a manager-only settlement register with due/paid balances, transfer reference, date and amount. Obtain card-terminal merchant-provider permission and accountant approval before live cross-company card collections.
+7. Owner approved staging-only testing on 22 November 2026; this does NOT authorize live migration or deployment. Obtain separate explicit launch approval after a documented staging test report and rollback plan.
 
 **Production status:** No changes made to production sales, inventory or auth in this development branch.
