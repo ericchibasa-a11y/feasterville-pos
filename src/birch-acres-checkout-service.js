@@ -14,10 +14,11 @@ async function execute(input,a){
  if(existing&&existing.request_hash!==input.request_hash)throw Error('Checkout ID already used with different request');
  if(!existing){
   if(typeof input.request_hash!=='string'||!input.request_hash)throw Error('Missing canonical request hash');
-  await a.create({...totals,request_hash:input.request_hash,state:'draft'});
+  await a.create({...totals,items:input.items.map(x=>({company:x.company,product_id:x.product_id,quantity:x.quantity})),request_hash:input.request_hash,state:'draft'});
  }
  let job=await a.load(totals.checkout_id);
  if(!job)throw Error('Checkout not persisted');
+ if(!Array.isArray(job.items)||JSON.stringify(job.items)!==JSON.stringify(input.items.map(x=>({company:x.company,product_id:x.product_id,quantity:x.quantity}))))throw Error('Persisted checkout basket mismatch');
  if(job.feasterville_amount!==totals.feasterville_amount||job.noshville_amount!==totals.noshville_amount||job.cash_amount!==totals.cash_amount||job.card_amount!==totals.card_amount)throw Error('Persisted checkout totals mismatch');
  if(job.state==='completed')return {status:'completed',checkout_id:job.checkout_id};
  if(['cancelled','refunded','refund_pending'].includes(job.state))throw Error('Checkout closed or refund pending');
