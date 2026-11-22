@@ -28,3 +28,5 @@ jobs:
         run: node tests/birch-acres-checkout-rules.test.cjs
       - name: Check checkout orchestration and recovery
         run: node tests/birch-acres-checkout-service.test.cjs
+      - name: Check product catalog normalization
+        run: node tests/birch-acres-catalog.test.cjs
