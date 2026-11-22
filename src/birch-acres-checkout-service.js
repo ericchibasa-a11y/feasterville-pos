@@ -38,6 +38,8 @@ async function execute(input,a){
   job=await a.load(job.checkout_id);
  }
  if(job.state!=='posting')throw Error('Unexpected checkout state: '+job.state);
+ // A retry must never bypass evidence of a previously confirmed payment.
+ if(typeof job.payment_reference!=='string'||!job.payment_reference.trim())throw Error('Posting blocked: persisted verified payment reference missing');
  try{
   // Inspect both company databases before every posting attempt, including
   // retries after a lost response. Unknown lookup status must fail closed.
@@ -68,7 +70,11 @@ async function execute(input,a){
   await a.transition(job.checkout_id,'posting','completed',{});
   return {status:'completed',checkout_id:job.checkout_id};
  }catch(error){
-  await a.transition(job.checkout_id,'posting','needs_reconciliation',{last_error:String(error.message||error)});
+  try{
+   await a.transition(job.checkout_id,'posting','needs_reconciliation',{last_error:String(error.message||error)});
+  }catch(transitionError){
+   throw new AggregateError([error,transitionError],'Posting failed and reconciliation state could not be persisted');
+  }
   return {status:'needs_reconciliation',checkout_id:job.checkout_id};
  }
 }
