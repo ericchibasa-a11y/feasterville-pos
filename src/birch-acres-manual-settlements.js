@@ -7,10 +7,14 @@ const cents=value=>{
  if(typeof value!=='number'||!Number.isFinite(value)||value<=0||Math.abs(value*100-Math.round(value*100))>1e-7)throw Error('Invalid transfer amount');
  return Math.round(value*100);
 };
+function isCalendarDate(value){
+ const date=new Date(value+'T00:00:00Z');
+ return Number.isFinite(date.getTime())&&date.toISOString().slice(0,10)===value;
+}
 function validateTransfer(input){
  if(!input||input.store_code!=='BIRCH_ACRES'||input.from_company!=='feasterville'||input.to_company!=='noshville')throw Error('Invalid intercompany direction');
  if(typeof input.reference!=='string'||!input.reference.trim()||input.reference.length>120)throw Error('Bank transfer reference required');
- if(typeof input.transfer_date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(input.transfer_date)||Number.isNaN(Date.parse(input.transfer_date+'T00:00:00Z')))throw Error('Valid transfer date required');
+ if(typeof input.transfer_date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(input.transfer_date)||!isCalendarDate(input.transfer_date))throw Error('Valid transfer date required');
  if(typeof input.recorded_by!=='string'||!input.recorded_by.trim())throw Error('Verified manager required');
  return Object.freeze({store_code:'BIRCH_ACRES',from_company:'feasterville',to_company:'noshville',amount:cents(input.amount)/100,reference:input.reference.trim(),transfer_date:input.transfer_date,recorded_by:input.recorded_by});
 }
