@@ -53,3 +53,14 @@ Status: DESIGN ONLY. No production checkout or database changes.
 
 ## Rollout
 Design review -> isolated prototype -> test DBs -> parallel shadow testing -> manager signoff -> limited Birch Acres pilot -> reconciled release. Feature flag OFF by default and rollback to existing separate POS screens.
+
+
+## Confirmed Birch Acres card settlement arrangement (22 November 2026)
+- One physical card terminal is used for the combined premises.
+- The card terminal settles **all card payments into Feasterville's bank account**, including card sales of Noshville products.
+- A mixed-card sale must therefore create Feasterville card clearing / bank settlement for the full collected amount, but recognize only Feasterville's own sale as Feasterville revenue.
+- Noshville recognizes its own retail sale and an intercompany receivable from Feasterville. Feasterville recognizes the matching intercompany payable to Noshville.
+- Example: R100 card sale comprising R40 Feasterville and R60 Noshville: Feasterville revenue R40, Noshville revenue R60, intercompany payable/receivable R60 before agreed fees. On actual transfer to Noshville, clear the payable and receivable; do not post a second sale.
+- Track terminal batch ID, payment provider transaction reference, gross amount, processing fees, net bank deposit, allocation per company, and transfer settlement reference.
+- Confirm accountant-approved fee allocation and merchant/acquirer permission to process both entities through one terminal **before live rollout**.
+- Cash collection ownership and physical cash-up arrangements still require confirmation; do not assume cash follows the card settlement rule.
