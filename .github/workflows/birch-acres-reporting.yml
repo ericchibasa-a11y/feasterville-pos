@@ -58,3 +58,6 @@ jobs:
         run: node tests/birch-acres-coordinator-sql-integrity.test.cjs
       - name: Check manual intercompany settlement balances
         run: node tests/birch-acres-manual-settlements.test.cjs
+
+      - name: Run all Birch Acres offline contract tests
+        run: node scripts/test-birch-acres-local.cjs
