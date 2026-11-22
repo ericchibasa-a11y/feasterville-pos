@@ -13,7 +13,8 @@ create table if not exists birch_internal.posted_checkouts (
 revoke all on birch_internal.posted_checkouts from public, anon, authenticated;
 grant select,insert on birch_internal.posted_checkouts to service_role;
 
--- IMPORTANT: DO NOT DEPLOY YET. Parameters below are caller assertions, NOT proof\n-- of external payment or authorization. Coordinator payment verification, immutable
+-- IMPORTANT: DO NOT DEPLOY YET. Parameters below are caller assertions, NOT proof
+-- of external payment or authorization. Coordinator payment verification, immutable
 -- request payload hashing, verified tender allocation and cashier identity mapping
 -- are not integrated. This SQL alone is NOT safe for live payments.
 -- p_lines is a backend-validated immutable snapshot. All prices are re-read from
