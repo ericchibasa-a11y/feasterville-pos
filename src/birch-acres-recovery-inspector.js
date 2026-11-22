@@ -6,7 +6,10 @@ function makeRecoveryInspector({lookupFeasterville,lookupNoshville}){
  if(typeof lookupFeasterville!=='function'||typeof lookupNoshville!=='function')throw Error('Missing trusted lookup');
  return async function inspect(job){
   if(!job||job.store_code!=='BIRCH_ACRES'||!job.checkout_id||!job.request_hash)throw Error('Invalid recovery job');
-  const [fv,nv]=await Promise.all([lookupFeasterville(job.checkout_id),lookupNoshville(job.checkout_id)]);
+  // Fail closed: a lookup error is NOT evidence that the sale is absent.
+  let fv,nv;
+  try{[fv,nv]=await Promise.all([lookupFeasterville(job.checkout_id),lookupNoshville(job.checkout_id)]);}catch(error){throw Error('Recovery status unknown; manual reconciliation required');}
+  if(fv===undefined||nv===undefined)throw Error('Recovery lookup incomplete; manual reconciliation required');
   for(const [name,sale] of [['Feasterville',fv],['Noshville',nv]]){
    if(sale&&sale.request_hash!==job.request_hash)throw Error(name+' checkout hash conflict');
    if(sale&&!sale.sale_reference)throw Error(name+' missing sale reference');
