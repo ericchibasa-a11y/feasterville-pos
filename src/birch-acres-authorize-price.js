@@ -15,7 +15,7 @@ function createAuthorizationAdapter({getIdentity,getFeastervilleCatalog,getNoshv
   const fvLines=input.items.filter(x=>x.company==='feasterville'),nvLines=input.items.filter(x=>x.company==='noshville');
   if(fvLines.length+nvLines.length!==input.items.length)throw Error('Unknown company');
   const fv=fvLines.length?prepareFeastervilleSale(fvLines,await getFeastervilleCatalog()):{total_amount:0,items:[]};
-  const nv=nvLines.length?prepareNoshvilleSale(nvLines,await getNoshvilleProducts()):{total_amount:0};
+  const nv=nvLines.length?prepareNoshvilleSale(nvLines,await getNoshvilleProducts()):{total_amount:0,items:[]};
   // Reject manipulated browser prices and tender amounts before creating a job.
   const trustedPrices=new Map();
   for(const line of fvLines){const item=fv.items.find(x=>x.code===String(line.product_id));if(!item)throw Error('Feasterville price unavailable');trustedPrices.set('feasterville:'+line.product_id,item.price);}
