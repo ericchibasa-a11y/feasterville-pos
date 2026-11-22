@@ -8695,7 +8695,7 @@ window.fvAccountingV89={openAccounting,loadAccounting,refreshAll};
  function update(){
    let b=document.getElementById('fvSwitchToNoshville');
    if(!b){const bar=document.getElementById('liveTopBar');if(!bar)return;
-     b=document.createElement('a');b.id='fvSwitchToNoshville';b.href=target;b.target='_blank';b.rel='noopener noreferrer';b.textContent='Switch to Noshville POS';
+     b=document.createElement('a');b.id='fvSwitchToNoshville';b.href=target;b.target='_self';b.textContent='Switch to Noshville POS';
      b.style.cssText='display:none;background:#8cc63f;color:#111;padding:10px;border-radius:7px;font-weight:bold;text-decoration:none';bar.appendChild(b);
      b.addEventListener('click',function(e){if(!authorized()){e.preventDefault();return;}if(document.querySelector('#orderTable tbody tr')?.textContent?.trim()){if(!confirm('Check that the current sale is completed or saved before switching POS. Continue?'))e.preventDefault();}});
    }
