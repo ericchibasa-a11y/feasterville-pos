@@ -3,13 +3,13 @@
 **NO-GO — do not deploy mixed-company checkout.** The passing Node tests use mocks, not the two live Supabase databases.
 
 ## Verified source review
-- `migrations/REVIEW_ONLY_noshville_atomic_posting.sql` currently contains **duplicate SQL appended after the function and grants**, plus literal `\\n` escape sequences inside SQL. This draft is **not executable as a trusted migration**. Do not apply it.
-- `src/birch-acres-company-posting.js` invokes `public.birch_post_noshville_sale` and `public.birch_post_feasterville_sale`; neither RPC is deployed. The Noshville SQL draft instead defines `birch_internal.post_noshville_sale`, which is not reachable by the default PostgREST RPC endpoint.
+- `migrations/REVIEW_ONLY_noshville_atomic_posting.sql` has been deduplicated and passes static structural checks. It has **not** been executed or validated against a staging database; do not apply it to production.
+- `src/birch-acres-company-posting.js` invokes `public.birch_post_noshville_sale` and `public.birch_post_feasterville_sale`; neither RPC has been confirmed deployed. The Noshville SQL draft instead defines `birch_internal.post_noshville_sale`, which is not reachable by the default PostgREST RPC endpoint.
 - `migrations/REVIEW_ONLY_birch_recovery_lookup.sql` assumes a private mapping table with `sale_id`. The Feasterville mapping table has not been implemented; Noshville's draft mapping uses a UUID sale ID, whereas Feasterville uses bigint.
 - `src/birch-acres-recovery-lookups.js` calls `public.birch_lookup_posted_checkout`, but that function is review-only and not deployed.
 - The checkout coordinator requires persisted basket lines and atomic compare-and-swap state transitions; neither server persistence adapter nor real payment verifier is connected.
 - Noshville's existing sale-item trigger already deducts tracked stock; additional stock deductions would double-count.
-- The current Noshville draft cannot be relied upon to record mixed cash/card allocations or a Feasterville-to-Noshville settlement liability.
+- The current Noshville draft uses payment method `other` for mixed-tender posting and does not itself record verified cash/card allocation or a Feasterville-to-Noshville settlement liability.
 
 ## Mandatory release gates
 1. Repair and validate both company-specific SQL posting functions in **staging**; enforce immutable checkout ID/hash, verified payment, company total, and stock under locks.
