@@ -50,3 +50,5 @@ jobs:
         run: node tests/birch-acres-recovery-inspector.test.cjs
       - name: Check company recovery RPC adapters
         run: node tests/birch-acres-recovery-lookups.test.cjs
+      - name: Check Noshville draft SQL integrity and release blockers
+        run: node tests/birch-acres-noshville-sql-integrity.test.cjs
