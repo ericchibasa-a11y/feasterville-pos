@@ -8,7 +8,8 @@ function payload(job,company){
  const id=reference(job?.checkout_id);
  if(!/^[-a-zA-Z0-9_]{8,100}$/.test(id)||job.store_code!=='BIRCH_ACRES')throw Error('Invalid Birch Acres checkout');
  if(typeof job.request_hash!=='string'||!/^[a-f0-9]{64}$/i.test(job.request_hash))throw Error('Missing canonical request hash');
- if(!job.payment_reference||typeof job.payment_reference!=='string')throw Error('Missing verified payment reference');
+ if(typeof job.payment_reference!=='string'||!job.payment_reference.trim())throw Error('Missing verified payment reference');
+ if(typeof job.payment_confirmed_at!=='string'||!/^\\d{4}-\\d{2}-\\d{2}T/.test(job.payment_confirmed_at)||!Number.isFinite(Date.parse(job.payment_confirmed_at)))throw Error('Missing persisted payment confirmation timestamp');
  if(typeof job.cashier_id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(job.cashier_id))throw Error('Missing verified cashier ID');
  const amount=company==='noshville'?job.noshville_amount:job.feasterville_amount;
  if(typeof amount!=='number'||!Number.isFinite(amount)||amount<=0||Math.round(amount*100)!==amount*100)throw Error('Invalid company amount');
