@@ -15,5 +15,7 @@ assert.match(sql,/pg_advisory_xact_lock/);
 // payment and amount parameters are included and tested in staging.
 const blockers=['p_payment_reference','p_expected_company_total','p_cashier_identity'];
 const missing=blockers.filter(x=>!sql.includes(x));
-assert.deepEqual(missing,blockers,'Update release gate after staging validation of all required controls');
-console.log('Noshville SQL static integrity checks passed; deployment remains BLOCKED: '+missing.join(', '));
+assert.deepEqual(missing,[],'Draft must contain expected company amount, payment reference and cashier parameters');
+assert.match(sql,/v_total<>p_expected_company_total/);
+assert.match(sql,/caller assertions, NOT proof/);
+console.log('Noshville SQL static integrity checks passed; deployment remains BLOCKED pending verified payment and staging tests');
