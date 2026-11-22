@@ -32,3 +32,5 @@ jobs:
         run: node tests/birch-acres-catalog.test.cjs
       - name: Check company posting contracts
         run: node tests/birch-acres-company-posting.test.cjs
+      - name: Check Noshville stock and price preflight
+        run: node tests/birch-acres-noshville-preflight.test.cjs
