@@ -24,3 +24,5 @@ jobs:
         run: node tests/birch-acres-trends.test.cjs
       - name: Check source adapters
         run: node tests/birch-acres-adapters.test.cjs
+      - name: Check checkout validation and transitions
+        run: node tests/birch-acres-checkout-rules.test.cjs
