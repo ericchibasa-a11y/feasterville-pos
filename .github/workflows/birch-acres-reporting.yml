@@ -38,3 +38,5 @@ jobs:
         run: node tests/birch-acres-feasterville-preflight.test.cjs
       - name: Check mixed tender and intercompany allocation
         run: node tests/birch-acres-tender-allocation.test.cjs
+      - name: Check completed checkout settlement records
+        run: node tests/birch-acres-settlement-record.test.cjs
