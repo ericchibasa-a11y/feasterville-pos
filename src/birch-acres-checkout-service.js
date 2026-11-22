@@ -3,10 +3,13 @@
 // reserve stock, verify external payment, and idempotently post company sales.
 // Never call this directly from an untrusted browser.
 const rules=require('./birch-acres-checkout-rules.js');
-function assertAdapter(a){for(const name of ['load','create','transition','verifyPayment','postFeasterville','postNoshville'])if(typeof a[name]!=='function')throw Error('Missing adapter: '+name)}
+function assertAdapter(a){for(const name of ['load','create','transition','verifyPayment','postFeasterville','postNoshville','authorizeAndPrice'])if(typeof a[name]!=='function')throw Error('Missing adapter: '+name)}
 async function execute(input,a){
  assertAdapter(a);
  const totals=rules.validate(input);
+ const verified=await a.authorizeAndPrice(input);
+ if(!verified||verified.authorized!==true||verified.store_code!=='BIRCH_ACRES'||verified.feasterville_amount!==totals.feasterville_amount||verified.noshville_amount!==totals.noshville_amount||verified.total_amount!==totals.total_amount||typeof verified.request_hash!=='string'||verified.request_hash.length<16)throw Error('Server authorization or pricing failed');
+ input={...input,request_hash:verified.request_hash};
  const existing=await a.load(totals.checkout_id);
  if(existing&&existing.request_hash!==input.request_hash)throw Error('Checkout ID already used with different request');
  if(!existing){
