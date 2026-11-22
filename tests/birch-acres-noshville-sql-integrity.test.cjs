@@ -11,5 +11,8 @@ for(const required of ['-- REVIEW-ONLY','DO NOT DEPLOY','pg_advisory_xact_lock',
 const signature='birch_internal.post_noshville_sale(text,text,jsonb,numeric,text,uuid,public.payment_method)';
 assert.ok(sql.includes('revoke all on function '+signature+' from public,anon,authenticated;'));
 assert.ok(sql.includes('grant execute on function '+signature+' to service_role;'));
-assert.ok(sql.includes("coalesce(p_request_hash,'') !~ '^[0-9a-f]{64}$'"));
+assert.ok(sql.includes("coalesce(p_request_hash,'') !~ '^[0-9a-f]{64}
+console.log('Noshville SQL static integrity passed; production release BLOCKED pending staging and payment verification');
+"));
+for(const field of ['payment_reference text not null','cashier_identity uuid not null','expected_company_total numeric(14,2) not null','v_prior.payment_reference <> p_payment_reference','v_prior.cashier_identity <> p_cashier_identity','v_prior.expected_company_total <> p_expected_company_total','insert into public.sales(order_no,cashier_id,payment_method','insert into birch_internal.posted_checkouts(checkout_id,sale_id,request_hash,payment_reference,cashier_identity,expected_company_total)'])assert.ok(sql.includes(field),'Missing immutable payment evidence: '+field);
 console.log('Noshville SQL static integrity passed; production release BLOCKED pending staging and payment verification');
