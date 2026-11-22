@@ -1,0 +1,14 @@
+'use strict';
+const assert=require('node:assert/strict');
+const {validateTransfer,settlementBalance}=require('../src/birch-acres-manual-settlements.js');
+const t={store_code:'BIRCH_ACRES',from_company:'feasterville',to_company:'noshville',amount:40,reference:'EFT-001',transfer_date:'2026-11-22',recorded_by:'manager-1'};
+assert.equal(validateTransfer(t).amount,40);
+const records=[{checkout_id:'BA-1',due_to_noshville:40},{checkout_id:'BA-2',due_to_noshville:20}];
+assert.deepEqual(settlementBalance(records,[]),{due:60,paid:0,outstanding:60,status:'unpaid'});
+assert.deepEqual(settlementBalance(records,[t]),{due:60,paid:40,outstanding:20,status:'partially_settled'});
+assert.deepEqual(settlementBalance(records,[t,{...t,amount:20,reference:'EFT-002'}]),{due:60,paid:60,outstanding:0,status:'settled'});
+assert.throws(()=>settlementBalance(records,[t,t]),/Duplicate bank transfer/);
+assert.throws(()=>settlementBalance(records,[{...t,amount:61}]),/exceeds outstanding/);
+assert.throws(()=>validateTransfer({...t,from_company:'noshville'}),/direction/);
+assert.throws(()=>validateTransfer({...t,amount:0}),/amount/);
+console.log('Manual intercompany settlement tests passed');
