@@ -13,7 +13,10 @@ create table if not exists birch_internal.posted_checkouts (
 revoke all on birch_internal.posted_checkouts from public, anon, authenticated;
 grant select,insert on birch_internal.posted_checkouts to service_role;
 
--- IMPORTANT: DO NOT DEPLOY YET. Coordinator payment verification, immutable\n-- request payload hashing, verified tender allocation and cashier identity mapping\n-- are not integrated. This SQL alone is NOT safe for live payments.\n-- p_lines is a backend-validated immutable snapshot. All prices are re-read from
+-- IMPORTANT: DO NOT DEPLOY YET. Coordinator payment verification, immutable
+-- request payload hashing, verified tender allocation and cashier identity mapping
+-- are not integrated. This SQL alone is NOT safe for live payments.
+-- p_lines is a backend-validated immutable snapshot. All prices are re-read from
 -- Noshville products. Do not accept price/cost from the client.
 create or replace function birch_internal.post_noshville_sale(
  p_checkout_id text,
@@ -52,7 +55,8 @@ begin
   select 1 from jsonb_array_elements(p_lines) x
   where (x->>'product_id') is null or
         (x->>'quantity') !~ '^[1-9][0-9]*$' or
-        (x->>'quantity')::numeric > 10000 or\n        (x->>'product_id') !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
+        (x->>'quantity')::numeric > 10000 or
+        (x->>'product_id') !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
  ) then raise exception 'Invalid sale lines'; end if;
  -- Lock every referenced product and its parent. SELECT FOR UPDATE with ORDER BY
  -- is performed in a subquery to ensure stable locking sequence.
@@ -145,7 +149,7 @@ grant execute on function birch_internal.post_noshville_sale(text,text,jsonb,pub
   group by 1
  loop
   if v_required.stock_id is not null then
-   if v_required.qty<=0 or not exists (
+   if v_required.qty is null or v_required.qty<=0 or not exists (
     select 1 from public.products p
     where p.id=v_required.stock_id and p.stock_qty>=v_required.qty
    ) then raise exception 'Insufficient stock'; end if;
