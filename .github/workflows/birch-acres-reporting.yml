@@ -48,3 +48,5 @@ jobs:
         run: node tests/birch-acres-auth-boundary.test.cjs
       - name: Check cross-company recovery inspection
         run: node tests/birch-acres-recovery-inspector.test.cjs
+      - name: Check company recovery RPC adapters
+        run: node tests/birch-acres-recovery-lookups.test.cjs
