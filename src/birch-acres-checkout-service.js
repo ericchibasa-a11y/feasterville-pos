@@ -22,7 +22,11 @@ async function execute(input,a){
  if(job.state==='draft'||job.state==='reserved'||job.state==='payment_pending'){
   const proof=await a.verifyPayment(job);
   if(!proof||proof.confirmed!==true||proof.amount!==totals.total_amount||!proof.reference) return {status:'payment_pending',checkout_id:job.checkout_id};
-  // Follow legal state transitions; the adapter must persist each change with CAS.\n  if(job.state==='draft'){await a.transition(job.checkout_id,'draft','reserved',{});job=await a.load(job.checkout_id);}\n  if(job.state==='reserved'){await a.transition(job.checkout_id,'reserved','payment_pending',{});job=await a.load(job.checkout_id);}\n  if(job.state!=='payment_pending')throw Error('Unexpected payment state');\n  await a.transition(job.checkout_id,'payment_pending','payment_confirmed',{payment_reference:proof.reference});
+  // Follow legal state transitions; the adapter must persist each change with CAS.
+  if(job.state==='draft'){await a.transition(job.checkout_id,'draft','reserved',{});job=await a.load(job.checkout_id);}
+  if(job.state==='reserved'){await a.transition(job.checkout_id,'reserved','payment_pending',{});job=await a.load(job.checkout_id);}
+  if(job.state!=='payment_pending')throw Error('Unexpected payment state');
+  await a.transition(job.checkout_id,'payment_pending','payment_confirmed',{payment_reference:proof.reference});
   job=await a.load(job.checkout_id);
  }
  if(job.state==='payment_confirmed'||job.state==='needs_reconciliation'){
@@ -44,7 +48,9 @@ async function execute(input,a){
    if(!ref)throw Error('Noshville post did not return reference');
    await a.transition(job.checkout_id,'posting','posting',{noshville_sale_reference:ref});
   }
-  job=await a.load(job.checkout_id);\n  if((totals.feasterville_amount>0&&!job.feasterville_sale_reference)||(totals.noshville_amount>0&&!job.noshville_sale_reference))throw Error('Company sale reference missing');\n  await a.transition(job.checkout_id,'posting','completed',{});
+  job=await a.load(job.checkout_id);
+  if((totals.feasterville_amount>0&&!job.feasterville_sale_reference)||(totals.noshville_amount>0&&!job.noshville_sale_reference))throw Error('Company sale reference missing');
+  await a.transition(job.checkout_id,'posting','completed',{});
   return {status:'completed',checkout_id:job.checkout_id};
  }catch(error){
   await a.transition(job.checkout_id,'posting','needs_reconciliation',{last_error:String(error.message||error)});
