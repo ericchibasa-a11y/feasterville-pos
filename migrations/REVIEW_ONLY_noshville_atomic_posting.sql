@@ -56,7 +56,7 @@ begin
   where (x->>'product_id') is null or
         (x->>'quantity') !~ '^[1-9][0-9]*$' or
         (x->>'quantity')::numeric > 10000 or
-        (x->>'product_id') !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
+        (x->>'product_id') !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
  ) then raise exception 'Invalid sale lines'; end if;
  -- Lock every referenced product and its parent. SELECT FOR UPDATE with ORDER BY
  -- is performed in a subquery to ensure stable locking sequence.
