@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Birch Acres — Manager Dashboard Prototype</title>
+<style>
+:root{font-family:system-ui,Arial;background:#f5f7f3;color:#17221a}body{margin:0}header{background:#163b25;color:white;padding:20px}main{max-width:1150px;margin:auto;padding:20px}.notice{background:#fff2d6;padding:12px;border-left:4px solid #a06b00}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px}.card,section{background:white;border-radius:12px;padding:18px;box-shadow:0 1px 5px #0001}.card b{display:block;font-size:26px;margin-top:8px}section{margin-top:16px}table{width:100%;border-collapse:collapse}th,td{padding:10px;text-align:left;border-bottom:1px solid #e7eae5}td:last-child,th:last-child{text-align:right}button{padding:10px 14px;border:0;border-radius:8px;background:#dce9db;cursor:pointer}button[aria-pressed=true]{background:#163b25;color:white}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.muted{color:#57665a}#status{font-weight:bold}
+</style></head><body>
+<header><h1>Birch Acres · Manager Performance</h1><div>Feasterville Foods + Noshville Catering</div></header>
+<main><div class="notice"><strong>DEVELOPMENT DEMO — SAMPLE DATA ONLY.</strong> This page is not connected to live POS records and is not an authenticated manager portal. Do not use for actual cash-up.</div>
+<div class="tabs" role="group" aria-label="Report view"><button data-tab="combined" aria-pressed="true">Combined</button><button data-tab="feasterville">Feasterville</button><button data-tab="noshville">Noshville</button><button data-tab="cashup">Cash-up</button></div>
+<div id="cards" class="cards"></div><section><h2 id="heading">Daily breakdown</h2><div id="report"></div></section>
+<section><h2>Controls and exceptions</h2><p id="status"></p><p class="muted">Card payments settle to Feasterville. Cash is held in one Feasterville till. Noshville's share is tracked separately as an intercompany receivable. This prototype does not post journals or change stock.</p></section>
+</main><script src="../src/birch-acres-reporting.js"></script><script>
+const rows=[
+{checkout_id:'DEMO-001',status:'completed',items:[{company:'feasterville',quantity:1,unit_price:40},{company:'noshville',quantity:2,unit_price:30}],card_amount:100},
+{checkout_id:'DEMO-002',status:'completed',items:[{company:'feasterville',quantity:2,unit_price:50}],cash_amount:100},
+{checkout_id:'DEMO-003',status:'completed',items:[{company:'noshville',quantity:1,unit_price:26}],cash_amount:26}
+];
+const format=n=>new Intl.NumberFormat('en-ZA',{style:'currency',currency:'ZAR'}).format(n);
+const totals=BirchAcresReporting.summarize(rows);
+const cash=BirchAcresReporting.cashup({opening_float:100,cash_collected:126,actual_cash:226});
+const labels={combined:'Combined sales',feasterville:'Feasterville sales',noshville:'Noshville sales',cashup:'Cash-up'};
+const cards=document.querySelector('#cards'),report=document.querySelector('#report');
+function card(label,value){const el=document.createElement('div');el.className='card';const caption=document.createElement('span');caption.textContent=label;const number=document.createElement('b');number.textContent=value;el.append(caption,number);return el;}
+function table(lines){const t=document.createElement('table');for(const [label,value] of lines){const tr=document.createElement('tr');for(const txt of [label,value]){const td=document.createElement('td');td.textContent=txt;tr.appendChild(td);}t.appendChild(tr);}return t;}
+function show(tab){
+ document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tab===tab)));
+ cards.replaceChildren();report.replaceChildren();document.querySelector('#heading').textContent=labels[tab]+' · demo day';
+ if(tab==='cashup'){
+  cards.append(card('Expected cash',format(cash.expected_cash)),card('Physical cash',format(cash.actual_cash)),card('Variance',format(cash.variance)));
+  report.append(table([['Opening float',format(100)],['Cash sales',format(totals.cash)],['Expected closing cash',format(cash.expected_cash)],['Actual counted',format(cash.actual_cash)]]));
+ }else{
+  const amount=totals[tab];cards.append(card(labels[tab],format(amount)),card('Transactions',String(totals.transactions)),card('Noshville owed',format(totals.noshville_receivable)));
+  report.append(table([['Feasterville sales',format(totals.feasterville)],['Noshville sales',format(totals.noshville)],['Combined sales',format(totals.combined)],['Card collected',format(totals.card)],['Cash collected',format(totals.cash)]]));
+ }
+ document.querySelector('#status').textContent=totals.exceptions?'Exception check required: '+totals.exceptions:'No posting exceptions in demo sample';
+}
+document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>show(b.dataset.tab)));show('combined');
+</script></body></html>
