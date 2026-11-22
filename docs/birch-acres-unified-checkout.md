@@ -104,3 +104,14 @@ Confirmed owner requirement: management must see distinct Feasterville and Noshv
 - Manager may review company-level daily reports independently of whether the physical drawer is shared.
 - Maintain audit trail for edits/reopenings and provide exportable daily/weekly/monthly reports.
 - No double counting of Noshville sales as Feasterville revenue or in consolidated views.
+
+
+## Backend security inspection — 22 November 2026
+Inspected deployed Supabase Edge Function inventories (read-only):
+- Feasterville functions: feasterville-pos (verify_jwt=false), pos-product-admin (true), feasterville-publish (false), paystack-webhook (false), pos-user-admin (true).
+- Noshville: manage-staff (verify_jwt=false).
+- A function with verify_jwt=false is not necessarily unauthenticated: webhook handlers may validate provider signatures, and other functions may perform explicit checks. Inspect implementation before drawing conclusions.
+- Do **not** reuse any existing function for manager financial reporting or cross-company checkout until its token validation, trusted role authorization, origin checks and input validation have been reviewed.
+- Establish a single trusted Birch Acres manager identity mapping; never assume Feasterville JWT grants access to Noshville, or vice versa.
+- New integration must authenticate callers and authorize manager/store scope server-side; keep privileged keys in backend-only secrets.
+- Security review and end-to-end test execution are release blockers. Draft PR #6 must not be merged until complete.
