@@ -74,3 +74,33 @@ Design review -> isolated prototype -> test DBs -> parallel shadow testing -> ma
 - Record intercompany transfers only when actually paid and confirmed; show outstanding balance by day and cumulatively.
 - Require manager authorization for till adjustments, reversals, manual allocations and settlement reconciliation.
 - Confirm accountant-approved custody/agency accounting, tax invoice responsibilities, and cash-control policy before enabling production.
+
+
+## Manager-only daily cash-up and new-store performance dashboards (22 November 2026)
+Confirmed owner requirement: management must see distinct Feasterville and Noshville daily sales and comprehensive performance dashboards, especially for new stores.
+
+### Manager dashboard tabs
+1. Feasterville: Birch Acres, Ndayini, Sivana and consolidated sales/P&L; existing reports preserved.
+2. Noshville: standalone sales, stock, gross margin, expenses and performance.
+3. Birch Acres Combined: company sales side by side; combined sales only as an operational total, never a third legal entity's revenue.
+4. Daily Cash-Up: one physical cash drawer and card terminal, with separate Feasterville/Noshville sales allocations; tender, change, opening float, withdrawals, actual cash count, variance, cash/card settlement and cashier.
+5. Intercompany Settlement: daily Noshville receivable / Feasterville payable, transfers paid, outstanding cumulative balance, card fees and reconciliation exceptions.
+
+### KPI requirements
+- Daily, 7-day, month-to-date, prior-period comparison, targets and trends per company and per Feasterville store.
+- Sales count, basket size, tender breakdown, discounts, refunds, gross sales and net sales.
+- Product rankings, non-moving items, category performance, stock consumption, recipe-based COGS, gross profit, gross margin, expenses and operating profit when cost data is complete.
+- Variances: expected versus actual till, unposted/failed orders, inventory differences, unsettled card receipts and unbalanced intercompany entries.
+- Explicit data completeness/health indicators; missing costs or incomplete posting must never be shown as confirmed profit.
+
+### Access
+- Manager: all company dashboards, store comparisons, reconciliation and adjustments.
+- Salesperson: checkout, tender capture, physical cash count and limited own-shift summary; hide expected till, variance, costs, margins and company-wide dashboards unless explicitly authorized.
+- Inventory controller: permitted stock receipt/count tasks only.
+- All access enforced server-side, not merely hidden UI.
+
+### Daily close and reporting
+- One shared Birch Acres physical cash-up per day with immutable reference and allocations to each company.
+- Manager may review company-level daily reports independently of whether the physical drawer is shared.
+- Maintain audit trail for edits/reopenings and provide exportable daily/weekly/monthly reports.
+- No double counting of Noshville sales as Feasterville revenue or in consolidated views.
