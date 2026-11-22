@@ -41,6 +41,7 @@ async function execute(input,a){
  if(job.state!=='posting')throw Error('Unexpected checkout state: '+job.state);
  // A retry must never bypass evidence of a previously confirmed payment.
  if(typeof job.payment_reference!=='string'||!job.payment_reference.trim())throw Error('Posting blocked: persisted verified payment reference missing');
+ if(typeof job.payment_confirmed_at!=='string'||!Number.isFinite(Date.parse(job.payment_confirmed_at)))throw Error('Posting blocked: persisted payment confirmation timestamp missing');
  try{
   // Inspect both company databases before every posting attempt, including
   // retries after a lost response. Unknown lookup status must fail closed.
