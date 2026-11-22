@@ -44,3 +44,5 @@ jobs:
         run: node tests/birch-acres-authorize-price.test.cjs
       - name: Check company catalog readers
         run: node tests/birch-acres-catalog-readers.test.cjs
+      - name: Check authenticated cashier boundary
+        run: node tests/birch-acres-auth-boundary.test.cjs
