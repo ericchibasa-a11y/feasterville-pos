@@ -40,3 +40,5 @@ jobs:
         run: node tests/birch-acres-tender-allocation.test.cjs
       - name: Check completed checkout settlement records
         run: node tests/birch-acres-settlement-record.test.cjs
+      - name: Check server authorization and pricing
+        run: node tests/birch-acres-authorize-price.test.cjs
