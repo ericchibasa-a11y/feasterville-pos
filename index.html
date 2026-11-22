@@ -2359,6 +2359,27 @@ document.addEventListener('DOMContentLoaded',function(){
   }
 
   window.completeSale = async function() {
+    // Mandatory returnable-glass check. Do not permit a sale without an explicit answer.
+    if (typeof cart !== 'undefined' && Array.isArray(cart)) {
+      const returnable = cart.filter(function(item) {
+        const label = String(item.name || '').toLowerCase();
+        return /1[.,]25\s*l|1250\s*ml/.test(label) && !/2[.,]25\s*l/.test(label);
+      });
+      if (returnable.length) {
+        const answer = window.prompt('Does the customer have an empty 1.25L bottle to exchange? Type YES or NO. Cancel stops the sale.');
+        if (answer === null || !/^(yes|no)$/i.test(String(answer).trim())) {
+          window.alert('Sale not completed. Answer YES or NO for the empty bottle.');
+          return;
+        }
+        const withBottle = /^yes$/i.test(String(answer).trim());
+        const expected = withBottle ? 15 : 20;
+        const wrong = returnable.filter(function(item) { return Math.abs(Number(item.price) - expected) > 0.001; });
+        if (wrong.length) {
+          window.alert('Sale not completed. Customer ' + (withBottle ? 'has' : 'does not have') + ' an empty bottle. Select the R' + expected + ' 1.25L product in the cart before completing the sale.');
+          return;
+        }
+      }
+    }
     if (window.__feastervilleSaleSubmitting) {
       return;
     }
