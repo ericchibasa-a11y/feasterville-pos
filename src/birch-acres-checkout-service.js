@@ -15,6 +15,7 @@ async function execute(input,a){
  }
  let job=await a.load(totals.checkout_id);
  if(!job)throw Error('Checkout not persisted');
+ if(job.feasterville_amount!==totals.feasterville_amount||job.noshville_amount!==totals.noshville_amount||job.cash_amount!==totals.cash_amount||job.card_amount!==totals.card_amount)throw Error('Persisted checkout totals mismatch');
  if(job.state==='completed')return {status:'completed',checkout_id:job.checkout_id};
  if(['cancelled','refunded','refund_pending'].includes(job.state))throw Error('Checkout closed or refund pending');
  // Never post anything until verified settlement, including exact amount and payment reference.
