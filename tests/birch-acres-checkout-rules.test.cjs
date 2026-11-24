@@ -1,0 +1,10 @@
+const assert=require('node:assert/strict');const c=require('../src/birch-acres-checkout-rules.js');
+const base={checkout_id:'BA-20261122-001',store_code:'BIRCH_ACRES',items:[{company:'feasterville',product_id:'K1',quantity:1,unit_price:40},{company:'noshville',product_id:'N1',quantity:2,unit_price:30}],tender:{cash:40,card:60}};
+assert.deepEqual(c.validate(base),{checkout_id:base.checkout_id,store_code:'BIRCH_ACRES',feasterville_amount:40,noshville_amount:60,total_amount:100,cash_amount:40,card_amount:60});
+assert.throws(()=>c.validate({...base,store_code:'SIVANA'}),/Birch Acres/);
+assert.throws(()=>c.validate({...base,tender:{cash:50,card:60}}),/Tender mismatch/);
+assert.equal(c.transition('posting','needs_reconciliation'),'needs_reconciliation');
+assert.equal(c.transition('needs_reconciliation','posting'),'posting');
+assert.throws(()=>c.transition('draft','completed'),/Forbidden/);
+assert.throws(()=>c.transition('completed','posting'),/Forbidden/);
+console.log('Birch Acres checkout rule tests passed');

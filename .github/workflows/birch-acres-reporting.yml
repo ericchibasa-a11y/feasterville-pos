@@ -1,0 +1,63 @@
+name: Birch Acres reporting checks
+on:
+  push:
+    branches:
+      - feature/birch-acres-unified-checkout-design
+  pull_request:
+    paths:
+      - 'src/birch-acres-*.js'
+      - 'tests/birch-acres-*.test.cjs'
+      - 'migrations/PROPOSED_birch_checkout_coordinator.sql'
+      - 'migrations/REVIEW_ONLY_noshville_atomic_posting.sql'
+      - '.github/workflows/birch-acres-reporting.yml'
+jobs:
+  reporting:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check reporting allocation
+        run: node tests/birch-acres-reporting.test.cjs
+      - name: Check period comparisons
+        run: node tests/birch-acres-trends.test.cjs
+      - name: Check source adapters
+        run: node tests/birch-acres-adapters.test.cjs
+      - name: Check checkout validation and transitions
+        run: node tests/birch-acres-checkout-rules.test.cjs
+      - name: Check checkout orchestration and recovery
+        run: node tests/birch-acres-checkout-service.test.cjs
+      - name: Check product catalog normalization
+        run: node tests/birch-acres-catalog.test.cjs
+      - name: Check company posting contracts
+        run: node tests/birch-acres-company-posting.test.cjs
+      - name: Check Noshville stock and price preflight
+        run: node tests/birch-acres-noshville-preflight.test.cjs
+      - name: Check Feasterville Birch Acres preflight
+        run: node tests/birch-acres-feasterville-preflight.test.cjs
+      - name: Check mixed tender and intercompany allocation
+        run: node tests/birch-acres-tender-allocation.test.cjs
+      - name: Check completed checkout settlement records
+        run: node tests/birch-acres-settlement-record.test.cjs
+      - name: Check server authorization and pricing
+        run: node tests/birch-acres-authorize-price.test.cjs
+      - name: Check company catalog readers
+        run: node tests/birch-acres-catalog-readers.test.cjs
+      - name: Check authenticated cashier boundary
+        run: node tests/birch-acres-auth-boundary.test.cjs
+      - name: Check cross-company recovery inspection
+        run: node tests/birch-acres-recovery-inspector.test.cjs
+      - name: Check company recovery RPC adapters
+        run: node tests/birch-acres-recovery-lookups.test.cjs
+      - name: Check Noshville draft SQL integrity and release blockers
+        run: node tests/birch-acres-noshville-sql-integrity.test.cjs
+      - name: Check coordinator SQL integrity and release blockers
+        run: node tests/birch-acres-coordinator-sql-integrity.test.cjs
+      - name: Check manual intercompany settlement balances
+        run: node tests/birch-acres-manual-settlements.test.cjs
+
+      - name: Run all Birch Acres offline contract tests
+        run: node scripts/test-birch-acres-local.cjs
